@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.HVACPolicyMgntMapper">
+	
+	<!-- 냉난방정책 상세내역 -->
+	<select id="retrieveSeasonPolicyMgnt" parameterType="Map" resultType="HVACPolicyMgntVo">
+	<![CDATA[
+		SELECT
+		         companyCd
+			   , m1
+			   , m2
+			   , m3
+			   , m4
+			   , m5
+			   , m6
+			   , m7
+			   , m8
+			   , m9
+			   , m10
+			   , m11
+			   , m12
+		  FROM (	SELECT
+				            COMPANY_CD as companyCd
+				          ,  max(case when mm = '01' then mode else '' end)  as m1
+		     		       ,  max(case when mm = '02' then mode else '' end)  as m2
+			    	       ,  max(case when mm = '03' then mode else '' end)  as m3
+				          ,  max(case when mm = '04' then mode else '' end)  as m4
+				          ,  max(case when mm = '05' then mode else '' end)  as m5
+				          ,  max(case when mm = '06' then mode else '' end)  as m6
+				          ,  max(case when mm = '07' then mode else '' end)  as m7
+				          ,  max(case when mm = '08' then mode else '' end)  as m8
+				          ,  max(case when mm = '09' then mode else '' end)  as m9
+					       ,  max(case when mm = '10' then mode else '' end)  as m10
+				          ,  max(case when mm = '11' then mode else '' end)  as m11
+				          ,  max(case when mm = '12' then mode else '' end)  as m12
+				 	  FROM TH_HAC_POLICY_MM_CONF
+				     WHERE COMPANY_CD = #{companyCd}
+				     GROUP BY COMPANY_CD
+		        ) A
+	 	]]>
+    </select>
+    
+    <!-- 냉난방정책 저장 -->
+    <update id="saveAirConditionPolicyMgnt" parameterType="Map">
+        INSERT INTO TH_HAC_POLICY_MM_CONF
+            (
+			   COMPANY_CD
+			 , MM
+			 , MODE
+			 , REGI_ID
+			 , REGI_DTTM
+			 , FINAL_MOD_ID
+ 			 , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+			   #{companyCd}
+			 , #{mm}
+			 , #{mode}
+			 , #{regiId}
+			 , now()
+			 , #{finalModId}
+ 			 , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  MODE      = #{mode}
+                                , FINAL_MOD_ID       = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+
+	</update>
+	
+</mapper>

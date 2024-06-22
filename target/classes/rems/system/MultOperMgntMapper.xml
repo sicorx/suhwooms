@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.MultOperMgntMapper">
+
+	<!-- 경영자 목록 -->
+	<select id="retrieveUserList" parameterType="Map" resultType="UserMngVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT 
+			U.USER_ID							AS userId, 
+			U.USER_NM							AS userNm, 
+			CONCAT(IFNULL(SM.STR_CNT, 0), '개')	AS strCnt 
+		FROM 
+			TH_USER_MST  U 
+			LEFT OUTER JOIN 
+			(
+				SELECT 
+					UM.USER_ID	AS USER_ID, 
+					COUNT(*)	AS STR_CNT 
+				FROM 
+					TH_STR_USER_MAP UM, 
+					TH_STR_INFO_MST IM, 
+					TH_COMPANY_MST CM, 
+					TH_AREA_MST AM 
+				WHERE 1 = 1 
+					AND UM.STR_CD = IM.STR_CD 
+					AND IM.COMPANY_CD = CM.COMPANY_CD 
+					AND CM.COUNTRY_CD = AM.COUNTRY_CD 
+					AND IM.LOCAL_AREA_CD = AM.LOCAL_AREA_CD 
+					AND UM.MAP_YN = 'Y' 
+					AND IM.USE_YN = 'Y' 
+					AND IM.COMPANY_CD = #{companyCd} 
+ 	]]>
+			<if test='strNm != null and strNm != ""'>
+        		<![CDATA[
+        			AND (
+	        			INSTR(IM.STR_NM, #{strNm}) > 0 
+	        			OR 
+	        			INSTR(IM.VIEW_STR_CD, #{strNm}) > 0
+        			)
+        		]]>
+    		</if>
+    		<if test='areaNm != null and areaNm != ""'>
+        		<![CDATA[
+        			AND AM.AREA_NM = #{areaNm}
+        		]]>
+    		</if>
+    <![CDATA[
+				GROUP BY UM.USER_ID
+			) SM 
+			ON U.USER_ID = SM.USER_ID 
+            , TH_USER_AUTH B
+            , TH_AUTH C
+		WHERE 1 = 1 
+            AND U.USER_ID = B.USER_ID
+            AND B.COMPANY_CD = C.COMPANY_CD
+            AND B.AUTH_ID = C.AUTH_ID
+			AND U.COMPANY_CD = #{companyCd} 
+			AND C.AUTH_SP = 'S' 
+			AND U.USE_YN = 'Y' 
+ 	]]>
+	<if test='userNm != null and userNm != ""'>
+    	<![CDATA[
+   			AND (
+    			INSTR(U.USER_NM, #{userNm}) > 0 
+    			OR 
+    			INSTR(U.USER_ID, #{userNm}) > 0
+   			)
+        ]]>
+    </if>
+    <if test='(strNm != null and strNm != "") or (areaNm != null and areaNm != "")'>
+    	<![CDATA[		
+			AND IFNULL(SM.STR_CNT, 0) > 0 
+        ]]>
+    </if>
+    <![CDATA[
+		ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+
+	<!-- 소유매장 목록 -->
+	<select id="retrieveRemsStoreMgnt" parameterType="Map" resultType="GridStoreMgntVo">
+	<![CDATA[
+		SELECT 
+			TEMP.* 
+		FROM 
+			(
+				SELECT 
+					TEMP.*, 
+					@n := @n+1 as records 
+				FROM 
+					(
+						SELECT 
+							IM.STR_CD		AS strCd, 
+							IM.STR_NM		AS strNm, 
+							IM.ADDR			AS addr, 
+							IM.VIEW_STR_CD	AS viewStrCd 
+						FROM 
+							TH_STR_USER_MAP UM, 
+							TH_STR_INFO_MST IM 
+						WHERE 1 = 1 
+							AND UM.STR_CD = IM.STR_CD 
+							AND UM.MAP_YN = 'Y' 
+							AND IM.USE_YN = 'Y' 
+							AND UM.USER_ID = #{userId} 
+							AND IM.COMPANY_CD = #{companyCd} 
+						ORDER BY ${sidx} ${sord}
+					) TEMP, 
+					(
+						SELECT 
+							@n:=0
+					) r 
+			) TEMP
+	]]>
+	</select>
+	
+	<!-- 전체매장 목록 -->
+	<select id="retrieveOperRemsStoreMgnt" parameterType="Map" resultType="GridStoreMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[	
+		SELECT 
+			IM.STR_CD				AS strCd, 
+			IM.STR_NM				AS strNm, 
+			IM.ADDR					AS addr, 
+			IM.VIEW_STR_CD			AS viewStrCd, 
+			IFNULL(UM.STR_CNT, 0)	AS strCnt 
+		FROM 
+			TH_STR_INFO_MST IM 
+			LEFT OUTER JOIN 
+			(
+				SELECT 
+					STR_CD, 
+					COUNT(*) STR_CNT 
+				FROM 
+					TH_STR_USER_MAP 
+				WHERE 1 = 1 
+					AND USER_ID IN (
+					SELECT 
+							A.USER_ID 
+						FROM 
+ 							TH_USER_MST A,
+                            TH_USER_AUTH B,
+							TH_AUTH C 
+ 						WHERE 1 = 1 
+                            AND A.USER_ID = B.USER_ID
+                            AND B.COMPANY_CD = C.COMPANY_CD
+                            AND B.AUTH_ID = C.AUTH_ID
+ 							AND A.COMPANY_CD = #{companyCd} 
+ 							AND C.AUTH_SP = 'S' 
+							AND A.USE_YN = 'Y' 
+					) 
+					AND MAP_YN = 'Y' 
+				GROUP BY STR_CD
+			) UM 
+			ON IM.STR_CD = UM.STR_CD 
+		WHERE 1 = 1 
+			AND IM.USE_YN = 'Y' 
+			AND IM.COMPANY_CD = #{companyCd} 
+			AND IM.STR_CD NOT IN (			
+				SELECT 
+					IM.STR_CD 
+				FROM 
+					TH_STR_USER_MAP UM, 
+					TH_STR_INFO_MST IM 
+				WHERE 1 = 1 
+					AND UM.STR_CD = IM.STR_CD 
+					AND UM.MAP_YN = 'Y' 
+					AND IM.USE_YN = 'Y' 
+					AND UM.USER_ID = #{userId} 
+					AND IM.COMPANY_CD = #{companyCd} 
+			)
+	]]>
+	<if test='strCd != null and strCd != ""'>
+        <![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0
+      		)
+    	]]>
+    </if>
+	<if test='strKd == "0" or strKd == "1"'>
+		<![CDATA[
+			AND IFNULL(UM.STR_CNT, 0) = #{strKd} 
+		]]>
+	</if>
+	<if test='strKd == "2"'>
+		<![CDATA[
+			AND IFNULL(UM.STR_CNT, 0) >= #{strKd} 
+		]]>
+	</if>
+	<![CDATA[	
+		ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<!-- 소유매장 삭제 -->
+	<delete id="deleteStrMapMgnt" parameterType="Map">
+	<![CDATA[
+		DELETE 
+		FROM 
+			TH_STR_USER_MAP 
+		WHERE 1 = 1 
+			AND USER_ID	= #{userId} 
+			AND STR_CD IN 
+	]]>
+		<foreach item="item" index="index" collection="strCd" open="(" close=")" separator=",">
+			#{item} 
+		</foreach>	
+	</delete>
+	
+	<!-- 소유매장 등록 -->
+	<insert id="saveStrMapMgnt" parameterType="Map">
+	<![CDATA[
+		INSERT INTO 
+			TH_STR_USER_MAP 
+		(
+			USER_ID, 
+		    STR_CD, 
+		    MAP_YN, 
+		    REGI_ID, 
+		    REGI_DTTM, 
+		    FINAL_MOD_ID, 
+		    FINAL_MOD_DTTM 
+		) 
+		SELECT 
+			#{userId}, 
+			STR_CD, 
+			'Y', 
+			#{regiId}, 
+		 	NOW(), 
+		 	#{finalModId}, 
+		 	NOW() 
+		FROM 
+			TH_STR_INFO_MST 
+		WHERE 1 = 1 
+			AND COMPANY_CD = #{companyCd} 
+			AND STR_CD IN 
+	]]>			
+		<foreach item="item" index="index" collection="strCd" open="(" close=")" separator=",">
+			#{item} 
+		</foreach>
+	</insert>
+	
+</mapper>

@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.UserMgntMapper">
+
+	<select id="retrieveRemsUserList" parameterType="Map" resultType="GridUserMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT 
+			U.*, 
+			SI.STR_NM     	AS strNm, 
+			SI.STR_CD		AS strCd,
+			VM.VENDOR_NM	AS vendorNm 
+		FROM 
+			(
+					SELECT 
+						U.USER_ID 		AS userId, 
+						U.USER_NM 		AS userNm, 
+						CAST(AES_DECRYPT(U.USER_PW, 'REMS_ADM')	AS CHAR(100)) userPw, 
+						U.COMPANY_CD   	AS companyCd,
+						A.AUTH_ID		AS authId,
+						A.AUTH_SP      	AS authSp, 
+						CC.COMM_CD_NM	AS commCdNm,
+						A.AUTH_NM      	AS authNm, 
+						U.ORG_CD       	AS orgCd, 
+						fnGetOrgFullName(U.COMPANY_CD, U.ORG_CD)	as orgFullNm,						
+						CO.ORG_NM     	AS orgNm, 
+						U.VENDOR_CD    	AS vendorCd, 
+						U.EULA_YN      	AS eulaYn, 
+						U.USE_YN       	AS useYn 
+					FROM 
+						TH_USER_MST U 
+ 						LEFT OUTER JOIN 
+ 						TH_COMPANY_ORG_MST CO 
+						ON U.ORG_CD = CO.ORG_CD 
+						AND CO.COMPANY_CD = #{companyCd}, 
+						TH_USER_AUTH UA, 
+						TH_AUTH A 
+						LEFT OUTER JOIN 
+						TH_COMM_CD CC 
+						ON A.AUTH_SP = CC.COMM_CD   						
+					WHERE 1 = 1 
+						AND U.USER_ID = UA.USER_ID 
+						AND U.COMPANY_CD = UA.COMPANY_CD 
+						AND UA.AUTH_ID = A.AUTH_ID 
+						AND UA.COMPANY_CD = A.COMPANY_CD 
+						AND U.COMPANY_CD = #{companyCd} 	
+						AND U.USE_YN = #{useYn} 
+						AND CC.COMM_GRP_CD = #{commcdParams} 
+	]]>
+				<if test='userId != null and userId != ""'>
+        			<![CDATA[
+        				AND (
+	        				INSTR(U.USER_ID, #{userId}) > 0 
+	        				OR 
+	        				INSTR(U.USER_NM, #{userId}) > 0
+        				)
+        			]]>
+    			</if>
+    			<if test='orgCd != null and orgCd != ""'>
+	            	<![CDATA[
+	            	  AND U.ORG_CD = #{orgCd} 
+	            	]]>
+	        	</if>
+				<if test='authSp != null and authSp != ""'>
+					<![CDATA[
+						AND A.AUTH_SP = #{authSp} 
+					]]>
+				</if>
+				<![CDATA[
+					ORDER BY ${sidx} ${sord}
+			) U 
+ 			LEFT JOIN TH_STR_INFO_MST SI 
+			ON U.userId = SI.VIEW_STR_CD 
+			AND U.companyCd = SI.COMPANY_CD 
+			LEFT OUTER JOIN 
+			(
+				SELECT 
+					VENDOR_CD, 
+					VENDOR_NM 
+				FROM 
+					TH_VENDOR_MST 
+				WHERE 1 = 1 
+					AND COMPANY_CD = #{companyCd} 
+				UNION ALL 
+				SELECT 
+					ELECTRICENT_CD, 
+					ELECTRICENT_NM 
+				FROM 
+					TH_ELECTRICENT_MST 
+				WHERE 1 = 1 
+					AND COMPANY_CD = #{companyCd} 
+			) VM 
+			ON U.vendorCd = VM.VENDOR_CD
+    ]]>    
+	<![CDATA[
+			ORDER BY ${sidx} ${sord}  			
+	]]>
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+	<select id="retrieveRemsUserMgntDtl" parameterType="Map" resultType="GridUserMgntVo">
+	    SELECT 
+	                m.USER_ID AS userId
+	              , m.USER_NM AS userNm
+	              , m.USER_PW_CNV AS userPw
+	              , m.COMPANY_CD as companyCd
+	              , m.COMPANY_NM as companyNm
+	              , m.VENDOR_CD as vendorCd
+	              , m.AUTH_ID AS authId
+	              , m.AUTH_NM AS authNm
+	              , m.AUTH_SP AS authSp
+	              , m.ORG_CD AS orgCd
+	              , m.ORG_NM as orgNm
+	              , m.STR_CD as strCd
+	              , m.VIEW_STR_CD as viewStrCd
+	              , m.STR_NM as strNm
+	              , m.EULA_YN AS eulaYn
+	              , m.USE_YN AS useYn
+	      FROM	        
+		        (SELECT
+		                   U.USER_ID
+		                 , USER_NM
+		                 , CAST(AES_DECRYPT(USER_PW , 'REMS_ADM')  as char(100)) AS USER_PW_CNV
+		                 , u.COMPANY_CD
+		                 , u.COMPANY_NM
+		                 , u.VENDOR_CD
+                         , D.AUTH_ID
+                         , C.AUTH_SP
+	                     , c.AUTH_NM
+		                 , u.ORG_CD
+		                 , ORG_NM
+		                 , u.STR_CD
+		                 , VIEW_STR_CD
+		                 , STR_NM
+		                 , EULA_YN
+		                 , u.USE_YN
+		          FROM 
+		                   (
+		                    SELECT 
+		                               A.USER_ID
+		                             , A.USER_NM
+		                             , A.USER_PW
+		                             , A.COMPANY_CD
+		                             , C.COMPANY_NM
+		                             , A.VENDOR_CD
+		                             , A.ORG_CD
+		                             , A.STR_CD
+		                             , A.EULA_YN
+		                             , A.USE_YN   
+		                      FROM TH_USER_MST A, TH_COMPANY_MST C
+		                      WHERE A.COMPANY_CD = C.COMPANY_CD
+		                        AND A.COMPANY_CD = #{companyCd}
+		                        AND A.USE_YN = 'Y'
+		                   ) u
+		          LEFT JOIN TH_COMPANY_ORG_MST a
+		            ON u.ORG_CD = a.ORG_CD
+		          AND a.COMPANY_CD = #{companyCd}
+		          LEFT JOIN TH_STR_INFO_MST b
+		            ON u.STR_CD = b.STR_CD
+                  LEFT JOIN TH_USER_AUTH D
+                    ON U.USER_ID = D.USER_ID
+		          LEFT JOIN TH_AUTH c
+		            ON D.AUTH_ID = c.AUTH_ID
+	               AND c.COMPANY_CD = #{companyCd}
+	            ) m
+	           WHERE 1=1
+                AND USER_ID = #{userId}
+    </select>
+
+
+
+	
+	<update id="saveRemsUserMgnt" parameterType="GridUserMgntVo">
+		INSERT INTO 
+			TH_USER_MST 
+		SET
+			USER_ID 			= #{userId},
+			USER_NM 			= #{userNm},
+			USER_PW 			= AES_ENCRYPT(#{userPw}, 'REMS_ADM'),
+			COMPANY_CD 			= #{companyCd},
+			ORG_CD 				= #{orgCd},
+			STR_CD 				= #{strCd},
+			VENDOR_CD 			= #{vendorCd},
+			EULA_YN 			= #{eulaYn},
+			USE_YN 				= #{useYn},
+			REGI_ID 			= #{regiId},
+			REGI_DTTM 			= now(),
+			FINAL_MOD_ID 		= #{finalModId},
+			FINAL_MOD_DTTM 		= now()
+		ON DUPLICATE KEY UPDATE			
+			USER_NM 			= #{userNm},
+			USER_PW 			= AES_ENCRYPT(#{userPw}, 'REMS_ADM'),
+			COMPANY_CD 			= #{companyCd},
+			ORG_CD 				= #{orgCd},
+			STR_CD 				= #{strCd},
+			VENDOR_CD 			= #{vendorCd},
+			EULA_YN 			= #{eulaYn},
+			USE_YN 				= #{useYn},			
+			FINAL_MOD_ID 		= #{finalModId},
+			FINAL_MOD_DTTM 		= now();			
+       
+	</update>
+	
+	
+
+
+
+	<update id="saveRemsHUserMgnt" parameterType="GridUserMgntVo">
+        INSERT INTO TH_USER
+            (
+               USER_ID
+             , USER_NM
+             , USER_PW
+             , COMPANY_CD
+             , ORG_CD
+             , STR_CD
+             , VENDOR_CD
+             , EULA_YN
+             , USE_YN   
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               #{userId}
+             , #{userNm}
+             , AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+             , #{companyCd}
+             , #{authCd}
+             , #{authSp}
+             , #{orgCd}
+             , null
+             , null
+             , #{eulaYn}
+             , #{useYn}
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  USER_ID           = #{userId}
+                                , USER_NM           = #{userNm}
+                                , USER_PW           = AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+                                , COMPANY_CD        = #{companyCd}
+                                , ORG_CD            = #{orgCd}
+                                , STR_CD            = null
+                                , VENDOR_CD         = null
+                                , EULA_YN           = #{eulaYn}
+                                , USE_YN            = #{useYn}
+                                , FINAL_MOD_ID      = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+	</update>
+	
+	<update id="saveRemsMUserMgnt" parameterType="GridUserMgntVo">
+        INSERT INTO TH_USER
+            (
+               USER_ID
+             , USER_NM
+             , USER_PW
+             , COMPANY_CD
+             , ORG_CD
+             , STR_CD
+             , VENDOR_CD
+             , EULA_YN
+             , USE_YN   
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               #{userId}
+             , #{userNm}
+             , AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+             , #{companyCd}
+             , #{orgCd}
+             , null
+             , #{vendorCd}
+             , #{eulaYn}
+             , #{useYn}
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  USER_ID           = #{userId}
+                                , USER_NM           = #{userNm}
+                                , USER_PW           = AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+                                , COMPANY_CD        = #{companyCd}
+                                , ORG_CD            = null
+                                , STR_CD            = null
+                                , VENDOR_CD         = #{vendorCd}
+                                , EULA_YN           = #{eulaYn}
+                                , USE_YN            = #{useYn}
+                                , FINAL_MOD_ID      = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+	</update>
+	
+	<update id="saveRemsTUserMgnt" parameterType="GridUserMgntVo">
+        INSERT INTO TH_USER_MST
+            (
+               USER_ID
+             , USER_NM
+             , USER_PW
+             , COMPANY_CD
+             , ORG_CD
+             , STR_CD
+             , VENDOR_CD
+             , EULA_YN
+             , USE_YN   
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               #{userId}
+             , #{userNm}
+             , AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+             , #{companyCd}
+             , #{orgCd}
+             , null
+             , #{electricEntCd}
+             , #{eulaYn}
+             , #{useYn}
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  USER_ID           = #{userId}
+                                , USER_NM           = #{userNm}
+                                , USER_PW           = AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+                                , COMPANY_CD        = #{companyCd}
+                                , ORG_CD            = null
+                                , STR_CD            = null
+                                , VENDOR_CD         = #{electricEntCd}
+                                , EULA_YN           = #{eulaYn}
+                                , USE_YN            = #{useYn}
+                                , FINAL_MOD_ID      = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+	</update>	
+	
+	
+	<update id="saveRemsSUserMgnt" parameterType="GridUserMgntVo">
+        INSERT INTO TH_USER_MST
+            (
+               USER_ID
+             , USER_NM
+             , USER_PW
+             , COMPANY_CD
+             , ORG_CD
+             , STR_CD
+             , VENDOR_CD
+             , EULA_YN
+             , USE_YN   
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               #{userId}
+             , #{userNm}
+             , AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+             , #{companyCd}
+             , null
+             , #{strCd}
+             , null
+             , #{eulaYn}
+             , #{useYn}
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  USER_ID           = #{userId}
+                                , USER_NM           = #{userNm}
+                                , USER_PW           = AES_ENCRYPT(#{userPw}, 'REMS_ADM')
+                                , COMPANY_CD        = #{companyCd}
+                                , ORG_CD            = null
+                                , STR_CD            = #{strCd}
+                                , VENDOR_CD         = null
+                                , EULA_YN           = #{eulaYn}
+                                , USE_YN            = #{useYn}
+                                , FINAL_MOD_ID      = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+	</update>
+	
+	<update id="saveRemsStoreMapMst" parameterType="GridUserMgntVo">
+        INSERT INTO TH_STR_USER_MAP
+            (
+               USER_ID
+             , STR_CD
+             , MAP_YN
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               #{userId}
+             , #{strCd}
+             , 'Y'
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  STR_CD            = #{strCd}
+                                , MAP_YN            = 'Y'
+                                , FINAL_MOD_ID      = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+	</update>
+	
+	<update id="deleteRemsStoreMapMst" parameterType="GridUserMgntVo">
+        UPDATE TH_STR_USER_MAP
+           SET MAP_YN         = 'N'
+             , FINAL_MOD_ID   = #{finalModId}
+             , FINAL_MOD_DTTM = now()
+         WHERE USER_ID        = #{userId}
+	</update>
+	
+	<update id="deleteRemsUserMgnt" parameterType="Map">
+        DELETE FROM TH_USER	WHERE
+        	USER_ID 		= #{userId}
+        	AND
+        	COMPANY_CD		= #{companyCd}
+	</update>
+	
+	<update id="deleteRemsUserAuthMgnt" parameterType="Map">
+        DELETE FROM TH_USER_AUTH	WHERE
+        	USER_ID 		= #{userId}
+        	AND
+        	COMPANY_CD		= #{companyCd}
+	</update>
+
+	<select id="checkUserId" parameterType="String" resultType="int">
+       SELECT 
+                   COUNT(*)
+          FROM TH_USER_MST
+         WHERE USER_ID = #{userId}
+                   
+    </select>
+    
+    <select id="retrieveVendorList" parameterType="Map"  resultType="SelectVo">
+    	SELECT 
+			VENDOR_CD	AS value, 
+    	  	VENDOR_NM	AS name 
+    	FROM 
+    		TH_VENDOR_MST 
+       	WHERE 1 = 1 
+       		AND USE_YN = 'Y' 
+			AND COMPANY_CD = #{companyCd} 
+		ORDER BY name
+       		 
+    </select>
+    
+    <select id="retrieveElectricEntList" parameterType="Map"  resultType="SelectVo">
+    	SELECT 
+    		ELECTRICENT_CD          AS value,
+    	  	ELECTRICENT_NM			AS name	      
+    	FROM th_electricent_mst
+        WHERE 1 = 1
+        	AND USE_YN = 'Y' 
+            AND COMPANY_CD = #{companyCd}
+       		 
+    </select>
+    
+    
+    
+    
+    
+    <update id="saveRemsUserAuth" parameterType="GridUserMgntVo">
+        INSERT INTO 
+        	TH_USER_AUTH
+        SET
+        	USER_ID 			= #{userId},
+        	COMPANY_CD 			= #{companyCd},        	
+        	AUTH_ID				= #{authId}        				
+        ON DUPLICATE KEY UPDATE
+        	COMPANY_CD 			= #{companyCd},
+        	AUTH_ID				= #{authId}			        	
+	</update>
+	
+	<update id="saveRemsUserStrMap" parameterType="GridUserMgntVo">
+        INSERT INTO 
+        	TH_STR_USER_MAP
+        SET
+        	USER_ID 			= #{userId},
+        	STR_CD				= #{strCd},
+        	MAP_YN				= 'Y',
+        	REGI_DTTM 			= now()   				
+        ON DUPLICATE KEY UPDATE        	
+        	MAP_YN				= 'Y',
+        	REGI_DTTM = now()			        	
+	</update>
+	
+	
+	
+	
+</mapper>

@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.StoreMgntMapper">
+
+	<select id="retrieveRemsStoreMgnt" parameterType="Map" resultType="GridStoreMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+	SELECT
+		A.STR_CD									as strCd,
+		A.VIEW_STR_CD								as viewStrCd, 
+		A.STR_NM									as strNm, 	
+		ROUND(A.CONT_DEMAND_POWER/1000,0)			as contDemandPower,
+		fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD)	as orgFullNm,
+		A.ORG_CD									as orgCd,		
+		if( A.USE_YN = "Y","사용","미사용")			as useYn,
+		DATE_FORMAT(A.REMS_START_DT, '%Y-%m-%d')	as remsStartDt, 
+		B.VENDOR_CD									as vendorCd, 
+		B2.VENDOR_Nm								as vendorNm, 
+		C.ELECTRICENT_CD							as electricCd,
+		C2.ELECTRICENT_NM							as electricNm,
+		A.ADDR										as addr,
+		A.TEL_NO									as telNo,
+		CASE WHEN (LENGTH(TEL_NO) - LENGTH(REPLACE(TEL_NO, '-', ''))) / LENGTH('-') = 2
+        	THEN SUBSTRING_INDEX(TEL_NO, '-', 1)
+        ELSE ''	END telNo1,
+    	CASE WHEN (LENGTH(TEL_NO) - LENGTH(REPLACE(TEL_NO, '-', ''))) / LENGTH('-') = 2
+	        THEN SUBSTRING_INDEX(SUBSTRING_INDEX(TEL_NO, '-', 2), '-', -1)
+        ELSE ''	END telNo2,
+    	CASE WHEN (LENGTH(TEL_NO) - LENGTH(REPLACE(TEL_NO, '-', ''))) / LENGTH('-') = 2
+	        THEN SUBSTRING_INDEX(TEL_NO, '-', -1)
+        ELSE ''	END telNo3,
+        A.STR_AREA_SPEC								as strAreaSpec
+	FROM
+		th_str_info_mst A
+		LEFT JOIN
+		th_vendor_str_map B
+		ON
+		A.STR_CD = B.STR_CD
+		LEFT JOIN
+		th_vendor_mst B2
+		ON
+		B.VENDOR_CD = B2.VENDOR_CD
+		LEFT JOIN
+		th_electricent_str_map C
+		ON
+		A.STR_CD = C.STR_CD
+		LEFT JOIN
+		th_electricent_mst C2
+		ON
+		C.ELECTRICENT_CD = C2.ELECTRICENT_CD
+	WHERE
+		A.COMPANY_CD = #{companyCd}
+		AND
+		A.REMS_START_DT >= #{dateFrom} AND A.REMS_START_DT <= #{dateTo}
+	]]>
+	    <if test="useYn != null and useYn != ''">
+		   		AND A.USE_YN	= #{useYn}
+		</if>		
+		<if test="strNm != null and strNm != ''">
+  				AND (  						
+	        			INSTR(A.STR_NM, #{strNm}) > 0 
+	        			OR 
+	        			INSTR(A.VIEW_STR_CD, #{strNm}) > 0
+        			)   				
+		</if>
+		<if test="orgCd != null and orgCd != ''">
+  				AND A.ORG_CD	= #{orgCd}
+		</if>	
+	<![CDATA[
+	ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	
+	<!-- 매장관리 상세 -->
+	<select id="retrieveRemsStoreMgntDtl" parameterType="Map" resultType="GridStoreMgntVo">
+	<![CDATA[
+		SELECT SIM.STR_CD             AS strCd          
+		     , SIM.STR_NM             AS strNm          
+		     , SIM.VIEW_STR_CD        AS viewStrCd      
+		     , SIM.LOCAL_AREA_CD      AS localAreaCd  
+		     , TRIM( CONCAT( ARM.AREA_NM
+                       , ' '
+                       , ARM.CITY_NM
+                       , ' '
+                       , ARM.DONG_NM
+                       )
+               )                   	  AS localAreaNm
+		     , SIM.ADDR               AS addr  
+	         , SIM.COMPANY_CD         AS companyCd  
+	         , TCM.COMPANY_NM		  AS companyNm
+	         , SIM.ORG_CD             AS orgCd
+	         , ROUND(SIM.CONT_DEMAND_POWER)  AS oldContDemandPower
+		     , ROUND(SIM.CONT_DEMAND_POWER)  AS contDemandPower		    
+		     , SIM.STR_AREA_SPEC      AS strAreaSpec    
+		     , SIM.STR_DIREC_CD       AS strDirecCd     		  
+		     , SIM.TEL_NO             AS telNo,
+		     CASE WHEN (LENGTH(SIM.TEL_NO) - LENGTH(REPLACE(SIM.TEL_NO, '-', ''))) / LENGTH('-') = 2
+		        	THEN SUBSTRING_INDEX(SIM.TEL_NO, '-', 1)
+		        ELSE ''	END telNo1,
+		    	CASE WHEN (LENGTH(SIM.TEL_NO) - LENGTH(REPLACE(SIM.TEL_NO, '-', ''))) / LENGTH('-') = 2
+			        THEN SUBSTRING_INDEX(SUBSTRING_INDEX(SIM.TEL_NO, '-', 2), '-', -1)
+		        ELSE ''	END telNo2,
+		    	CASE WHEN (LENGTH(SIM.TEL_NO) - LENGTH(REPLACE(SIM.TEL_NO, '-', ''))) / LENGTH('-') = 2
+			        THEN SUBSTRING_INDEX(SIM.TEL_NO, '-', -1)
+		        ELSE ''	END telNo3	               		   
+		     , SIM.REMS_START_DT      AS remsStartDt    
+		     , SIM.REMS_END_DT        AS remsEndDt  
+	         , SIM.USE_YN             AS useYn
+	         , SIM.TIME_DIFF          AS timeDiff         
+		     , SIM.STR_AREA_TYPE_CD   AS strAreaTypeCd
+		     , SIM.REGI_ID            AS regiId         
+		     , SIM.REGI_DTTM          AS regiDttm       
+		     , SIM.FINAL_MOD_ID       AS finalModId     
+		     , SIM.FINAL_MOD_DTTM     AS finalModDttm   
+		     , fnGetOrgFullName(SIM.COMPANY_CD, SIM.ORG_CD) AS orgNm      		    
+		  FROM th_str_info_mst SIM
+	      LEFT OUTER JOIN th_area_mst ARM
+	      ON SIM.LOCAL_AREA_CD = ARM.LOCAL_AREA_CD
+	      LEFT OUTER JOIN th_company_mst TCM
+	      ON SIM.COMPANY_CD =  TCM.COMPANY_CD
+	            
+		 WHERE SIM.STR_CD		= #{strCd}
+		 AND SIM.VIEW_STR_CD	= #{viewStrCd}
+		 LIMIT 1
+	]]>
+	
+	</select>
+	
+	<!-- 시스템 매장코드 최대값 가져오기 -->
+	<select id="getMaxStrCd" parameterType="Map"  resultType="String">
+	<![CDATA[		
+		
+		SELECT IFNULL( 
+			CONCAT(
+				( SELECT COMPANY_STR_CD FROM TH_COMPANY_MST WHERE COMPANY_CD = #{companyCd}), 
+					LPAD(MAX(CAST(SUBSTR(STR_CD,4,6) AS UNSIGNED)+1),6,'0') )
+				, 
+			CONCAT(	
+				( SELECT COMPANY_STR_CD FROM TH_COMPANY_MST WHERE COMPANY_CD = #{companyCd}), 
+					LPAD(0+1,6,'0') )            
+				)
+            as strCd
+		FROM TH_STR_INFO_MST WHERE COMPANY_CD = #{companyCd}	
+	]]>	
+	</select>
+	<!--  	SELECT
+	   			  CONCAT(( SELECT COMPANY_STR_CD FROM TH_COMPANY_MST WHERE COMPANY_CD = #{companyCd}), LPAD(MAX(CAST(SUBSTR(STR_CD,4,6) AS UNSIGNED)+1),6,'0') ) AS strCd
+ 		 FROM TH_STR_INFO_MST
+ 	   WHERE COMPANY_CD = #{companyCd} -->
+	
+	<!-- 매장코드(viewStrCd) 가져오기 -->
+	<select id="getViewStrCd" parameterType="Map" resultType="int">
+	<![CDATA[
+		SELECT count(*)
+		FROM th_str_info_mst
+		WHERE VIEW_STR_CD = UPPER(#{viewStrCd})
+	]]>	
+	</select>
+
+	<!-- 최초 등록시 REMS END DT를 NULL 로 기입 -->	
+	<update id="saveRemsStoreMgnt_init" parameterType="GridStoreMgntVo">
+		INSERT INTO th_str_info_mst SET
+		       COMPANY_CD 				= #{companyCd}
+		     , STR_CD 					= #{strCd}
+		     , STR_NM 					= #{strNm}
+	     	 , VIEW_STR_CD 				= #{viewStrCd}
+		     , LOCAL_AREA_CD 			= #{localAreaCd}
+		     , ADDR 					= #{addr}
+		     , TEL_NO 					= #{telNo}
+		     , ORG_CD 					= #{orgCd}
+		     , OLD_CONT_DEMAND_POWER 	= #{oldContDemandPower}
+		     , CONT_DEMAND_POWER 		= #{contDemandPower}
+		     , STR_AREA_SPEC 			= #{strAreaSpec}
+		     , STR_DIREC_CD 			= '1'
+		     , REMS_START_DT 			= #{remsStartDt}
+		     , REMS_END_DT 				= null
+		     , USE_YN 					= #{useYn}
+		     , TIME_DIFF				= '0'
+		     , REGI_ID 					= #{regiId}
+		     , REGI_DTTM 				= now()
+		     , FINAL_MOD_ID 			= #{finalModId}
+		     , FINAL_MOD_DTTM 			= now()	    
+		ON DUPLICATE KEY
+		      UPDATE LOCAL_AREA_CD      	= #{localAreaCd}
+		           , COMPANY_CD         	= #{companyCd}
+		           , STR_NM             	= #{strNm}
+		           , ADDR               	= #{addr}
+		           , VIEW_STR_CD        	= #{viewStrCd}
+		           , TEL_NO             	= #{telNo}
+		           , ORG_CD             	= #{orgCd}
+		           , OLD_CONT_DEMAND_POWER  = #{oldContDemandPower}
+		           , CONT_DEMAND_POWER  	= #{contDemandPower}
+		           , STR_AREA_SPEC      	= #{strAreaSpec}
+		           , STR_DIREC_CD       	= #{strDirecCd}
+		           , REMS_START_DT      	= #{remsStartDt}	
+		           , REMS_END_DT 			= null	           
+		           , USE_YN					= #{useYn}
+		           , TIME_DIFF				= '0'	
+		           , FINAL_MOD_ID       	= #{finalModId}
+		           , FINAL_MOD_DTTM     	= now()
+	</update>
+	
+	
+	
+	
+	<!-- 업데이트 할때 -->
+	<update id="saveRemsStoreMgnt" parameterType="GridStoreMgntVo">
+		INSERT INTO th_str_info_mst
+		     ( COMPANY_CD
+		     , STR_CD
+		     , STR_NM
+		     , VIEW_STR_CD
+		     , LOCAL_AREA_CD
+		     , ADDR
+		     , TEL_NO
+		     , ORG_CD
+		     , OLD_CONT_DEMAND_POWER
+		     , CONT_DEMAND_POWER
+		     , STR_AREA_SPEC
+		     , STR_DIREC_CD
+		     , REMS_START_DT
+		     , REMS_END_DT
+		     , USE_YN
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES( #{companyCd}
+		      , #{strCd}
+		      , #{strNm}
+		      , #{viewStrCd}
+		      , #{localAreaCd}
+		      , #{addr}
+		      , #{telNo}
+		      , #{orgCd}
+		      , #{oldContDemandPower}
+		      , #{contDemandPower}
+		      , #{strAreaSpec}
+		      , #{strDirecCd}
+		      , #{remsStartDt}
+		      , #{remsEndDt}
+		      , #{useYn}
+		      , #{regiId}
+		      , now()
+		      , #{finalModId}
+		      , now()
+		      )
+		ON DUPLICATE KEY
+		      UPDATE LOCAL_AREA_CD      	= #{localAreaCd}
+		           , COMPANY_CD         	= #{companyCd}
+		           , STR_NM             	= #{strNm}
+		           , ADDR               	= #{addr}
+		           , VIEW_STR_CD        	= #{viewStrCd}
+		           , TEL_NO             	= #{telNo}
+		           , ORG_CD             	= #{orgCd}
+		           , OLD_CONT_DEMAND_POWER  = #{oldContDemandPower}
+		           , CONT_DEMAND_POWER  	= #{contDemandPower}
+		           , STR_AREA_SPEC      	= #{strAreaSpec}
+		           , STR_DIREC_CD       	= #{strDirecCd}
+		           , REMS_START_DT      	= #{remsStartDt}
+		           , REMS_END_DT        	= #{remsEndDt}
+		           , USE_YN					= #{useYn}	
+		           , FINAL_MOD_ID       	= #{finalModId}
+		           , FINAL_MOD_DTTM     	= now()
+	</update>
+	
+	<!-- 간판 수동 제어 관련 정보 등록 -->	
+	<update id="saveSignManualCtrlInfo_init" parameterType="GridStoreMgntVo">
+		INSERT INTO th_str_sign_manual_ctrl_info
+		     ( STR_CD
+		     , USE_YN
+		     , SIGN_ON_TIME
+		     , SIGN_OFF_TIME
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES( #{strCd}
+		      , '0'
+		      , '00:00'
+		      , '00:00'
+		      , #{regiId}
+		      , now()
+		      , #{finalModId}
+		      , now()
+		      )
+		ON DUPLICATE KEY
+		      UPDATE USE_YN					= '0'	
+		           , FINAL_MOD_ID       	= #{finalModId}
+		           , FINAL_MOD_DTTM     	= now()
+	</update>	
+	
+	<!-- 간판 수동 제어 관련 정보 삭제 -->	
+	<delete id="delSignManualCtrlInfo" parameterType="Map">
+		delete from 
+			th_str_sign_manual_ctrl_info 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+	
+	
+	<!-- 지우기 -->
+	<delete id="delRemsStoreMgnt" parameterType="Map">
+		delete from 
+			th_str_info_mst 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+
+	<select id="retrieveExcelRemsStoreList" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+	SELECT
+		A.VIEW_STR_CD								as viewStrCd, 
+		A.STR_NM									as strNm, 	
+		fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD) AS orgNm,
+		ROUND(A.CONT_DEMAND_POWER,0)				as contDemandPower,
+		if( A.USE_YN = "Y","사용","미사용")			as useYn,
+		DATE_FORMAT(A.REMS_START_DT, '%Y-%m-%d')	as remsStartDt, 
+		B2.VENDOR_Nm								as vendorNm, 
+		C2.ELECTRICENT_NM							as electricNm,
+		A.ADDR										as addr,
+		A.TEL_NO									as telNo,
+		CASE WHEN (LENGTH(TEL_NO) - LENGTH(REPLACE(TEL_NO, '-', ''))) / LENGTH('-') = 2
+        	THEN SUBSTRING_INDEX(TEL_NO, '-', 1)
+        ELSE ''	END telNo1,
+    	CASE WHEN (LENGTH(TEL_NO) - LENGTH(REPLACE(TEL_NO, '-', ''))) / LENGTH('-') = 2
+	        THEN SUBSTRING_INDEX(SUBSTRING_INDEX(TEL_NO, '-', 2), '-', -1)
+        ELSE ''	END telNo2,
+    	CASE WHEN (LENGTH(TEL_NO) - LENGTH(REPLACE(TEL_NO, '-', ''))) / LENGTH('-') = 2
+	        THEN SUBSTRING_INDEX(TEL_NO, '-', -1)
+        ELSE ''	END telNo3,
+        A.STR_AREA_SPEC								as strAreaSpec
+	FROM
+		th_str_info_mst A
+		LEFT JOIN
+		th_vendor_str_map B
+		ON
+		A.STR_CD = B.STR_CD
+		LEFT JOIN
+		th_vendor_mst B2
+		ON
+		B.VENDOR_CD = B2.VENDOR_CD
+		LEFT JOIN
+		th_electricent_str_map C
+		ON
+		A.STR_CD = C.STR_CD
+		LEFT JOIN
+		th_electricent_mst C2
+		ON
+		C.ELECTRICENT_CD = C2.ELECTRICENT_CD
+	WHERE
+		A.COMPANY_CD = #{companyCd}
+		AND
+		A.REMS_START_DT >= #{dateFrom} AND A.REMS_START_DT <= #{dateTo}
+	]]>
+	    <if test="useYn != null and useYn != ''">
+		   		AND A.USE_YN	= #{useYn}
+		</if>		
+		<if test="strNm != null and strNm != ''">
+  				AND (  						
+	        			INSTR(A.STR_NM, #{strNm}) > 0 
+	        			OR 
+	        			INSTR(A.VIEW_STR_CD, #{strNm}) > 0
+        			)   				
+		</if>
+		<if test="orgCd != null and orgCd != ''">
+  				AND A.ORG_CD	= #{orgCd}
+		</if>	
+	</select>
+	
+	<update id="updateEnvConfMst" parameterType="Map">
+		UPDATE TH_STR_ENV_CONF_MST
+			SET
+				STR_CONF_VAL = 		#{confVal},
+				FINAL_MOD_ID = 		#{finalModId},
+				FINAL_MOD_DTTM = 	now()
+			WHERE
+				STR_CD = #{strCd}
+			AND
+				CONF_SP = #{confSp}
+	</update>
+</mapper>

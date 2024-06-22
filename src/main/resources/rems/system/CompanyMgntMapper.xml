@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.CompanyMgntMapper">
+
+	<select id="retrieveRemsCompanyList" parameterType="Map" resultType="GridCompanyMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+        <![CDATA[
+        SELECT 
+                   A.COMPANY_CD AS companyCd 
+                 , A.COMPANY_NM AS companyNm
+                 , A.COMPANY_STR_CD as companyStrCd
+                 , A.COUNTRY_CD as countryCd
+                 , C.COMM_CD_NM AS countryNm
+                 , A.USE_YN AS useYn
+                 , A.FINAL_MOD_ID as FinalModId
+                 , B.USER_NM AS finalModUserNm
+                 , A.FINAL_MOD_DTTM AS finalModDttm
+          FROM TH_COMPANY_MST A, TH_USER_MST B, TH_COMM_CD C
+        WHERE A.FINAL_MOD_ID = B.USER_ID
+            AND C.COMM_CD = A.COUNTRY_CD
+            AND C.COMM_GRP_CD = 'CNTRY' 
+     ]]>
+    <if test="useYn != null or useYn != ''" >
+        <![CDATA[
+        AND A.USE_YN = #{useYn}
+        ]]>
+    </if>
+            
+        <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+	<select id="retrieveRemsCompanyMgntDtl" parameterType="Map" resultType="GridCompanyMgntVo">
+
+        SELECT 
+                   A.COMPANY_CD AS companyCd 
+                 , A.COMPANY_NM AS companyNm
+                 , A.COMPANY_STR_CD as companyStrCd
+                 , A.COUNTRY_CD as countryCd
+                 , A.USE_YN AS useYn
+                 , A.FINAL_MOD_ID as FinalModId
+                 , B.USER_NM AS finalModNm
+                 , A.FINAL_MOD_DTTM AS finalModDttm
+          FROM TH_COMPANY_MST A, TH_USER_MST B
+        WHERE A.FINAL_MOD_ID = B.USER_ID
+            AND A.COMPANY_CD = #{companyCd}
+ 
+    </select>
+
+	<update id="saveRemsCompanyMgnt" parameterType="GridCompanyMgntVo">
+        INSERT INTO TH_COMPANY_MST
+            (
+               COMPANY_CD
+             , COMPANY_NM
+             , COMPANY_STR_CD
+             , COUNTRY_CD
+             , USE_YN   
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               upper(#{companyCd})
+             , #{companyNm}
+             , upper(#{companyStrCd})
+             , #{countryCd}
+             , #{useYn}
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  COMPANY_NM        = #{companyNm}
+                                , COUNTRY_CD         = #{countryCd}
+                                , USE_YN                = #{useYn}
+                                , FINAL_MOD_ID       = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+
+	</update>
+
+	<update id="deleteRemsCompanyMgnt" parameterType="GridCompanyMgntVo">
+        UPDATE TH_COMPANY_MST
+             SET USE_YN               = 'N'
+                 , FINAL_MOD_ID      = #{finalModId}
+                 , FINAL_MOD_DTTM = now()
+         WHERE COMPANY_CD       = #{companyCd}
+
+	</update>
+
+	<select id="retrieveCountryList" parameterType="String" resultType="SelectVo">
+       SELECT
+                   COMM_CD AS name
+                 , COMM_CD_NM AS value
+          FROM TH_COMM_CD
+        WHERE COMM_GRP_CD = 'CNTRY'
+          
+    </select>
+    
+	<select id="checkCompanyCd" parameterType="String" resultType="int">
+       SELECT 
+                   COUNT(*)
+          FROM TH_COMPANY_MST
+         WHERE COMPANY_CD = #{companyCd}
+                   
+    </select>
+    
+	<select id="checkCompanyStrCd" parameterType="String" resultType="int">
+       SELECT
+                   COUNT(*)
+          FROM TH_COMPANY_MST
+         WHERE COMPANY_STR_CD = #{companyStrCd}
+                   
+    </select>
+
+	
+</mapper>

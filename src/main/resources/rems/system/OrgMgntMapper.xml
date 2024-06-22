@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.OrgMgntMapper">
+	
+	<!-- 조직 목록 -->
+    <select id="retrieveOrgList" parameterType="Map" resultType="Map">
+    <![CDATA[
+		SELECT 
+      		ORG_CD		AS orgCd, 
+      		ORG_NM		AS orgNm, 
+      		ORG_TYPE	AS orgType, 
+       		INDEX_HIER	AS indexHier, 
+			USE_YN		AS useYn 
+      	FROM 
+      		TH_COMPANY_ORG_MST 
+      	WHERE 1 = 1 
+      		AND COMPANY_CD = #{companyCd} 
+      	ORDER BY indexHier
+	]]>
+    </select>
+    
+    <!-- 조직 삭제 -->
+    <delete id="deleteOrgBatch" parameterType="map">
+    <![CDATA[
+		DELETE 
+		FROM 
+			TH_COMPANY_ORG_MST 
+		WHERE 1 = 1 
+			AND COMPANY_CD = #{companyCd} 
+			AND ORG_CD IN 
+	]]>
+        <foreach item="orgCd" index="index" collection="list" open="(" separator="," close=")">
+            #{orgCd}
+        </foreach>
+    </delete>
+    
+     <!-- 매장 삭제(삭제된 조직코드를 매장에서 null) -->
+    <update id="updateOrgCdNullStrMgnt" parameterType="Map">
+    <![CDATA[
+		UPDATE 
+			TH_STR_INFO_MST 
+		SET 
+			ORG_CD			= NULL, 
+			FINAL_MOD_ID	= #{finalModId}, 
+			FINAL_MOD_DTTM	= NOW() 
+		WHERE 1 = 1 
+			AND COMPANY_CD= #{companyCd} 
+			AND ORG_CD IN 
+	]]>
+		<foreach item="orgCd" index="index" collection="list" open="(" separator="," close=")">
+            #{orgCd}
+        </foreach>
+    </update>
+    
+    <!-- 조직 수정 -->
+    <update id="updateOrgBatch" parameterType="map">
+    <![CDATA[
+		INSERT INTO 
+			TH_COMPANY_ORG_MST 
+		(
+			COMPANY_CD, 
+			ORG_CD, 
+			ORG_NM, 
+			ORG_TYPE, 
+			INDEX_HIER, 
+			USE_YN, 
+			FINAL_MOD_ID, 
+			FINAL_MOD_DTTM			
+		) VALUES 
+	]]>	
+	<foreach item="org" index="index" collection="list" open="" separator="," close="">
+        (
+        	#{companyCd}, 
+        	#{org.orgCd}, 
+        	#{org.orgNm}, 
+        	#{org.orgType}, 
+        	#{org.indexHier}, 
+        	#{org.useYn}, 
+        	#{finalModId}, 
+        	NOW()
+        )
+    </foreach>
+    <![CDATA[
+		ON DUPLICATE KEY 
+		UPDATE 
+			ORG_NM        	= VALUES(ORG_NM), 
+          	ORG_TYPE      	= VALUES(ORG_TYPE),
+          	INDEX_HIER     	= VALUES(INDEX_HIER),
+          	USE_YN         	= VALUES(USE_YN),
+          	FINAL_MOD_ID   	= VALUES(FINAL_MOD_ID),
+          	FINAL_MOD_DTTM	= VALUES(FINAL_MOD_DTTM)
+	]]>
+    </update>    
+    
+    <!-- 조직 등록 -->
+	<insert id="insertOrgBatch" parameterType="map">
+	<![CDATA[
+		INSERT INTO 
+			TH_COMPANY_ORG_MST 
+		(
+			COMPANY_CD, 
+			ORG_CD, 
+			ORG_NM, 
+			ORG_TYPE, 
+			INDEX_HIER, 
+			USE_YN, 
+			REGI_ID, 
+			REGI_DTTM, 
+			FINAL_MOD_ID, 
+			FINAL_MOD_DTTM			
+		) VALUES 	
+	]]>
+	<foreach item="org" index="index" collection="list" open="" separator="," close="">
+		(
+        	#{companyCd}, 
+        	(
+        		SELECT 
+        			B.cnt 
+        		FROM 
+		        	(
+		        		SELECT 
+		        			IFNULL(MAX(A.ORG_CD), 0) + 1 AS cnt
+		        		FROM 
+		        			TH_COMPANY_ORG_MST A 
+		        		WHERE 1 = 1 
+		        			AND A.COMPANY_CD = #{companyCd}
+					) B
+			), 
+        	#{org.orgNm}, 
+        	#{org.orgType}, 
+        	#{org.indexHier}, 
+        	#{org.useYn}, 
+        	#{regiId}, 
+        	NOW(), 
+        	#{finalModId}, 
+        	NOW()
+        )
+	</foreach>
+    </insert>
+    
+    <!-- 매장 목록 -->
+    <select id="retrieveStrList" parameterType="Map" resultType="Map">
+    <![CDATA[
+		SELECT 
+			TEMP.* 
+		FROM 
+			(
+				SELECT 
+					TEMP.*, 
+					@n := @n+1 as records 
+				FROM 
+					(
+						SELECT 
+				    		STR_CD		AS strCd, 
+				    		STR_NM		AS strNm, 
+				    		VIEW_STR_CD	AS viewStrCd, 
+				    		ADDR		AS addr, 
+				    		TEL_NO		AS telNo 
+				    	FROM 
+				    		TH_STR_INFO_MST 
+				    	WHERE 1 = 1 
+				    		AND COMPANY_CD  = #{companyCd} 
+				    		AND ORG_CD = #{orgCd}  
+				    	ORDER BY ${sidx} ${sord}
+					) TEMP, 
+					(
+						SELECT 
+							@n:=0
+					) r 
+			) TEMP
+	]]>
+    </select>
+    
+    <!-- 매장에 조직코드 저장 -->
+    <update id="updateStrMgntOrgCd" parameterType="Map">
+    <![CDATA[
+		UPDATE 
+			TH_STR_INFO_MST 
+		SET 
+			ORG_CD			= ${orgCd}, 
+			FINAL_MOD_ID	= #{finalModId}, 
+			FINAL_MOD_DTTM	= NOW() 
+		WHERE 1 = 1 
+			AND COMPANY_CD= #{companyCd} 
+			AND STR_CD = #{strCd}
+	]]>
+    </update>
+    
+    <!-- 매장 삭제(매장에서 조직코드 null) -->
+    <update id="updateStrMgntOrgCdNull" parameterType="Map">
+    <![CDATA[
+		UPDATE 
+			TH_STR_INFO_MST 
+		SET 
+			ORG_CD			= NULL, 
+			FINAL_MOD_ID	= #{finalModId}, 
+			FINAL_MOD_DTTM	= NOW() 
+		WHERE 1 = 1 
+			AND COMPANY_CD= #{companyCd} 
+			AND STR_CD IN 
+	]]>		
+			<foreach item="item" index="index" collection="strCd" open="(" close=")" separator=",">
+				#{item} 
+			</foreach>
+    </update>
+    
+	<select id="searchOrgCd" parameterType="Map" resultType="GridOrgMgntVo">
+    <![CDATA[
+    	SELECT 
+    		ORG_CD AS orgCd,
+			ORG_NM AS orgNm,
+			SEQ AS seq,
+			USE_YN AS useYn
+    	FROM 
+    		TH_COMPANY_ORG_MST
+    	WHERE 
+    		COMPANY_CD = #{companyCd} 
+			AND ORG_CD = #{orgCd} 
+	]]>
+    </select>
+    
+    <update id="deleteOrgMgnt" parameterType="Map">
+    <![CDATA[
+   		UPDATE TH_COMPANY_ORG_MST
+   		   SET USE_YN = 'N'
+   		 WHERE COMPANY_CD= #{companyCd}
+   		   AND ORG_CD = #{orgCd}
+   	]]>
+    </update>
+</mapper>

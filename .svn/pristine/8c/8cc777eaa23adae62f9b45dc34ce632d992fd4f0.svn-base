@@ -1,0 +1,319 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* Main Component
+---------------------------------------------------------*/
+/* Alarm Area */
+.r_alarmArea {width:auto; height:221px; background:#f2f4f6; padding:20px 20px 0 20px;}
+
+/* Main Title */
+h1.r_mainTitle {font-family:"LG Smart_H"; font-weight:300; font-size:18px; color:#a50034; margin-bottom:20px; background:url(../images/ico_dashboard.png) no-repeat left top; padding-left:23px;}
+
+/* 적용현황 */
+.r_alarmStatus {width:33%; height:156px; border-right:1px solid #dde1e2; font-family:"Nanum Gothic", sans-serif; float:left; margin-bottom:25px;}
+.r_alarmStatus .r_wrapper_1 {padding:0 20px;}
+.r_alarmStatus h2 {font-family:"LG Smart_H"; font-size:15px; font-weight:500; color:#4e4e4e; margin-bottom:21px;}
+
+.r_alarmStatus .chartSample_1 {width:120px; height:120px; float:left;}
+.r_alarmStatus .chartSample_1 img {position:absolute; z-index:1;}
+.r_alarmStatus .chartSample_1 div {width:120px; position:absolute; z-index:10; color:#363636; text-align:center;}
+.r_alarmStatus .chartSample_1 div span {display:block;}
+.r_alarmStatus .chartSample_1 div span.r_number {font-family:"LG Smart_H"; font-size:40px; font-weight:300; margin-top:30px;}
+.r_alarmStatus .chartSample_1 div span.r_title {font-size:14px;}
+
+.r_alarmStatus .chartSample_2 {width:55%;height:120px; float:right;}
+.r_alarmStatus .chartSample_2 .data_1 {width:100%; height:30px; margin-bottom:14px;}
+.r_alarmStatus .chartSample_2 .data_1 img {display:inline-block; width:30px; margin-right:8px;}
+.r_alarmStatus .chartSample_2 .data_1 span.r_title {display:inline-block; font-size:14px; color:555555; vertical-align:top; margin-top:6px;}
+.r_alarmStatus .chartSample_2 .data_1 span.r_number {font-family:"LG Smart_H"; display:inline-block; float:right; text-align:right; font-size:28px; color:#81aec5; margin-right:10px; font-weight:300;}
+.r_alarmStatus .chartSample_2 .data_2 {width:100%; height:30px; margin-bottom:14px;}
+.r_alarmStatus .chartSample_2 .data_2 span.r_title {display:inline-block; font-size:14px; color:555555; vertical-align:top; margin-top:6px;}
+.r_alarmStatus .chartSample_2 .data_2 span.r_number {font-family:"LG Smart_H"; display:inline-block; float:right; text-align:right; font-size:28px; color:#777777; margin-right:10px; font-weight:300;}
+.r_alarmStatus .chartSample_2 .data_2 img {display:inline-block; width:30px; margin-right:8px;}
+.r_alarmStatus .chartSample_2 .data_3 {width:100%; height:30px;}
+.r_alarmStatus .chartSample_2 .data_3 span.r_title {display:inline-block; font-size:14px; color:555555; vertical-align:top; margin-top:6px;}
+.r_alarmStatus .chartSample_2 .data_3 span.r_number {font-family:"LG Smart_H"; display:inline-block; float:right; text-align:right; font-size:28px; color:#d80546; margin-right:10px; font-weight:300;}
+.r_alarmStatus .chartSample_2 .data_3 img {display:inline-block; width:30px; margin-right:8px;}
+
+/* 시설물 알람 발생 매장 */
+.r_alarmDevice {width:40%; height:156px; border-right:1px solid #dde1e2; font-family:"Nanum Gothic", sans-serif; float:left; margin-bottom:25px;}
+.r_alarmDevice .r_wrapper_1 {padding:0 20px;}
+.r_alarmDevice h2 {font-family:"LG Smart_H"; font-size:15px; font-weight:500; color:#4e4e4e; margin-bottom:21px; display:inline-block;}
+.r_alarmDevice a.r_mainMore {display:inline-block; width:14px; height:14px; background:url(../images/btn_mainMore.png) no-repeat; float:right;}
+.r_alarmDevice a:hover.r_mainMore {background:url(../images/btn_mainMore_on.png) no-repeat;}
+.r_alarmDevice a.r_mainMore span {display:none;}
+.r_alarmDevice .alarmWrapper {width:100%; height:120px; text-align:center;}
+.r_alarmDevice .alarmWrapper .yesterday {display:inline-block; width:29%; height:112px; background-color:#8c98a4; color:#ffffff; margin-right:12px;}
+.r_alarmDevice .alarmWrapper .yesterday span.r_number {display:inline-block; width:100%; font-family:"LG Smart_H"; font-size:60px; font-weight:300; text-align:center; margin-top:14px; text-shadow:0 1px #7f8a95;}
+.r_alarmDevice .alarmWrapper .yesterday span.r_title {display:inline-block; width:100%; font-size:14px; text-align:center; margin-top:2px;}
+.r_alarmDevice .alarmWrapper .today {display:inline-block; width:29%; height:112px; background-color:#353942; color:#ffffff; margin-right:12px;}
+.r_alarmDevice .alarmWrapper .today span.r_number {display:inline-block; width:100%; font-family:"LG Smart_H"; font-size:60px; font-weight:300; text-align:center; margin-top:14px; text-shadow:0 1px #2e3239;}
+.r_alarmDevice .alarmWrapper .today span.r_title {display:inline-block; width:100%; font-size:14px; text-align:center; margin-top:2px;}
+.r_alarmDevice .alarmWrapper .hour {display:inline-block; width:29%; height:112px; background-color:#5c94b0; color:#ffffff;}
+.r_alarmDevice .alarmWrapper .hour span.r_number {display:inline-block; width:100%; font-family:"LG Smart_H"; font-size:60px; font-weight:300; text-align:center; margin-top:14px; text-shadow:0 1px #53869f;}
+.r_alarmDevice .alarmWrapper .hour span.r_title {display:inline-block; width:100%; font-size:14px; text-align:center; margin-top:2px;}
+
+/* 피크 알람 발생 매장 */
+.r_alarmPeak {width:26.5%; height:156px; font-family:"Nanum Gothic", sans-serif; float:left; margin-bottom:25px;}
+.r_alarmPeak .r_wrapper_1 {padding:0 0 0 20px;}
+.r_alarmPeak h2 {font-family:"LG Smart_H"; font-size:15px; font-weight:500; color:#4e4e4e; margin-bottom:21px; display:inline-block;}
+.r_alarmPeak a.r_mainMore {display:inline-block; width:14px; height:14px; background:url(../images/btn_mainMore.png) no-repeat; float:right; margin-right:15px;}
+.r_alarmPeak a:hover.r_mainMore {background:url(../images/btn_mainMore_on.png) no-repeat;}
+.r_alarmPeak a.r_mainMore span {display:none;}
+.r_alarmPeak .alarmWrapper {width:100%; height:120px; text-align:center;}
+.r_alarmPeak .alarmWrapper .yesterday {display:inline-block; width:43%; height:112px; background-color:#8c98a4; color:#ffffff; margin-right:12px;}
+.r_alarmPeak .alarmWrapper .yesterday span.r_number {display:inline-block; width:100%; font-family:"LG Smart_H"; font-size:60px; font-weight:300; text-align:center; margin-top:14px; text-shadow:0 1px #7f8a95;}
+.r_alarmPeak .alarmWrapper .yesterday span.r_title {display:inline-block; width:100%; font-size:14px; text-align:center; margin-top:2px;}
+.r_alarmPeak .alarmWrapper .today {display:inline-block; width:43%; height:112px; background-color:#353942; color:#ffffff;}
+.r_alarmPeak .alarmWrapper .today span.r_number {display:inline-block; width:100%; font-family:"LG Smart_H"; font-size:60px; font-weight:300; text-align:center; margin-top:14px; text-shadow:0 1px #2e3239;}
+.r_alarmPeak .alarmWrapper .today span.r_title {display:inline-block; width:100%; font-size:14px; text-align:center; margin-top:2px;}
+
+/* Chart Area */
+.r_chartArea {padding:20px 20px 20px 230px;}
+
+/* 월별사용 전력량 */
+.r_monthlyUsage {background:#ffffff; width:65%; height:425px; float:left;}
+.r_monthlyUsage .r_wrapper_1 {padding:19px 20px;}
+.r_monthlyUsage h2 {font-family:"LG Smart_H"; font-weight:500; color:#4e4e4e; font-size:15px; display:inline-block; margin-bottom:20px;}
+.r_monthlyUsage a.r_mainMore {display:inline-block; width:14px; height:14px; background:url(../images/btn_mainMore_1.png) no-repeat; float:right;}
+.r_monthlyUsage a.r_mainMore span {display:none;}
+.r_monthlyUsage a:hover.r_mainMore {background:url(../images/btn_mainMore_on.png) no-repeat;}
+.r_monthlyUsage .r_content {text-align:center;}
+
+/* 어제오늘 사용량 */
+.r_todayUsage {background:#ffffff; width:33%; height:202px; float:right; margin-bottom:20px;}
+.r_todayUsage .r_wrapper_1 {padding:19px 20px;}
+.r_todayUsage h2 {font-family:"LG Smart_H"; font-weight:500; color:#4e4e4e; font-size:15px; display:inline-block; margin-bottom:20px;}
+.r_todayUsage a.r_mainMore {display:inline-block; width:14px; height:14px; background:url(../images/btn_mainMore_1.png) no-repeat; float:right;}
+.r_todayUsage a.r_mainMore span {display:none;}
+.r_todayUsage a:hover.r_mainMore {background:url(../images/btn_mainMore_on.png) no-repeat;}
+.r_todayUsage .r_content {text-align:center;}
+
+/* CO2 사용량 */
+.r_co2Usage {background:#ffffff; width:33%; height:203px; float:right;}
+.r_co2Usage .r_wrapper_1 {padding:19px 20px;}
+.r_co2Usage h2 {font-family:"LG Smart_H"; font-weight:500; color:#4e4e4e; font-size:15px; display:inline-block; margin-bottom:20px;}
+.r_co2Usage a.r_mainMore {display:inline-block; width:14px; height:14px; background:url(../images/btn_mainMore_1.png) no-repeat; float:right;}
+.r_co2Usage a.r_mainMore span {display:none;}
+.r_co2Usage a:hover.r_mainMore {background:url(../images/btn_mainMore_on.png) no-repeat;}
+.r_co2Usage .r_content {text-align:center;}
+
+
+
+/* Page Component
+---------------------------------------------------------*/
+/* Page Title */
+h1.r_pageTitle {font-family:"LG Smart_H"; font-weight:normal; font-size:18px; color:#a50034; margin-bottom:20px;}
+
+/* Page Navigation */
+.pageNav {font-family:"LG Smart_H"; font-weight:normal; display:inline-block; font-size:12px; position:absolute; top:23px; right:20px;}
+.pageNav a {color:#6c6c75;}
+.pageNav a:hover {color:#101010; text-decoration:none;}
+.pageNav a.r_select {font-weight:500;}
+.pageNav span {padding:0 4px; font-weight:100;}
+
+/* Search */
+.r_search {background:#d2e3e7; padding:17px 20px; font-size:12px; font-family:"Nanum Gothic", sans-serif; margin-bottom:25px; position:relative;}
+.r_search.oneLine {padding:17px 35px;}
+.r_inputTbl .r_search.oneLine {background:#ffffff; border-bottom:1px solid #cbcbcb; margin-bottom:0;}
+.r_search.oneLine table,
+.r_inputTbl .r_search.oneLine table {width:auto; position:relative; display:inline-block;}
+.r_search table th,
+.r_inputTbl .r_search.oneLine table th {text-align:left; background:none; border:none; padding:0; color:#333333;}
+.r_search table th.r_second,
+.r_inputTbl .r_search.oneLine table th.r_second {padding-left:25px;}
+.r_search table td,
+.r_inputTbl .r_search.oneLine table td {text-aligh:left; padding:0 10px;background:none; border:none; color:#333333;}
+.r_search.oneLine table td.r_searchBtn {padding-left:0px;}
+.r_search table select.searchSelect {height:29px; padding-left:5px; border:1px solid #c3c3c3; vertical-align:middle;}
+.r_search table .r_Input {height:27px; padding:0 5px; border:1px solid #c3c3c3; vertical-align:middle;}
+.r_search table .r_radio label:before {bottom: -2px;}
+
+.r_search.oneLine .search {display:inline-block; position:relative;}
+.r_search.oneLine .search button {font-size:13px; height:29px; background-color:#a50034; border:none; color:#ffffff; font-weight:bold; padding-left:42px; padding-right:19px; background-image:url(../images/ico_search.png); background-repeat: no-repeat; background-position:17px 7px; vertical-align:middle;}
+.r_search.oneLine .search button:hover {background-color:#8c002c;}
+
+.r_search.multiLine {padding:10px 20px 11px;}
+.r_search.multiLine table {width:auto;}
+.r_search.multiLine table th,
+.r_inputTbl .r_search.multiLine table th {padding:6px 0 5px;background:none; border:none;}
+.r_search.multiLine table td,
+.r_inputTbl .r_search.multiLine table td {padding:6px 15px 5px 10px;background:none; border:none;}
+.r_search.multiLine .search {display:inline-block;}
+.r_search.multiLine .search button {position:absolute; right:18px; bottom:16px; font-size:13px; height:29px; background-color:#a50034; border:none; color:#ffffff; font-weight:bold; padding-left:42px; padding-right:19px; background-image:url(../images/ico_search.png); background-repeat: no-repeat; background-position:17px 7px; vertical-align:middle;}
+.r_search.multiLine .search button:hover {background-color:#8c002c;}
+
+.r_innerSearch {display:inline-block; position:relative;}
+.r_innerSearch a {position:absolute;right:9px; top:5px;}
+.r_search .r_innerSearch a {top:6px}
+
+/* Grid */
+.r_grid {background:#fcfcfd; border:1px solid #cbcbcb; border-radius:3px 3px 0 0; position:relative;}
+.r_grid.r_secondTbl {margin-top:15px;}
+.r_gridTitle {background:#ffffff url(../images/gr_001.gif) repeat-x scroll left bottom; border-bottom:1px solid #cbcbcb; position:relative; height:31px; line-height:31px;}
+.r_gridTitle h3 {font-size:14px; margin:0 0 0 15px; float:left; font-weight:bold; color:#333333;}
+.r_grid table tr {background-color:#ffffff;}
+.r_grid table tr.r_even {background-color:#f8f9fa;}
+ .r_grid table tr:hover {background-color:#fff7fa;}
+.r_grid table tr.r_select {background-color:#ffeff5;}
+.r_grid table th {font-weight:bold; color:#666666; border-bottom:1px solid #cbcbcb; padding:10px 0; border-right:1px solid #e8e8e8; background-color:#f8f9fa;}
+.r_grid table th.r_last {border-right:none;}
+.r_grid table tr.r_last td {border-bottom:none;}
+.r_grid table td {color:#222222; border-right:1px solid #e8e8e8; border-bottom:1px solid #e8e8e8; padding:7px 8px; text-align:center; vertical-align:middle; line-height:19px;}
+.r_grid table tr.r_emptyBtm td {border-bottom:1px solid #cbcbcb;}
+.r_grid table td.r_last {border-right:none;}
+.r_grid table td.r_gridInput {padding:3px 8px;}
+.r_grid table td input {height:25px; border:1px solid #c3c3c3;}
+
+.r_inputTbl {background:#fcfcfd; border:1px solid #cbcbcb; border-radius:3px 3px 0 0; position:relative;}
+.r_inputTbl.r_secondTbl {margin-top:15px;}
+.r_inputTblTitle {background:#ffffff url(../images/gr_001.gif) repeat-x scroll left bottom; border-bottom:1px solid #cbcbcb; position:relative; height:31px; line-height:31px;}
+.r_inputTblTitle h3 {font-size:14px; margin:0 0 0 15px; float:left; font-weight:bold; color:#333333;}
+.r_inputTbl table tr {background-color:#ffffff;}
+.r_inputTbl table tr.r_even {background-color:#f8f9fa;}
+.r_inputTbl table th {font-weight:bold; color:#666666; border-bottom:1px solid #cbcbcb; padding:10px 3px; border-right:1px solid #e8e8e8; background-color:#f8f9fa;}
+.r_inputTbl table th.r_last {border-right:none;}
+.r_inputTbl table tr.r_last td, .r_inputTbl.r_horizonTbl table tr.r_last th {border-bottom:none;}
+.r_inputTbl table td {color:#222222; border-right:1px solid #e8e8e8; border-bottom:1px solid #e8e8e8; padding:7px 8px; text-align:center; vertical-align:middle; line-height:19px;}
+.r_inputTbl table tr.r_emptyBtm td {border-bottom:1px solid #cbcbcb;}
+.r_inputTbl table td.r_last {border-right:none;}
+.r_inputTbl table td.r_gridInput {padding:3px 8px;}
+.r_inputTbl table td input {height:25px; border:1px solid #c3c3c3;}
+
+.r_inputTbl.r_horizonTbl table th, .r_inputTbl.r_horizonTbl table td {text-align:left;}
+.r_inputTbl.r_horizonTbl table th {padding:10px; border-bottom:1px solid #e8e8e8;}
+/* 테이블 내 Select */
+.r_inputTbl select.tblSelect {height:27px; padding-left:5px; border:1px solid #c3c3c3; vertical-align:middle;}
+
+.r_halfGrid_l {width:49%; float:left;}
+.r_halfGrid_r {width:49%; float:right;}
+
+
+/* Accordion */
+.r_accordion {background:#fcfcfd; border:1px solid #cbcbcb; border-radius:3px 3px 0 0; position:relative;}
+.r_accordion.r_close {border-radius:3px;}
+.r_accordion.r_secondTbl {margin-top:15px;}
+.r_accordionTitle {background:#ffffff url(../images/gr_001.gif) repeat-x scroll left bottom; border-bottom:1px solid #cbcbcb; position:relative; height:31px; line-height:31px;}
+.r_accordionTitle .r_accordionIcon {display:inline-block; width:31px; height:32px; border-right:1px solid #dddddd; float:left; cursor:pointer;}
+.r_accordion.r_open .r_accordionTitle .r_accordionIcon {background:url(../images/ico_accordion_open.png) no-repeat center;}
+.r_accordion.r_close .r_accordionTitle .r_accordionIcon {background:url(../images/ico_accordion_close.png) no-repeat center;}
+.r_accordion.r_close .r_accordionTitle {border-bottom:none;}
+.r_accordion.r_close .r_accordionCont {display:none;}
+.r_accordionTitle h3 {font-size:14px; margin:0 0 0 10px; float:left; font-weight:bold; color:#333333;}
+.r_accordion table tr {background-color:#ffffff;}
+.r_accordion table tr.r_even {background-color:#f8f9fa;}
+.r_accordion table th {font-weight:bold; color:#666666; border-bottom:1px solid #cbcbcb; padding:10px 3px; border-right:1px solid #e8e8e8; background-color:#f8f9fa;}
+.r_accordion table th.r_last {border-right:none;}
+.r_accordion table tr.r_last td, .r_accordion.r_horizonTbl table tr.r_last th {border-bottom:none;}
+.r_accordion table td {color:#222222; border-right:1px solid #e8e8e8; border-bottom:1px solid #e8e8e8; padding:7px 8px; text-align:center; vertical-align:middle; line-height:19px;}
+.r_accordion table tr.r_emptyBtm td {border-bottom:1px solid #cbcbcb;}
+.r_accordion table td.r_last {border-right:none;}
+.r_accordion table td.r_gridInput {padding:3px 8px;}
+.r_accordion table td input {height:25px; border:1px solid #c3c3c3;}
+.r_accordion.r_horizonTbl table th, .r_accordion.r_horizonTbl table td {text-align:left;}
+.r_accordion.r_horizonTbl table th {padding:10px; border-bottom:1px solid #e8e8e8;}
+
+
+.r_chart {background:#ffffff; border:1px solid #cbcbcb; position:relative;}
+.r_chartTitle {background:#ffffff url(../images/gr_001.gif) repeat-x scroll left bottom; border-bottom:1px solid #cbcbcb; position:relative; height:31px; line-height:31px;}
+.r_chartTitle h3 {font-size:14px; margin:0 0 0 10px; float:left; font-weight:bold; color:#333333;}
+.r_chart .r_chartCont {padding:15px;}
+.r_chartDuration {text-align:left; margin-bottom:10px;}
+.r_chartDuration .r_title {display:inline-block; padding:10px 10px 10px 0;}
+.r_chartDuration button {width:49px; height:29px; background:#ffffff; border:1px solid #c3c3c3; font-size:12px; color:#333333; text-align:center;}
+.r_chartDuration button.r_select {background:#e63c6b; border:none; color:#ffffff; font-weight:bold;}
+
+
+/* Button */
+
+/* 상단 모듈버튼 */
+.r_detailBtn {float:right; height:31px; text-align:center; padding:0 14px; border-left:1px solid #dddddd; color:#333333; text-decoration:none; cursor:pointer;}
+.r_detailBtn:hover {background:#ffffff url(../images/gr_002.gif) repeat-x scroll left top;}
+.r_detailBtn.r_radio:hover {background:#ffffff url(../images/gr_001.gif) repeat-x scroll left bottom; cursor:default;}
+.r_detailBtn.r_disable {background:#eeeeee url(../images/gr_003.gif) repeat-x scroll left bottom; color:#555555; cursor:default;}
+.r_detailBtn.r_radio .r_title {display:inline-block; margin-right:5px;}
+
+/* 하단 모듈저장버튼 */
+.r_moduleBtn {background:#f9fafb; border:1px solid #dedfe0; border-top:none; overflow:hidden; margin-bottom:15px; padding:7px 0 6px 0; height:29px;}
+.r_moduleBtn .moduleSave {display:inline-block; position:relative; float:right; margin-right:8px;}
+.r_moduleBtn .moduleSave button {font-size:12px; height:29px; min-width:70px; background-color:#8c98a4; border:none; color:#ffffff; font-weight:bold; text-align:center; vertical-align:middle; padding:0 20px;}
+.r_moduleBtn .moduleSave button:hover {background-color:#798692;}
+
+.r_moduleBtn .moduleTotal {display:inline-block; position:relative; float:left; margin-left:10px; padding-top:7px; color:#4d4c4c;}
+.r_moduleBtn .moduleStat {display:inline-block; position:relative; float:left; margin-left:8px; padding-left:8px; border-left:1px solid #dedfe0; height: 15px; margin-top: 7px;}
+.r_moduleBtn .moduleStat img {display:inline-block; float:left;}
+.r_moduleBtn .moduleStat .r_text {padding:0 10px 0 5px; display:inline-block; float:left;}
+.r_moduleBtn .moduleStat .r_text.r_normal {color:#0288d1;}
+.r_moduleBtn .moduleStat .r_text.r_error {color:#ff2d55;}
+
+
+/* 하단 페이지버튼 */
+.r_pageBtnWrapper {text-align:right; border-top:1px solid #bbbbbb; margin-top:15px; padding:12px 0 30px 0;}
+.r_pageBtnWrapper .pageNormal {display:inline-block; position:relative; margin-left:6px; float:right;}
+.r_pageBtnWrapper .pageNormal button {font-size:13px; height:33px; min-width:80px; background-color:#c3ccd5; border:none; color:#333333; font-weight:bold; text-align:center; vertical-align:middle; padding:0 15px;}
+.r_pageBtnWrapper .pageNormal button:hover {background-color:#b6c2cd;}
+.r_pageBtnWrapper .pageNormal.r_last {border-right: 1px solid #dfdfdf; padding-right: 6px;}
+
+.r_pageBtnWrapper .pageConfirm {display:inline-block; position:relative; margin-left:6px; float:right;}
+.r_pageBtnWrapper .pageConfirm button {font-size:13px; height:33px; min-width:80px; background-color:#353942; border:none; color:#ffffff; font-weight:bold; text-align:center; vertical-align:middle; padding:0 15px;}
+.r_pageBtnWrapper .pageConfirm button:hover {background-color:#272b32;}
+
+
+/* 그리드 인라인버튼 */
+.innerBtn {display:inline-block; position:relative;}
+.innerBtn button {font-size:12px; height:26px; min-width:70px; background-color:#f3f3f3; border:1px solid #c3c3c3; color:#333333; font-weight:normal; text-align:center; vertical-align:middle; padding:0 13px;}
+
+.r_inputTbl td .r_radio label:before {bottom:0;}
+
+/* 조회영역 내 날짜조회 버튼 */
+.r_calendarBtn {vertical-align: middle; display: inline-block; margin-top:2px;}
+
+
+
+/* Tree Menu */
+.r_treeWrapper {background:#ffffff; padding:15px; border:1px solid #cbcbcb; height:200px; overflow:auto;}
+
+.tree{font-size:12px;color:#333333}
+.tree ul{margin:0;padding:0;list-style:none}
+.tree ul ul{margin:0 0 0 -3px}
+.tree li{position:relative;padding:0 0 0 20px;background:url(../images/line_tree.gif) no-repeat 9px 0;line-height:20px;white-space:nowrap;*zoom:1}
+.tree li.last{background-position:9px -1766px}
+.tree li.active a{font-weight:bold;color:#333333; background-color:#f9ceda;}
+.tree li.active li a{font-weight:normal;color:#333333}
+.tree a{color:#333333;text-decoration:none; padding:3px;}
+.tree a:hover,
+.tree a:active,
+.tree a:focus{text-decoration:underline}
+.tree .toggle{overflow:hidden;position:absolute;top:0;left:0;width:19px;height:19px;padding:0;border:0;background:transparent url(../images/btn_tree.gif) no-repeat;cursor:pointer;font-size:0;color:#fff;text-indent:19px;*text-indent:0;vertical-align:middle}
+.tree .toggle.plus{background-position:5px -17px}
+.tree .toggle.minus{background-position:5px 4px}
+
+/* 지시문 */
+.r_errorTxt {display:inline-block; vertical-align:top; color:#d80546; margin-top:6px;}
+.r_errorTxt img {display:inline-block; vertical-align:middle; margin:0 5px 0 7px;}
+.r_radio .r_errorTxt,
+.r_checkbox .r_errorTxt {margin-top:0; vertical-align:middle;}
+td .r_errorTxt {vertical-align:middle;margin-top:0;}
+
+.r_infoTxt {display:inline-block; vertical-align:top; margin-top:6px;}
+.r_infoTxt img {display:inline-block; vertical-align:middle; margin:0 5px 0 7px;}
+.r_radio .r_infoTxt,
+.r_checkbox .r_infoTxt {margin-top:0; vertical-align:middle;}
+td .r_infoTxt {vertical-align:middle;margin-top:0;vertical-align:middle;}
+.r_infoTxt.r_bottom {margin:10px 0; display:block;}
+.r_infoTxt.r_bottom img {margin-left:0;}
+
+.r_infoGroup {background:#ffffff; padding:10px; margin:10px 0;}
+.r_infoGroup .r_infoTxt.r_title {font-weight:bold; color:#2b7d93; margin-top:0; margin-bottom:8px;vertical-align:middle;}
+.r_infoGroup .r_infoTxt.r_title img {margin-left:0;}
+.r_infoGroup p {line-height:20px;}
+.r_infoGroup .r_infoTxt {margin-top:0; margin-bottom:8px; vertical-align:middle; display:block;}
+.r_infoGroup .r_infoTxt.r_last {margin-bottom:0;}
+.r_infoGroup .r_infoTxt strong {font-weight:bold; color:#a50034;}
+
+/* Popup Component
+---------------------------------------------------------*/
+/* Popup Title */
+h1.r_popupTitle {font-family:"LG Smart_H"; font-weight:normal; font-size:18px; color:#a50034; display:block; padding:15px 20px; background:#ffffff; border-bottom:1px solid #e8e8e8;}
+.r_popupCont {padding:15px 20px 12px 20px;}
+.r_popupCont .r_pageBtnWrapper {padding:12px 0 0 0;}

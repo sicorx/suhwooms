@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.StoreInverterMgntMapper">
+
+	<select id="retrieveInverterMgnt" parameterType="Map" resultType="GridStoreInverterMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+	
+		SELECT
+				TSIM.STR_CD          				as strCd
+				,TSIM.STR_NM          				as strNm
+			  	,TSIM.VIEW_STR_CD     				as viewStrCd
+			  	,TSIM.COMPANY_CD      				as companyCd
+			 	,TSIM.ORG_CD          				as orgCd		
+			 	,fnGetOrgFullName(TSIM.COMPANY_CD, TSIM.ORG_CD)	as orgFullNm	  	
+			  	,TSRPC.INV          				as hubCnt     
+			  	,COUNT( TSIH.USE_YN ) 				as portCnt
+        		,SUM( INSTR(TSIH.USE_YN, 'Y') >0  ) as usePortCnt
+			FROM  
+				TH_STR_INFO_MST TSIM,
+			    TH_STR_REMS_DEVICE_CNT_MNT TSRPC,			    
+			    TH_STR_INV_HUB_MST TSIH
+			WHERE
+			    TSIM.STR_CD = TSRPC.STR_CD			        
+			    AND			    
+          		TSIM.STR_CD = TSIH.STR_CD
+          		AND
+			    TSIM.USE_YN = 'Y'		      
+			    AND
+			    TSIM.COMPANY_CD = #{companyCd}
+		]]>
+		<if test="strNm != null and strNm != ''" >
+		<![CDATA[
+				AND
+				(
+					INSTR(TSIM.STR_NM, #{strNm}) > 0
+					OR 
+					INSTR(TSIM.VIEW_STR_CD, #{strNm}) > 0
+	       		)
+		]]>
+		</if>
+		<if test="orgCd != null and orgCd != ''" >
+		<![CDATA[
+				AND TSIM.ORG_CD = #{orgCd}
+		]]>
+		</if>
+		<![CDATA[
+				GROUP BY TSIM.STR_CD
+				ORDER BY ${sidx} ${sord}
+	  			/* rems.system.persistence.StoreMgntMapper.retrieveStoreFcltyMgnt */
+		]]>		
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<select id="retrieveStoreInverterMgntDtl" parameterType="Map" resultType="GridStoreInverterMgntVo">
+		  SELECT
+		              STR_CD AS strCd
+					, HUB_ID AS hubId
+					, PORT_NO AS portNo
+					, DEVICE_TYPE AS deviceType
+					, DEVICE_LOC AS deviceLoc
+					, CONTENTS AS contents
+			        , PUSH_TERM AS pushTerm
+					, USE_YN AS useYn
+			FROM TH_STR_INV_HUB_MST
+		   WHERE STR_CD = #{strCd}
+	</select>
+
+	<update id="saveStoreInverterMgnt" parameterType="GridStoreInverterMgntVo">
+		INSERT INTO TH_STR_INV_HUB_MST
+		     (
+		       STR_CD
+		     , HUB_ID
+		     , PORT_NO
+		     , DEVICE_TYPE
+		     , DEVICE_LOC
+		     , CONTENTS
+		     , PUSH_TERM
+		     , USE_YN
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES(
+		        #{strCd}
+		      , #{hubId}
+		      , #{portNo}
+		      , #{deviceType}
+		      , #{deviceLoc}
+		      , #{contents}
+		      , #{pushTerm}
+		      , #{useYn}
+		      , #{regiId}
+		      , #{now}
+		      , #{finalModId}      
+		      , #{now}
+		      )
+		ON DUPLICATE KEY
+		      UPDATE DEVICE_TYPE   = #{deviceType}
+		           , DEVICE_LOC         = #{deviceLoc}
+		           , CONTENTS           = #{contents}
+		           , PUSH_TERM          = #{pushTerm}
+		           , USE_YN             = #{useYn}
+		           , FINAL_MOD_ID       = #{finalModId}
+		           , FINAL_MOD_DTTM   = #{now}
+	</update>
+	
+	<!-- 매장 렘스 장치 정보 삭제 -->
+	<delete id="deleteStoreInverterMgnt" parameterType="Map">
+		DELETE FROM TH_STR_INV_HUB_MST
+		WHERE STR_CD = #{strCd}
+	</delete>
+	
+	
+	
+	<update id="saveStoreInverterMgnt_init" parameterType="Map">
+		INSERT INTO 
+				TH_STR_INV_HUB_MST
+				( 
+				STR_CD,
+				HUB_ID,			    
+			    PORT_NO,			    
+				DEVICE_TYPE,
+			   	DEVICE_LOC,
+			    CONTENTS,			    
+			    PUSH_TERM,
+			    USE_YN,
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="InfoInvDataListVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.invStrCd},
+					#{item.invId},					
+					#{item.invPortNo},
+					#{item.invDeviceType},
+					#{item.invDeviceLoc},
+					#{item.invDeviceContents},					
+					#{item.invPushTerm},
+					#{item.invPortUseYn},
+					#{item.invRegiId},
+					now(),
+					#{item.invFinalModId},
+					now()
+				)			    
+		   		</foreach>		
+	</update>
+	
+	<!-- 지우기 -->
+	<delete id="delStoreInverterMgnt" parameterType="Map">
+		delete from 
+			TH_STR_INV_HUB_MST 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+	
+</mapper>

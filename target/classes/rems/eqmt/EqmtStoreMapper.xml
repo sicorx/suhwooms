@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtStoreMapper">
+
+	<select id="retrieveAuthList" parameterType="Map" resultType="SystemVo">
+		SELECT AUTH_ID as authId, 
+		   	   AUTH_NM as authNm 
+		  FROM TH_AUTH
+		 WHERE COMPANY_CD = #{companyCd}
+	</select>
+
+
+	<select id="retrieveStoreExcel" parameterType="Map" resultType="HashMap">
+		<![CDATA[
+		SELECT 
+			  B.VIEW_STR_CD		as viewStrCd
+		    , B.STR_NM			as strNm
+		    , B.ORG_CD			as orgCd
+		    , fnGetOrgFullName(#{companyCd}, B.ORG_CD) AS orgFullName
+		    , DATE_FORMAT(B.REMS_START_DT, '%Y-%m-%d') 	as remsStartDt        
+		    , F.VENDOR_NM       as vendorNm
+		    , D.ELECTRICENT_NM	as electricentNm
+		    , A.GW_CHECK_LAST_DTTM	as lastYmdh
+		    , DATEDIFF(NOW(), A.GW_CHECK_LAST_DTTM) AS lapseDay
+		FROM 
+			TH_STR_INFO_MST B,
+		    TH_STR_GW_MST A
+		    LEFT JOIN TH_ELECTRICENT_STR_MAP C			
+		    ON A.STR_CD = C.STR_CD
+		    LEFT JOIN TH_ELECTRICENT_MST D
+			ON C.ELECTRICENT_CD = D.ELECTRICENT_CD
+		    LEFT JOIN TH_VENDOR_STR_MAP E
+		    ON A.STR_CD = E.STR_CD
+		    LEFT JOIN TH_VENDOR_MST F
+		    ON E.VENDOR_CD = F.VENDOR_CD    
+		    WHERE 1=1
+		    AND A.STR_CD = B.STR_CD    
+		    AND A.GW_STATUS_YN = 'N'
+		    AND B.USE_YN = 'Y'
+		    AND B.COMPANY_CD = #{companyCd}
+		]]>
+		<if test="scrDayChk != 1">
+		<![CDATA[
+	         	   
+		]]>
+		</if>
+		<if test="scrDayChk == 1">
+		<![CDATA[
+			AND DATEDIFF(NOW(), A.GW_CHECK_LAST_DTTM) >= 3
+		]]>
+		</if>	       	       
+		<if test="scrStrNm != null and scrStrNm != ''">
+			AND (B.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%') OR B.VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+		</if> 	
+		<if test="scrOrgCd != null and scrOrgCd != ''">
+			AND B.ORG_CD = #{scrOrgCd} 
+		</if>  
+		<![CDATA[	                                                                              
+			AND A.GW_CHECK_LAST_DTTM BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')           
+		]]>
+    </select>	
+
+	<select id="retrieveStore" parameterType="Map"  resultType="SystemVo">
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+		<![CDATA[
+		SELECT 
+			  B.VIEW_STR_CD		as viewStrCd
+		    , B.STR_NM			as strNm
+		    , B.ORG_CD			as orgCd
+		    , fnGetOrgFullName(#{companyCd}, B.ORG_CD) AS orgFullName
+		    , DATE_FORMAT(B.REMS_START_DT, '%Y-%m-%d') 	as remsStartDt        
+		    , F.VENDOR_NM       as vendorNm
+		    , D.ELECTRICENT_NM	as electricentNm
+		    , A.GW_CHECK_LAST_DTTM	as lastYmdh
+		    , DATEDIFF(NOW(), A.GW_CHECK_LAST_DTTM) AS lapseDay
+		FROM 
+			TH_STR_INFO_MST B,
+		    TH_STR_GW_MST A
+		    LEFT JOIN TH_ELECTRICENT_STR_MAP C			
+		    ON A.STR_CD = C.STR_CD
+		    LEFT JOIN TH_ELECTRICENT_MST D
+			ON C.ELECTRICENT_CD = D.ELECTRICENT_CD
+		    LEFT JOIN TH_VENDOR_STR_MAP E
+		    ON A.STR_CD = E.STR_CD
+		    LEFT JOIN TH_VENDOR_MST F
+		    ON E.VENDOR_CD = F.VENDOR_CD    
+		    WHERE 1=1
+		    AND A.STR_CD = B.STR_CD
+		    AND A.USE_YN = 'Y'
+		    AND A.GW_STATUS_YN = 'N'
+		    AND B.USE_YN = 'Y'
+		    AND B.COMPANY_CD = #{companyCd}
+		]]>
+		<if test="scrDayChk != 1">
+		<![CDATA[
+	         	   
+		]]>
+		</if>
+		<if test="scrDayChk == 1">
+		<![CDATA[
+			AND DATEDIFF(NOW(), A.GW_CHECK_LAST_DTTM) >= 3
+		]]>
+		</if>	       	       
+		<if test="scrStrNm != null and scrStrNm != ''">
+			AND (B.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%') OR B.VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+		</if> 	
+		<if test="scrOrgCd != null and scrOrgCd != ''">
+			AND B.ORG_CD = #{scrOrgCd} 
+		</if>  
+		<![CDATA[	                                                                              
+			AND A.GW_CHECK_LAST_DTTM BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')           
+		]]>
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>		
+    
+</mapper>

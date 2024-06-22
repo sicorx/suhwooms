@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.MenuMgntMapper">
+	<select id="retrieveMenuList" parameterType="map" resultType="map">
+		SELECT MENU_ID as menuId
+			  ,MENU_NM as menuNm
+			  ,MENU_ENG_NM as menuEngNm
+			  ,MENU_TYPE as menuType
+			  ,URL as url
+			  ,INDEX_HIER as indexHier
+			  ,USE_YN as useYn
+		  FROM TH_MENU
+		 WHERE COMPANY_CD = #{companyCd}
+		 ORDER BY INDEX_HIER ASC
+	</select>
+
+    <insert id="insertMenuBatch" parameterType="map">
+        INSERT INTO TH_MENU(COMPANY_CD, MENU_ID, MENU_NM, MENU_ENG_NM, MENU_TYPE, URL, INDEX_HIER, USE_YN, REGI_ID, REGI_DTTM, FINAL_MOD_ID, FINAL_MOD_DTTM)
+        VALUES
+        <foreach item="menu" index="index" collection="list" open="" separator="," close="">
+            (#{companyCd}, (SELECT b.cnt FROM (SELECT IFNULL(max(a.MENU_ID),0)+1 cnt FROM TH_MENU a WHERE a.COMPANY_CD = #{companyCd}) b), #{menu.menuNm},  #{menu.menuEngNm}, #{menu.menuType}, #{menu.url}, #{menu.indexHier}, #{menu.useYn}, #{regiId}, #{now}, #{finalModId}, #{now})
+        </foreach>
+    </insert>
+
+    <insert id="updateMenuBatch" parameterType="map">
+        INSERT INTO TH_MENU(COMPANY_CD, MENU_ID, MENU_NM, MENU_ENG_NM, MENU_TYPE, URL, INDEX_HIER, USE_YN, FINAL_MOD_ID, FINAL_MOD_DTTM)
+        VALUES
+        <foreach item="menu" index="index" collection="list" open="" separator="," close="">
+            (#{companyCd}, #{menu.menuId}, #{menu.menuNm}, #{menu.menuEngNm}, #{menu.menuType}, #{menu.url}, #{menu.indexHier}, #{menu.useYn}, #{finalModId}, #{now})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+           MENU_NM        = VALUES(MENU_NM)
+          ,MENU_ENG_NM    = VALUES(MENU_ENG_NM)
+          ,MENU_TYPE      = VALUES(MENU_TYPE)
+          ,URL            = VALUES(URL)
+          ,INDEX_HIER     = VALUES(INDEX_HIER)
+          ,USE_YN         = VALUES(USE_YN)
+          ,FINAL_MOD_ID   = VALUES(FINAL_MOD_ID)
+          ,FINAL_MOD_DTTM = VALUES(FINAL_MOD_DTTM)
+    </insert>
+
+    <delete id="deleteMenuBatch" parameterType="map">
+        DELETE FROM TH_MENU
+         WHERE COMPANY_CD = #{companyCd}
+           AND MENU_ID IN
+        <foreach item="menuId" index="index" collection="list" open="(" separator="," close=")">
+            #{menuId}
+        </foreach>
+    </delete>
+</mapper>

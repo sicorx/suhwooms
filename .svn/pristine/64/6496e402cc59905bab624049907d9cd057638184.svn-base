@@ -1,0 +1,1251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.AuthMgntMapper">
+	
+	<select id="retrieveAuthSpList" parameterType="Map" resultType="SelectVo">
+		SELECT
+	            COMM_CD as value
+	          , COMM_CD_NM as name
+	      FROM TH_COMM_CD
+	     WHERE COMM_GRP_CD = 'MAST04'
+	</select>
+	
+	<select id="retrieveAuthListDtl" parameterType="Map" resultType="AuthVo">
+	<![CDATA[
+		SELECT
+		         COMPANY_CD AS companyCd
+		       , AUTH_ID AS authId
+		       , AUTH_NM as authNm
+		       , AUTH_DESC as authDesc
+		       , AUTH_SP as authSp
+		       , USE_YN as useYn
+		  FROM TH_AUTH 
+		 WHERE COMPANY_CD = #{companyCd}           
+    ]]>
+	</select>
+	
+	<select id="retrieveBleStoreList" parameterType="Map" resultType="GridStoreMgntVo">
+	<![CDATA[
+		SELECT
+		         STR_CD as strCd
+		       , STR_NM as strNm		       
+		  FROM TH_STR_INFO_MST
+		 WHERE COMPANY_CD = 'GSR'
+		 AND USE_YN = 'Y'
+		 ORDER BY strNm           
+    ]]>
+	</select>
+		
+	<select id="retrieveREQ_CHECK_UPDATE" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			OSTYPE			as OSType,
+		    max(VERSION) 	as Version,
+		    DL_URL			as DlUrl
+		    
+		FROM
+			th_ble_app_mst    
+		WHERE
+			OSTYPE = #{OSType}		
+			AND	
+            VERSION = ( SELECT max(VERSION) FROM th_ble_app_mst WHERE OSTYPE = #{OSType} )		   
+			
+    ]]>
+	</select>	
+	
+	<select id="retrieveREQ_AUTH_USER" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			count(USER_ID)		as cnt,
+            #{ID}				as putId,
+			USER_ID				as userId,
+		    USER_NM				as userNm,
+		    USER_PW				as userPw,
+		    COMPANY_CD			as companyCd,
+		    ORG_CD				as orgCd,
+		    STR_CD				as strCd,
+		    VENDOR_CD			as vendorCd,
+		    USE_YN				as useYn,
+		    ifnull( ( SELECT count(ELECTRICENT_NM) FROM TH_ELECTRICENT_MST WHERE ELECTRICENT_CD = vendorCd ), 0)	as type1,
+		    ifnull( ( SELECT count(VENDOR_NM) FROM TH_VENDOR_MST WHERE VENDOR_CD = vendorCd ), 0)					as type2,		    
+		    if( VENDOR_CD = 'SISNET_ENT', 1, 0 )																	as type3,
+		    ifnull( CASE WHEN VENDOR_CD = 'FAMILY_ENT' 	THEN '1'
+				 WHEN VENDOR_CD = 'ADCOM_ENT' 			THEN '1' 
+                 WHEN VENDOR_CD = 'BOKANG_ENT' 			THEN '1' 
+                 WHEN VENDOR_CD = 'LEDERS_ENT' 			THEN '1' 
+                 WHEN VENDOR_CD = 'WASREM_ENT' 			THEN '1' 
+                 WHEN VENDOR_CD = 'WOOSIN_ENT' 			THEN '1' 
+                 WHEN VENDOR_CD = 'MIKANG_ENT' 			THEN '1'
+                 WHEN VENDOR_CD = 'DINE_ENT' 			THEN '1'                  
+                 ELSE '0' END ,  0 )																				as type4,
+		    ifnull( ( SELECT ELECTRICENT_NM FROM TH_ELECTRICENT_MST WHERE ELECTRICENT_CD = vendorCd ), 0) 			as type1Nm,
+            ifnull( ( SELECT VENDOR_NM FROM TH_VENDOR_MST WHERE VENDOR_CD = vendorCd ), 0) 							as type2Nm,
+		    ifnull( if( VENDOR_CD = 'SISNET_ENT', '시스네트', null ), 0)											as type3Nm,
+		    ifnull( CASE WHEN VENDOR_CD = 'FAMILY_ENT' 	THEN '훼밀리'
+				 WHEN VENDOR_CD = 'ADCOM_ENT' 			THEN '애드컴' 
+                 WHEN VENDOR_CD = 'BOKANG_ENT' 			THEN '보광기획' 
+                 WHEN VENDOR_CD = 'LEDERS_ENT' 			THEN '리더스' 
+                 WHEN VENDOR_CD = 'WASREM_ENT' 			THEN '와스알이엠' 
+                 WHEN VENDOR_CD = 'WOOSIN_ENT' 			THEN '우진기획' 
+                 WHEN VENDOR_CD = 'MIKANG_ENT' 			THEN '미광기획'
+                 WHEN VENDOR_CD = 'DINE_ENT' 			THEN '다인기획'                  
+                 ELSE '0' END ,  0 )				    															as type4Nm
+		FROM
+			TH_USER_MST A
+		WHERE
+			USER_ID = #{ID}
+		    AND
+		    USER_PW = aes_encrypt(#{Pass},'REMS_ADM')
+		    AND
+		    USE_YN = 'Y'
+    ]]>
+	</select>
+	
+	
+	<select id="retrieveREQ_VERIFY_BLE" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			A.STR_CD				as strCd,	        	
+        	B.VIEW_STR_CD			as viewStrCd,      
+			concat( SUBSTR(A.GW_ADDR,1,2),":", SUBSTR(A.GW_ADDR,3,2),":", SUBSTR(A.GW_ADDR,5,2),":", SUBSTR(A.GW_ADDR,7,2),":", SUBSTR(A.GW_ADDR,9,2),":", SUBSTR(A.GW_ADDR,11,2) )				as macAddr,
+			B.STR_NM				as strNm,
+		    A.GW_BLE_PWD			as gwBlePwd,
+		    A.GW_ID					as gwId	
+		FROM 
+			th_str_gw_mst A, th_str_info_mst B    
+		WHERE
+			A.STR_CD = B.STR_CD
+		    AND
+			A.GW_ADDR = #{MAC}        
+    ]]>
+	</select>
+	
+	<select id="retrieveREQ_CHECK_STORE" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			concat( SUBSTR(A.GW_ADDR,1,2),":", SUBSTR(A.GW_ADDR,3,2),":", SUBSTR(A.GW_ADDR,5,2),":", SUBSTR(A.GW_ADDR,7,2),":", SUBSTR(A.GW_ADDR,9,2),":", SUBSTR(A.GW_ADDR,11,2) )	as macAddr,
+			B.STR_NM				as strNm,
+		    A.GW_BLE_PWD			as gwBlePwd,
+		    A.GW_ID					as gwId
+		FROM 
+			th_str_gw_mst A, th_str_info_mst B    
+		WHERE
+			A.STR_CD = B.STR_CD
+		    AND
+			A.GW_ADDR = #{MAC}     
+    ]]>
+	</select>
+	
+	<select id="retrieveREQ_CHECK_STORE_ALL" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			A.STR_CD				as strCd,
+			concat( SUBSTR(A.GW_ADDR,1,2),":", SUBSTR(A.GW_ADDR,3,2),":", SUBSTR(A.GW_ADDR,5,2),":", SUBSTR(A.GW_ADDR,7,2),":", SUBSTR(A.GW_ADDR,9,2),":", SUBSTR(A.GW_ADDR,11,2) )	as macAddr,
+			B.STR_NM				as strNm,
+		    A.GW_BLE_PWD			as gwBlePwd,
+		    A.GW_ID					as gwId
+		FROM 
+			th_str_gw_mst A, th_str_info_mst B    
+		WHERE
+			A.STR_CD = B.STR_CD
+		    AND
+			( A.GW_ADDR = '000000000000' OR A.GW_ADDR is null )     
+    ]]>
+	</select>
+	
+	
+	<update id="retrieveREQ_REG_STORE" parameterType="Map">
+	<![CDATA[
+		UPDATE TH_STR_GW_MST SET GW_ADDR=#{MAC}, GW_BLE_PWD = #{BlePwd} WHERE STR_CD = ( SELECT STR_CD FROM TH_STR_INFO_MST WHERE STR_NM = #{StoreName} );    
+    ]]>
+	</update>
+	
+	<select id="retrieveREQ_STORE_INFO_ELEC" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			A.STR_CD,		    								
+		    ( B.METER_CH1_RST + B.METER_CH2_RST + B.METER_CH3_RST + B.METER_CH4_RST + B.METER_CH5_RST + B.METER_CH6_RST +		     
+		    B.METER_CH7_R + B.METER_CH7_S + B.METER_CH7_T + 
+		    B.METER_CH8_R + B.METER_CH8_S + B.METER_CH8_T )	* 3	as channelCnt,
+            C.VIEW_STR_CD										as viewStrCd
+		FROM 
+			th_str_gw_mst A, th_str_rems_device_cnt_mnt B, th_str_info_mst C
+		WHERE
+			A.STR_CD = B.STR_CD
+		    AND
+            A.STR_CD = C.STR_CD
+            AND
+			A.GW_ADDR = #{MAC}    
+    ]]>
+	</select>
+	
+	<select id="retrieveREQ_STORE_INFO_TEMON" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			A.STR_CD				as strCd,
+		    B.TEMON_ID				as temonId,
+		    B.PORT_NO				as portNo,    
+		    CASE 	WHEN DEVICE_LOC = 'WIC1' THEN '1' 
+					WHEN DEVICE_LOC = 'WIC2' THEN '2' 
+		            WHEN DEVICE_LOC = 'OSC1' THEN '3'
+		            WHEN DEVICE_LOC = 'OSC2' THEN '4'
+		            WHEN DEVICE_LOC = 'OSC3' THEN '5'
+		            WHEN DEVICE_LOC = 'OSC4' THEN '6'
+		            WHEN DEVICE_LOC = 'RIC1' THEN '7'
+		            WHEN DEVICE_LOC = 'RIC2' THEN '8'
+		            WHEN DEVICE_LOC = 'RIF1' THEN '9'
+		            WHEN DEVICE_LOC = 'RIF2' THEN '10'
+		            WHEN DEVICE_LOC = 'RIF3' THEN '11'
+		            WHEN DEVICE_LOC = 'ICC1' THEN '12'
+		            WHEN DEVICE_LOC = 'ICC2' THEN '13'
+		            WHEN DEVICE_LOC = 'ICC3' THEN '14'
+		            WHEN DEVICE_LOC = '냉동평대1' THEN '15'
+		            WHEN DEVICE_LOC = '냉동평대2' THEN '16'
+		            WHEN DEVICE_LOC = '냉동평대3' THEN '17'
+		            WHEN DEVICE_LOC = '냉동콤비1(상)' THEN '18'
+		            WHEN DEVICE_LOC = '냉동콤비1(하)' THEN '19'
+		            WHEN DEVICE_LOC = '냉동콤비2(상)' THEN '20'
+		            WHEN DEVICE_LOC = '냉동콤비2(하)' THEN '21'
+		            WHEN DEVICE_LOC = '냉동콤비3(상)' THEN '22'
+		            WHEN DEVICE_LOC = '냉동콤비3(하)' THEN '23'		            		            
+		            ELSE '24' END 	as deviceType, 
+		    B.USE_YN				as useYn
+		FROM 
+			th_str_gw_mst A, th_str_rems_device_mst B
+		WHERE
+			A.STR_CD = B.STR_CD
+		    AND
+		    B.TEMON_TYPE = 'T'
+		    AND
+			A.GW_ADDR = #{MAC}
+		ORDER BY TEMON_ID+0, PORT_NO+0     
+    ]]>
+	</select>
+	
+	<select id="retrieveREQ_STORE_INFO_ZIGBEE" parameterType="Map" resultType="BleAuthVo">
+	<![CDATA[
+		SELECT 
+			A.STR_CD				as strCd,
+		    B.TEMON_ID				as temonId,
+		    B.PORT_NO				as portNo,    
+		    CASE 	WHEN DEVICE_LOC = 'WIC1' THEN '1' 
+					WHEN DEVICE_LOC = 'WIC2' THEN '2' 
+		            WHEN DEVICE_LOC = 'OSC1' THEN '3'
+		            WHEN DEVICE_LOC = 'OSC2' THEN '4'
+		            WHEN DEVICE_LOC = 'OSC3' THEN '5'
+		            WHEN DEVICE_LOC = 'OSC4' THEN '6'
+		            WHEN DEVICE_LOC = 'RIC1' THEN '7'
+		            WHEN DEVICE_LOC = 'RIC2' THEN '8'
+		            WHEN DEVICE_LOC = 'RIF1' THEN '9'
+		            WHEN DEVICE_LOC = 'RIF2' THEN '10'
+		            WHEN DEVICE_LOC = 'RIF3' THEN '11'
+		            WHEN DEVICE_LOC = 'ICC1' THEN '12'
+		            WHEN DEVICE_LOC = 'ICC2' THEN '13'
+		            WHEN DEVICE_LOC = 'ICC3' THEN '14'
+		            WHEN DEVICE_LOC = '냉동평대1' THEN '15'
+		            WHEN DEVICE_LOC = '냉동평대2' THEN '16'
+		            WHEN DEVICE_LOC = '냉동평대3' THEN '17'
+		            WHEN DEVICE_LOC = '냉동콤비1(상)' THEN '18'
+		            WHEN DEVICE_LOC = '냉동콤비1(하)' THEN '19'
+		            WHEN DEVICE_LOC = '냉동콤비2(상)' THEN '20'
+		            WHEN DEVICE_LOC = '냉동콤비2(하)' THEN '21'
+		            WHEN DEVICE_LOC = '냉동콤비3(상)' THEN '22'
+		            WHEN DEVICE_LOC = '냉동콤비3(하)' THEN '23'
+		            ELSE '24' END 	as deviceType, 
+		    B.USE_YN				as useYn
+		FROM 
+			th_str_gw_mst A, th_str_rems_device_mst B
+		WHERE
+			A.STR_CD = B.STR_CD
+		    AND
+		    B.TEMON_TYPE = 'Z'
+		    AND
+			A.GW_ADDR = #{MAC}
+		ORDER BY TEMON_ID+0, PORT_NO+0      
+    ]]>
+	</select>
+	
+	
+	<update id="retrieveREQ_NOTI_GW_INFO_BLE_CHECK_MST" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_ble_check_mst
+			(
+				STR_CD,
+				STR_NM,
+	]]>
+ 	<if test="userType eq '1'.toString() " >
+    <![CDATA[
+        		ELEC_VENDOR_NM,
+				ELEC_NOTI_DATE,
+				
+    ]]>
+    </if>
+    <if test="userType eq '2'.toString() " >
+    <![CDATA[
+        		SENSOR_VENDOR_NM,				
+				SENSOR_NOTI_DATE,				
+    ]]>
+    </if>
+    <if test="userType eq '3'.toString() " >
+    <![CDATA[
+				NETWORK_VENDOR_NM,				
+				NETWORK_NOTI_DATE,
+    ]]>
+    </if>
+    <if test="userType eq '4'.toString() " >
+    <![CDATA[
+				SIGN_VENDOR_NM,				
+				SIGN_NOTI_DATE,
+    ]]>
+    </if>
+    <![CDATA[	
+    			ELEC_CHECK,
+    			SENSOR_CHECK,
+    			NETWORK_CHECK,
+    			SIGN_CHECK,
+				CHECK_SUCCESS			
+			)
+			VALUES
+			( 
+				#{strCd},
+				#{strNm},				
+				#{vendorNm},
+				#{notiDateTime},				
+				#{elecCheck},
+				#{sensorCheck},
+				#{networkCheck},
+				#{signCheck},				
+				'N'
+			) ON DUPLICATE KEY UPDATE
+				STR_CD = #{strCd},
+	]]>
+	
+	<if test="userType eq '1'.toString() " >
+    <![CDATA[
+        		ELEC_VENDOR_NM = #{vendorNm},
+				ELEC_NOTI_DATE = #{notiDateTime},
+				ELEC_CHECK = #{elecCheck},
+				
+    ]]>
+    </if>
+    <if test="userType eq '2'.toString() " >
+    <![CDATA[
+        		SENSOR_VENDOR_NM = #{vendorNm},				
+				SENSOR_NOTI_DATE = #{notiDateTime},	
+				SENSOR_CHECK = #{sensorCheck},
+    	]]>
+    </if>
+    <if test="userType eq '3'.toString() " >
+    <![CDATA[
+				NETWORK_VENDOR_NM = #{vendorNm},				
+				NETWORK_NOTI_DATE = #{notiDateTime},
+				NETWORK_CHECK = #{networkCheck},
+    ]]>
+    </if>
+    <if test="userType eq '4'.toString() " >
+    <![CDATA[
+				SIGN_VENDOR_NM = #{vendorNm},				
+				SIGN_NOTI_DATE = #{notiDateTime},
+				SIGN_CHECK = #{signCheck},
+    ]]>
+    </if>
+    <![CDATA[	
+    			CHECK_SUCCESS = 'N'
+    ]]>
+    
+	
+	</update>
+	
+	<update id="retrieveREQ_NOTI_GW_INFO_BLE_MST" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_ble_mst
+			(
+				STR_CD,
+				STR_NM,
+				VIEW_STR_CD,
+				GW_ID,
+				MAC,
+				USER_NM,
+				USER_ID,
+				USER_TYPE,
+				VENDOR_CD,
+				VENDOR_NM,
+				NOTI_DATE,
+				IP,
+				NETMASK,
+				GATEWAY,
+				IFIP,
+				IFPORT,
+				ELEC_CHECK,
+				SENSOR_CHECK,
+				NETWORK_CHECK							
+			)
+			VALUES
+			( 
+				#{strCd},
+				#{strNm},
+				#{storeCode},
+				#{gwId},
+				#{MAC},
+				#{userName},
+				#{ID},
+				#{userType},
+				#{vendorCd},
+				#{vendorNm},
+				#{notiDateTime},				
+				#{gwIp},
+				#{gwNetmask},
+				#{gwGateway},
+				#{ifIp},
+				#{ifPort},				
+				#{elecCheck},
+				#{sensorCheck},
+				#{networkCheck}
+			) ON DUPLICATE KEY UPDATE
+				VIEW_STR_CD = #{storeCode},
+				USER_NM = #{userName}
+				
+			
+			
+	]]>
+	</update>
+	
+	
+	<update id="retrieveREQ_NOTI_GW_INFO_ELEC_MST" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_ble_elec_mst
+			(
+				STR_CD,
+				USER_TYPE,
+				NOTI_DATE,
+				RST,
+				EP_CNT,
+				
+				EP_1CH_ACC,
+				EP_1CH_INST,
+				EP_1CH_STATUS,				
+				EP_2CH_ACC,
+				EP_2CH_INST,
+				EP_2CH_STATUS,
+				EP_3CH_ACC,
+				EP_3CH_INST,
+				EP_3CH_STATUS,
+				EP_4CH_ACC,
+				EP_4CH_INST,
+				EP_4CH_STATUS,
+				EP_5CH_ACC,
+				EP_5CH_INST,
+				EP_5CH_STATUS,
+				EP_6CH_ACC,
+				EP_6CH_INST,
+				EP_6CH_STATUS,
+				EP_7CH_R_ACC,
+				EP_7CH_R_INST,
+				EP_7CH_R_STATUS,
+				EP_7CH_S_ACC,
+				EP_7CH_S_INST,
+				EP_7CH_S_STATUS,
+				EP_7CH_T_ACC,
+				EP_7CH_T_INST,
+				EP_7CH_T_STATUS,
+				EP_8CH_R_ACC,
+				EP_8CH_R_INST,
+				EP_8CH_R_STATUS,
+				EP_8CH_S_ACC,
+				EP_8CH_S_INST,
+				EP_8CH_S_STATUS,
+				EP_8CH_T_ACC,
+				EP_8CH_T_INST,
+				EP_8CH_T_STATUS
+			)
+			VALUES
+			( 
+				#{strCd},				
+				#{userType},				
+				#{notiDateTime},
+				#{RST},
+				#{EpCnt},
+				
+				#{EC1Acc},
+				#{EC1Inst},
+				#{EC1S},
+				#{EC2Acc},
+				#{EC2Inst},
+				#{EC2S},
+				#{EC3Acc},
+				#{EC3Inst},
+				#{EC3S},
+				#{EC4Acc},
+				#{EC4Inst},
+				#{EC4S},
+				#{EC5Acc},
+				#{EC5Inst},
+				#{EC5S},
+				#{EC6Acc},
+				#{EC6Inst},
+				#{EC6S},
+				#{EC7RAcc},
+				#{EC7RInst},
+				#{EC7RS},
+				#{EC7SAcc},
+				#{EC7SInst},
+				#{EC7SS},
+				#{EC7TAcc},
+				#{EC7TInst},
+				#{EC7TS},
+				#{EC8RAcc},
+				#{EC8RInst},
+				#{EC8RS},
+				#{EC8SAcc},
+				#{EC8SInst},
+				#{EC8TS},
+				#{EC8TAcc},
+				#{EC8TInst},
+				#{EC8TS}								
+			) ON DUPLICATE KEY UPDATE			
+				RST = #{RST},
+				EP_CNT = #{EpCnt}				
+	]]>
+	</update>
+	
+	
+	<update id="retrieveREQ_NOTI_GW_INFO_DEVICE_MST" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_ble_device_mst
+			(
+				STR_CD,
+				USER_TYPE,
+				NOTI_DATE,
+				
+				TEMON_ID,
+				TEMON_TYPE,
+				PORT_NO,
+				DEVICE_TYPE,
+				DEVICE_LOC,
+				TEMP,
+				MAX_TEMP,
+				MIN_TEMP,
+				DELAY_TIME,
+				USE_YN,
+				PUSH_TERM,				
+				BATTERY,
+				RSSI,
+				STATUS
+			)
+			VALUES
+			( 
+				#{strCd},				
+				#{userType},				
+				#{notiDateTime},
+				
+				#{id},
+				#{type},
+				#{portNo},
+				#{deviceType},
+				#{deviceLoc},
+				#{temp},
+				#{maxTemp},
+				#{minTemp},
+				#{delayTime},
+				#{useYn},
+				#{pushTerm},				
+				#{battery},
+				#{rssi},
+				#{status}		
+			) ON DUPLICATE KEY UPDATE
+				BATTERY = #{battery},
+				STATUS = #{status}
+	]]>
+	</update>
+	
+	<update id="retrieveREQ_NOTI_GW_INFO_SENSOR_MST" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_ble_sensor_mst
+			(
+				STR_CD,
+				USER_TYPE,
+				NOTI_DATE,
+				
+				HACON_EXIST_N1,
+				HACON_EXIST_N2,
+				HACON_EXIST_N3,
+				HACON_EXIST_N4,
+				HACON_EXIST_N5,
+				
+				HACON_TEMP_N1,
+				HACON_TEMP_N2,
+				HACON_TEMP_N3,
+				HACON_TEMP_N4,
+				HACON_TEMP_N5,
+				
+				HACON_ONOFF_N1,
+				HACON_ONOFF_N2,
+				HACON_ONOFF_N3,
+				HACON_ONOFF_N4,
+				HACON_ONOFF_N5,
+				
+				HACON_STAT_CD_N1,
+				HACON_STAT_CD_N2,
+				HACON_STAT_CD_N3,
+				HACON_STAT_CD_N4,
+				HACON_STAT_CD_N5,
+				
+				T_SENSOR_EXIST_N1,
+				T_SENSOR_EXIST_N2,
+				T_SENSOR_EXIST_N3,
+				T_SENSOR_EXIST_N4,
+				T_SENSOR_EXIST_N5,
+				
+				T_SENSOR_TEMP_N1,
+				T_SENSOR_TEMP_N2,
+				T_SENSOR_TEMP_N3,
+				T_SENSOR_TEMP_N4,
+				T_SENSOR_TEMP_N5,
+				
+				T_SENSOR_STAT_CD_N1,
+				T_SENSOR_STAT_CD_N2,
+				T_SENSOR_STAT_CD_N3,
+				T_SENSOR_STAT_CD_N4,
+				T_SENSOR_STAT_CD_N5,
+				
+				SIGN_STAT_CD,
+				SIGN_ONOFF
+			)
+			VALUES
+			( 
+				#{strCd},				
+				#{userType},				
+				#{notiDateTime},
+				
+				#{Hacon1Exist},
+				#{Hacon2Exist},
+				#{Hacon3Exist},
+				#{Hacon4Exist},
+				#{Hacon5Exist},
+				
+				#{Hacon1Temp},
+				#{Hacon2Temp},
+				#{Hacon3Temp},
+				#{Hacon4Temp},
+				#{Hacon5Temp},
+				
+				#{Hacon1OnOff},
+				#{Hacon2OnOff},
+				#{Hacon3OnOff},
+				#{Hacon4OnOff},
+				#{Hacon5OnOff},
+				
+				#{Hacon1Status},
+				#{Hacon2Status},
+				#{Hacon3Status},
+				#{Hacon4Status},
+				#{Hacon5Status},
+				
+				
+				#{Tsensor1Exist},
+				#{Tsensor2Exist},
+				#{Tsensor3Exist},
+				#{Tsensor4Exist},
+				#{Tsensor5Exist},
+				
+				#{Tsensor1Temp},
+				#{Tsensor2Temp},
+				#{Tsensor3Temp},
+				#{Tsensor4Temp},
+				#{Tsensor5Temp},
+				
+				#{Tsensor1Status},
+				#{Tsensor2Status},
+				#{Tsensor3Status},
+				#{Tsensor4Status},
+				#{Tsensor5Status},
+			
+				#{SignStatus},			
+				#{SignOnOff}
+			) ON DUPLICATE KEY UPDATE				
+				SIGN_ONOFF = #{SignOnOff}
+	]]>
+	</update>
+	
+	<update id="retrieveREQ_NOTI_GW_INFO" parameterType="Map">
+	<![CDATA[
+		INSERT INTO `th_str_ble_mst`
+			(`STR_CD`,
+			`STR_NM`,
+			`GW_ID`,
+			`MAC`,
+			`USER_NM`,
+			`USER_ID`,
+			`USER_TYPE`,
+			`VENDOR_NM`,
+			`NOTI_DATE`,
+			`RST`,
+			`EP_CNT`,
+			`EP_1CH_STATUS`,
+			`EP_2CH_STATUS`,
+			`EP_3CH_STATUS`,
+			`EP_4CH_STATUS`,
+			`EP_5CH_STATUS`,
+			`EP_6CH_STATUS`,
+			`EP_7CH_R_STATUS`,
+			`EP_7CH_S_STATUS`,
+			`EP_7CH_T_STATUS`,
+			`EP_8CH_R_STATUS`,
+			`EP_8CH_S_STATUS`,
+			`EP_8CH_T_STATUS`,
+			`EP_1CH_EFT_WATAGE`,
+			`EP_1CH_ACT_WATAGE`,
+			`EP_2CH_EFT_WATAGE`,
+			`EP_2CH_ACT_WATAGE`,
+			`EP_3CH_EFT_WATAGE`,
+			`EP_3CH_ACT_WATAGE`,
+			`EP_4CH_EFT_WATAGE`,
+			`EP_4CH_ACT_WATAGE`,
+			`EP_5CH_EFT_WATAGE`,
+			`EP_5CH_ACT_WATAGE`,
+			`EP_6CH_EFT_WATAGE`,
+			`EP_6CH_ACT_WATAGE`,
+			`EP_7CH_R_EFT_WATAGE`,
+			`EP_7CH_R_ACT_WATAGE`,
+			`EP_7CH_S_EFT_WATAGE`,
+			`EP_7CH_S_ACT_WATAGE`,
+			`EP_7CH_T_EFT_WATAGE`,
+			`EP_7CH_T_ACT_WATAGE`,
+			`EP_8CH_R_EFT_WATAGE`,
+			`EP_8CH_R_ACT_WATAGE`,
+			`EP_8CH_S_EFT_WATAGE`,
+			`EP_8CH_S_ACT_WATAGE`,
+			`EP_8CH_T_EFT_WATAGE`,
+			`EP_8CH_T_ACT_WATAGE`,
+			`TEMON1_PORT1_TEMP`,
+			`TEMON1_PORT2_TEMP`,
+			`TEMON1_PORT3_TEMP`,
+			`TEMON1_PORT4_TEMP`,
+			`TEMON1_PORT5_TEMP`,
+			`TEMON1_PORT6_TEMP`,
+			`TEMON1_PORT7_TEMP`,
+			`TEMON1_PORT8_TEMP`,
+			`TEMON1_PORT9_TEMP`,
+			`TEMON1_PORT10_TEMP`,
+			`TEMON1_PORT11_TEMP`,
+			`TEMON1_PORT12_TEMP`,
+			`TEMON1_PORT13_TEMP`,
+			`TEMON1_PORT14_TEMP`,
+			`TEMON1_PORT15_TEMP`,
+			`TEMON1_PORT16_TEMP`,
+			`TEMON1_PORT1_STATUS`,
+			`TEMON1_PORT2_STATUS`,
+			`TEMON1_PORT3_STATUS`,
+			`TEMON1_PORT4_STATUS`,
+			`TEMON1_PORT5_STATUS`,
+			`TEMON1_PORT6_STATUS`,
+			`TEMON1_PORT7_STATUS`,
+			`TEMON1_PORT8_STATUS`,
+			`TEMON1_PORT9_STATUS`,
+			`TEMON1_PORT10_STATUS`,
+			`TEMON1_PORT11_STATUS`,
+			`TEMON1_PORT12_STATUS`,
+			`TEMON1_PORT13_STATUS`,
+			`TEMON1_PORT14_STATUS`,
+			`TEMON1_PORT15_STATUS`,
+			`TEMON1_PORT16_STATUS`,	
+			
+			`TEMON1_PORT1_DEVICETYPE`,
+					
+			`ZIGBEE1_PORT1_TEMP`,
+			`ZIGBEE1_PORT2_TEMP`,
+			`ZIGBEE1_PORT3_TEMP`,
+			`ZIGBEE1_PORT4_TEMP`,
+			`ZIGBEE1_PORT5_TEMP`,
+			`ZIGBEE1_PORT6_TEMP`,
+			`ZIGBEE1_PORT7_TEMP`,
+			`ZIGBEE1_PORT8_TEMP`,
+			`ZIGBEE1_PORT9_TEMP`,
+			`ZIGBEE1_PORT10_TEMP`,
+			`ZIGBEE1_PORT11_TEMP`,
+			`ZIGBEE1_PORT12_TEMP`,
+			`ZIGBEE1_PORT13_TEMP`,
+			`ZIGBEE1_PORT14_TEMP`,
+			`ZIGBEE1_PORT15_TEMP`,
+			`ZIGBEE1_PORT16_TEMP`,
+			`ZIGBEE1_PORT1_STATUS`,		
+			`ZIGBEE1_PORT2_STATUS`,
+			`ZIGBEE1_PORT3_STATUS`,
+			`ZIGBEE1_PORT4_STATUS`,
+			`ZIGBEE1_PORT5_STATUS`,
+			`ZIGBEE1_PORT6_STATUS`,
+			`ZIGBEE1_PORT7_STATUS`,
+			`ZIGBEE1_PORT8_STATUS`,
+			`ZIGBEE1_PORT9_STATUS`,
+			`ZIGBEE1_PORT10_STATUS`,
+			`ZIGBEE1_PORT11_STATUS`,
+			`ZIGBEE1_PORT12_STATUS`,
+			`ZIGBEE1_PORT13_STATUS`,
+			`ZIGBEE1_PORT14_STATUS`,
+			`ZIGBEE1_PORT15_STATUS`,
+			`ZIGBEE1_PORT16_STATUS`,
+			`ZIGBEE1_PORT1_RSSI`,
+			`ZIGBEE1_PORT2_RSSI`,
+			`ZIGBEE1_PORT3_RSSI`,
+			`ZIGBEE1_PORT4_RSSI`,
+			`ZIGBEE1_PORT5_RSSI`,
+			`ZIGBEE1_PORT6_RSSI`,
+			`ZIGBEE1_PORT7_RSSI`,
+			`ZIGBEE1_PORT8_RSSI`,
+			`ZIGBEE1_PORT9_RSSI`,
+			`ZIGBEE1_PORT10_RSSI`,
+			`ZIGBEE1_PORT11_RSSI`,
+			`ZIGBEE1_PORT12_RSSI`,
+			`ZIGBEE1_PORT13_RSSI`,
+			`ZIGBEE1_PORT14_RSSI`,
+			`ZIGBEE1_PORT15_RSSI`,
+			`ZIGBEE1_PORT16_RSSI`,
+			`ZIGBEE1_PORT1_BATTERY`,
+			`ZIGBEE1_PORT2_BATTERY`,
+			`ZIGBEE1_PORT3_BATTERY`,
+			`ZIGBEE1_PORT4_BATTERY`,
+			`ZIGBEE1_PORT5_BATTERY`,
+			`ZIGBEE1_PORT6_BATTERY`,
+			`ZIGBEE1_PORT7_BATTERY`,
+			`ZIGBEE1_PORT8_BATTERY`,
+			`ZIGBEE1_PORT9_BATTERY`,
+			`ZIGBEE1_PORT10_BATTERY`,
+			`ZIGBEE1_PORT11_BATTERY`,
+			`ZIGBEE1_PORT12_BATTERY`,
+			`ZIGBEE1_PORT13_BATTERY`,
+			`ZIGBEE1_PORT14_BATTERY`,
+			`ZIGBEE1_PORT15_BATTERY`,
+			`ZIGBEE1_PORT16_BATTERY`,
+			`ALMON1_PORT1_ALARM`,
+			`ALMON1_PORT2_ALARM`,
+			`ALMON1_PORT3_ALARM`,
+			`ALMON1_PORT4_ALARM`,
+			`ALMON1_PORT5_ALARM`,
+			`ALMON1_PORT6_ALARM`,
+			`ALMON1_PORT7_ALARM`,
+			`ALMON1_PORT8_ALARM`,
+			`ALMON1_PORT9_ALARM`,
+			`ALMON1_PORT10_ALARM`,
+			`ALMON1_PORT11_ALARM`,
+			`ALMON1_PORT12_ALARM`,
+			`ALMON1_PORT13_ALARM`,
+			`ALMON1_PORT14_ALARM`,
+			`ALMON1_PORT15_ALARM`,
+			`ALMON1_PORT16_ALARM`,
+			`HACON1_TEMP`,
+			`HACON2_TEMP`,
+			`HACON1_STATUS`,
+			`HACON2_STATUS`,
+			`HACON1_ONOFF`,
+			`HACON2_ONOFF`,
+			`T-SENSOR1_TEMP`,
+			`T-SENSOR2_TEMP`,
+			`T-SENSOR1_STATUS`,
+			`T-SENSOR2_STATUS`,
+			`SIGN_ONOFF`,
+			`SIGN_STATUS`,
+			`REGI_ID`,
+			`REGI_DTTM`,
+			`FIANL_MOD_ID`,
+			`FIANL_MOD_DTTM`)
+			VALUES
+			( 	#{strCd},
+				#{strNm},
+				#{gwId},
+				#{MAC},
+				#{UserName},
+				#{ID},
+				#{UserType},
+				#{VendorNm},
+				now(),
+				
+				#{RST},
+				#{EpCnt},
+				
+				#{EC1S},
+				#{EC2S},
+				#{EC3S},
+				#{EC4S},
+				#{EC5S},
+				#{EC6S},
+				#{EC7RS},
+				#{EC7SS},
+				#{EC7TS},
+				#{EC8RS},
+				#{EC8SS},
+				#{EC8TS},
+
+				#{EC1Acc},
+				#{EC1Inst},
+				#{EC2Acc},
+				#{EC2Inst},
+				#{EC3Acc},
+				#{EC3Inst},
+				#{EC4Acc},
+				#{EC4Inst},
+				#{EC5Acc},
+				#{EC5Inst},
+				#{EC6Acc},
+				#{EC6Inst},
+				#{EC7RAcc},
+				#{EC7RInst},
+				#{EC7SAcc},
+				#{EC7SInst},
+				#{EC7TAcc},
+				#{EC7TInst},
+				#{EC8RAcc},
+				#{EC8RInst},
+				#{EC8SAcc},
+				#{EC8SInst},
+				#{EC8TAcc},
+				#{EC8TInst},			
+				
+				
+				#{Temon1Port1Temp},
+				#{Temon1Port2Temp},
+				#{Temon1Port3Temp},
+				#{Temon1Port4Temp},
+				#{Temon1Port5Temp},
+				#{Temon1Port6Temp},
+				#{Temon1Port7Temp},
+				#{Temon1Port8Temp},
+				#{Temon1Port9Temp},
+				#{Temon1Port10Temp},
+				#{Temon1Port11Temp},
+				#{Temon1Port12Temp},
+				#{Temon1Port13Temp},
+				#{Temon1Port14Temp},
+				#{Temon1Port15Temp},
+				#{Temon1Port16Temp},	
+				
+				#{Temon1Port1Status},
+				#{Temon1Port2Status},
+				#{Temon1Port3Status},
+				#{Temon1Port4Status},
+				#{Temon1Port5Status},
+				#{Temon1Port6Status},
+				#{Temon1Port7Status},
+				#{Temon1Port8Status},
+				#{Temon1Port9Status},
+				#{Temon1Port10Status},
+				#{Temon1Port11Status},
+				#{Temon1Port12Status},
+				#{Temon1Port13Status},
+				#{Temon1Port14Status},
+				#{Temon1Port15Status},
+				#{Temon1Port16Status},
+				
+				
+				#{Zigbee1Port1Temp},
+				#{Zigbee1Port2Temp},
+				#{Zigbee1Port3Temp},
+				#{Zigbee1Port4Temp},
+				#{Zigbee1Port5Temp},
+				#{Zigbee1Port6Temp},
+				#{Zigbee1Port7Temp},
+				#{Zigbee1Port8Temp},
+				#{Zigbee1Port9Temp},
+				#{Zigbee1Port10Temp},
+				#{Zigbee1Port11Temp},
+				#{Zigbee1Port12Temp},
+				#{Zigbee1Port13Temp},
+				#{Zigbee1Port14Temp},
+				#{Zigbee1Port15Temp},
+				#{Zigbee1Port16Temp},			
+						
+				#{Zigbee1Port1Status},
+				#{Zigbee1Port2Status},
+				#{Zigbee1Port3Status},
+				#{Zigbee1Port4Status},
+				#{Zigbee1Port5Status},
+				#{Zigbee1Port6Status},
+				#{Zigbee1Port7Status},
+				#{Zigbee1Port8Status},
+				#{Zigbee1Port9Status},
+				#{Zigbee1Port10Status},
+				#{Zigbee1Port11Status},
+				#{Zigbee1Port12Status},
+				#{Zigbee1Port13Status},
+				#{Zigbee1Port14Status},
+				#{Zigbee1Port15Status},
+				#{Zigbee1Port16Status},				
+				
+				#{Zigbee1Port1RSSI},
+				#{Zigbee1Port2RSSI},
+				#{Zigbee1Port3RSSI},
+				#{Zigbee1Port4RSSI},
+				#{Zigbee1Port5RSSI},
+				#{Zigbee1Port6RSSI},
+				#{Zigbee1Port7RSSI},
+				#{Zigbee1Port8RSSI},
+				#{Zigbee1Port9RSSI},
+				#{Zigbee1Port10RSSI},
+				#{Zigbee1Port11RSSI},
+				#{Zigbee1Port12RSSI},
+				#{Zigbee1Port13RSSI},
+				#{Zigbee1Port14RSSI},
+				#{Zigbee1Port15RSSI},
+				#{Zigbee1Port16RSSI},	
+				
+				#{Zigbee1Port1Battery},
+				#{Zigbee1Port2Battery},
+				#{Zigbee1Port3Battery},
+				#{Zigbee1Port4Battery},
+				#{Zigbee1Port5Battery},
+				#{Zigbee1Port6Battery},
+				#{Zigbee1Port7Battery},
+				#{Zigbee1Port8Battery},
+				#{Zigbee1Port9Battery},
+				#{Zigbee1Port10Battery},
+				#{Zigbee1Port11Battery},
+				#{Zigbee1Port12Battery},
+				#{Zigbee1Port13Battery},
+				#{Zigbee1Port14Battery},
+				#{Zigbee1Port15Battery},
+				#{Zigbee1Port16Battery},
+			
+			
+			
+				#{Almon1Port1Alarm},
+				#{Almon1Port2Alarm},
+				#{Almon1Port3Alarm},
+				#{Almon1Port4Alarm},
+				#{Almon1Port5Alarm},
+				#{Almon1Port6Alarm},
+				#{Almon1Port7Alarm},
+				#{Almon1Port8Alarm},
+				#{Almon1Port9Alarm},
+				#{Almon1Port10Alarm},
+				#{Almon1Port11Alarm},
+				#{Almon1Port12Alarm},
+				#{Almon1Port13Alarm},
+				#{Almon1Port14Alarm},
+				#{Almon1Port15Alarm},
+				#{Almon1Port16Alarm},	
+				
+							
+				#{Hacon1Temp},
+				#{Hacon2Temp},
+				#{Hacon1Status},			
+				#{Hacon2Status},
+				#{Hacon1OnOff},			
+				#{Hacon2OnOff},
+				
+				#{Tsensor1Temp},
+				#{Tsensor2Temp},
+				#{Tsensor1Status},			
+				#{Tsensor2Status},
+				
+				#{SignOnOff},
+				#{SignStatus},
+			
+				'aa',
+				now(),
+				'aa',
+				now()
+				)  ON DUPLICATE KEY UPDATE				
+				SIGN_ONOFF = #{SignOnOff}
+    ]]>
+	</update>
+	
+	<update id="saveGwInfoDeviceMst" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_rems_device_mst
+			(
+				STR_CD,
+				
+				TEMON_ID,
+				TEMON_TYPE,
+				PORT_NO,
+				
+				DEVICE_TYPE,
+				DEVICE_LOC,
+				
+				MAX_TEMP,
+				MIN_TEMP,
+				DELAY_TIME,
+				TEMP_CONF,
+				PUSH_TERM
+			)
+			VALUES
+			( 
+				#{strCd},
+				
+				#{id},
+				#{type},
+				#{portNo},
+				#{deviceType},
+				#{deviceLoc},
+				
+				#{maxTemp},
+				#{minTemp},
+				#{delayTime},
+				'0',
+				
+				#{pushTerm}
+						
+			) ON DUPLICATE KEY UPDATE
+			
+				DEVICE_TYPE = 	#{deviceType},
+				DEVICE_LOC = 	#{deviceLoc},
+				
+				MAX_TEMP = 		#{maxTemp},
+				MIN_TEMP = 		#{minTemp},
+				DELAY_TIME = 	#{delayTime},
+				TEMP_CONF = 	'0',
+				PUSH_TERM = 	#{pushTerm}
+	
+    ]]>
+	</update>
+	
+	<update id="saveElecChannelCnt" parameterType="Map">
+	<![CDATA[
+		INSERT INTO th_str_rems_device_cnt_mnt
+			(
+				STR_CD,
+				
+				METER_CH1_RST,
+				METER_CH2_RST,
+				METER_CH3_RST,
+				METER_CH4_RST,
+				METER_CH5_RST,
+				METER_CH6_RST,
+				METER_CH7_R,
+				METER_CH7_S,
+				METER_CH7_T,
+				METER_CH8_R,
+				METER_CH8_S,
+				METER_CH8_T				
+			)
+			VALUES
+			( 
+				#{strCd},
+				
+				#{ch1cnt},
+				#{ch2cnt},
+				#{ch3cnt},
+				#{ch4cnt},
+				#{ch5cnt},
+				#{ch6cnt},
+				#{ch7Rcnt},
+				#{ch7Scnt},
+				#{ch7Tcnt},
+				#{ch8Rcnt},
+				#{ch8Scnt},
+				#{ch8Tcnt}
+						
+			) ON DUPLICATE KEY UPDATE
+				
+				METER_CH1_RST = 	#{ch1cnt},
+				METER_CH2_RST = 	#{ch2cnt},
+				METER_CH3_RST = 	#{ch3cnt},
+				METER_CH4_RST = 	#{ch4cnt},
+				METER_CH5_RST = 	#{ch5cnt},
+				METER_CH6_RST = 	#{ch6cnt},
+				METER_CH7_R = 		#{ch7Rcnt},
+				METER_CH7_S = 		#{ch7Scnt},
+				METER_CH7_T = 		#{ch7Tcnt},
+				METER_CH8_R = 		#{ch8Rcnt},
+				METER_CH8_S = 		#{ch8Scnt},
+				METER_CH8_T = 		#{ch8Tcnt}
+	
+    ]]>
+	</update>
+	
+	
+	<update id="saveStoreCode" parameterType="Map">
+	<![CDATA[
+		UPDATE th_str_info_mst
+		SET
+			VIEW_STR_CD = #{storeCode}
+		WHERE
+			STR_CD = #{strCd}
+	
+    ]]>
+	</update>
+	
+	<update id="saveUserMst" parameterType="Map">
+	<![CDATA[
+		INSERT INTO TH_USER_MST
+			(
+				USER_ID,
+				USER_NM,
+				USER_PW,
+				COMPANY_CD,
+				STR_CD,
+				EULA_YN,
+				USE_YN,
+				REGI_ID,
+				REGI_DTTM				
+			)
+			VALUES
+			( 
+				#{storeCode},				
+				#{strNm},
+				aes_encrypt('1','REMS_ADM'),
+				'GSR',
+				#{strCd},
+				'N',
+				'Y',
+				'SEMS2.0',
+				now()
+			) ON DUPLICATE KEY UPDATE				
+				
+				USER_NM 	= #{strNm},
+				USER_PW		= aes_encrypt('1','REMS_ADM'),
+				COMPANY_CD	= 'GSR',
+				STR_CD		= #{strCd},
+				EULA_YN		= 'N',
+				USE_YN		= 'Y',
+				REGI_ID		= 'SEMS2.0',
+				REGI_DTTM	= now()	
+	
+    ]]>
+	</update>
+	<update id="saveUserAuth" parameterType="Map">
+	<![CDATA[
+		INSERT INTO TH_USER_AUTH
+			(
+				COMPANY_CD,
+				USER_ID,
+				AUTH_ID				
+			)
+			VALUES
+			( 
+				'GSR',				
+				#{storeCode},
+				'4'
+			) ON DUPLICATE KEY UPDATE
+				AUTH_ID	= '4'
+	
+    ]]>
+	</update>
+	
+	<update id="saveUserStrMap" parameterType="Map">
+	<![CDATA[
+		INSERT INTO TH_STR_USER_MAP
+			(				
+				USER_ID,
+				STR_CD,
+				MAP_YN,
+				REGI_DTTM							
+			)
+			VALUES
+			( 								
+				#{storeCode},
+				#{strCd},
+				'Y',
+				now()
+			) ON DUPLICATE KEY UPDATE
+				MAP_YN = 'Y',
+				REGI_DTTM = now()
+	
+    ]]>
+	</update>
+	
+	
+	
+	
+	
+</mapper>

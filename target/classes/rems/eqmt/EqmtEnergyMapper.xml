@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtEnergyMapper">
+
+	<select id="retrieveEnergyList" parameterType="Map" resultType="SystemVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+	    SELECT  strCd,
+	    		viewStrCd, 
+				strNm, 
+				orgNm, 
+				strAreaSpec,   
+				demandPower, 
+				recommDemandPower, 
+				yearMon,
+				maxWatage,
+				CASE WHEN judge = '1' THEN '과다'
+				     WHEN judge = '2' THEN '여유'
+				     WHEN judge = '3' THEN '적정'
+				     WHEN judge = '4' THEN '부족'
+				END AS judge, 
+		      	maxUseWatage, 
+		      	useWatageDiff,
+		      	totalWatage, 
+		      	avgWatage,
+		      	operDayCnt
+		FROM (
+			SELECT  strCd, 
+					viewStrCd, 
+					strNm, 
+					orgNm, 
+					strAreaSpec,   
+					demandPower, 
+					recommDemandPower, 
+					yearMon,
+					maxWatage,
+					CASE WHEN recommDemandPower = '-' AND (demandPower - maxWatage) > 5 THEN '1'
+					     WHEN recommDemandPower = '-' AND ((demandPower - maxWatage) > 3 AND (demandPower - maxWatage) <= 5) THEN '2'
+					     WHEN recommDemandPower = '-' AND ((demandPower - maxWatage) >= 0 AND (demandPower - maxWatage) <= 3) THEN '3'
+					     WHEN recommDemandPower = '-' AND (demandPower - maxWatage) < 0 THEN '4'
+					     WHEN recommDemandPower != '-' AND (recommDemandPower - maxWatage) > 5 THEN '1'
+					     WHEN recommDemandPower != '-' AND ((recommDemandPower - maxWatage) > 3 AND (recommDemandPower - maxWatage) <= 5) THEN '2'
+					     WHEN recommDemandPower != '-' AND ((recommDemandPower - maxWatage) >= 0 AND (recommDemandPower - maxWatage) <= 3) THEN '3'
+					     WHEN recommDemandPower != '-' AND (recommDemandPower - maxWatage) < 0 THEN '4'
+					END AS judge, 
+			      	maxUseWatage, 
+			      	CASE WHEN recommDemandPower = '-' THEN ROUND(demandPower - maxUseWatage,2)
+			      	 ELSE  ROUND(recommDemandPower - maxUseWatage,2)
+	             	END AS   useWatageDiff,
+			      	totalWatage, 
+			      	IFNULL(ROUND((totalWatage / operDayCnt),2), 0) AS avgWatage
+			     , operDayCnt
+			FROM (
+					SELECT A.STR_CD AS strCd
+			             , A.VIEW_STR_CD AS viewStrCd
+			             , A.STR_NM AS strNm
+			             , fnGetOrgFullName(a.COMPANY_CD, A.ORG_CD) AS orgNm
+			             , IFNULL(A.STR_AREA_SPEC,'-') AS strAreaSpec
+			             , IFNULL(IFNULL(B.DEMAND_POWER,A.OLD_CONT_DEMAND_POWER), '-') AS demandPower
+			             , IFNULL(A.CONT_DEMAND_POWER, '-') AS recommDemandPower
+			             , ROUND((C.EP_1CH_EFT_WATAGE/1000),2) AS totalWatage
+			             , IFNULL(C.MAX_TOTAL_USE_WATAGE, '-') AS maxUseWatage
+			             , (
+								SELECT CONCAT(SUBSTR(YYYYMM,1,4),'-',SUBSTR(YYYYMM,5,2)) AS yearMon
+								FROM TH_STR_CHN_ELEC_USE_MM_SUM AA
+								WHERE STR_CD = A.STR_CD
+								AND MAX_TOTAL_USE_WATAGE =
+										(SELECT MAX(MAX_TOTAL_USE_WATAGE) AS MAX_TOTAL_USE_WATAGE
+										FROM TH_STR_CHN_ELEC_USE_MM_SUM AAA
+										WHERE STR_CD = AA.STR_CD
+										GROUP BY STR_CD)
+								LIMIT 1
+							) AS yearMon
+					     , (
+								SELECT MAX(MAX_TOTAL_USE_WATAGE) AS MAX_TOTAL_USE_WATAGE
+								FROM TH_STR_CHN_ELEC_USE_MM_SUM AA
+								WHERE STR_CD = A.STR_CD
+								GROUP BY STR_CD
+							) AS maxWatage
+			          FROM (
+							SELECT A.STR_CD
+			                     , A.VIEW_STR_CD
+			                     , A.STR_NM
+			                     , A.ORG_CD
+			                     , A.COMPANY_CD
+			                     , A.STR_AREA_SPEC
+			                     , ROUND(A.OLD_CONT_DEMAND_POWER/1000,0) AS OLD_CONT_DEMAND_POWER
+			                     , ROUND(A.CONT_DEMAND_POWER/1000,0) AS CONT_DEMAND_POWER
+			                  FROM TH_STR_INFO_MST A
+	                     	  LEFT JOIN TH_STR_GW_MST B
+	                			ON  A.STR_CD = B.STR_CD
+			                 WHERE  A.USE_YN     = 'Y'
+		            			AND B.GW_ADDR != '000000000000'			
+		            			AND B.GW_IP is not null
+		                    	AND B.USE_YN		= 'Y'
+	]]>	 
+						<if test="scrStrNm != null and scrStrNm != ''">
+								AND ((A.VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+	 		  					OR (A.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%')))
+						</if>  
+						<if test="scrOrgCd != null and scrOrgCd != ''">
+								AND ORG_CD = #{scrOrgCd}				
+						</if>					
+					
+	<![CDATA[		                 
+								AND COMPANY_CD = #{companyCd}
+						) A
+						LEFT OUTER JOIN TH_ELECTRICENT_STR_MAP B
+			            ON A.STR_CD = B.STR_CD
+						LEFT JOIN TH_STR_CHN_ELEC_USE_MM_SUM C
+			            ON A.STR_CD = C.STR_CD
+						AND C.YYYYMM = #{scrDate}
+						GROUP BY strCd
+							, viewStrCd
+			                , strNm
+			                , orgNm
+			                , strAreaSpec
+			                , demandPower
+			                , recommDemandPower
+			                , totalWatage
+			) A
+			,(SELECT STR_CD,
+					COUNT(*) AS operDayCnt
+				FROM TH_STR_CHN_ELEC_USE_DD_SUM
+				WHERE YYYYMMDD BETWEEN CONCAT(#{scrDate},'01') AND CONCAT(#{scrDate},'31')
+				GROUP BY STR_CD
+			) B
+			WHERE A.strCd = B.STR_CD
+		) T
+    ]]>
+    	WHERE 1=1
+    <if test="scrJudge != null and scrJudge != ''">
+		AND judge = #{scrJudge}				
+	</if>
+    <![CDATA[
+		ORDER BY ${sidx} ${sord}
+    ]]>	    
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+    
+    <select id="retrieveExcelEnergyList" parameterType="Map" resultType="HashMap">
+    <![CDATA[
+    	SELECT  strCd,
+	    		viewStrCd, 
+				strNm, 
+				orgNm, 
+				strAreaSpec,   
+				demandPower, 
+				recommDemandPower, 
+				yearMon,
+				maxWatage,
+				CASE WHEN judge = '1' THEN '과다'
+				     WHEN judge = '2' THEN '여유'
+				     WHEN judge = '3' THEN '적정'
+				     WHEN judge = '4' THEN '부족'
+				END AS judge, 
+		      	maxUseWatage, 
+		      	useWatageDiff,
+		      	totalWatage, 
+		      	avgWatage,
+		      	operDayCnt
+		FROM (
+			SELECT  strCd, 
+					viewStrCd, 
+					strNm, 
+					orgNm, 
+					strAreaSpec,   
+					demandPower, 
+					recommDemandPower, 
+					yearMon,
+					maxWatage,
+					CASE WHEN recommDemandPower = '-' AND (demandPower - maxWatage) > 5 THEN '1'
+					     WHEN recommDemandPower = '-' AND ((demandPower - maxWatage) > 3 AND (demandPower - maxWatage) <= 5) THEN '2'
+					     WHEN recommDemandPower = '-' AND ((demandPower - maxWatage) >= 0 AND (demandPower - maxWatage) <= 3) THEN '3'
+					     WHEN recommDemandPower = '-' AND (demandPower - maxWatage) < 0 THEN '4'
+					     WHEN recommDemandPower != '-' AND (recommDemandPower - maxWatage) > 5 THEN '1'
+					     WHEN recommDemandPower != '-' AND ((recommDemandPower - maxWatage) > 3 AND (recommDemandPower - maxWatage) <= 5) THEN '2'
+					     WHEN recommDemandPower != '-' AND ((recommDemandPower - maxWatage) >= 0 AND (recommDemandPower - maxWatage) <= 3) THEN '3'
+					     WHEN recommDemandPower != '-' AND (recommDemandPower - maxWatage) < 0 THEN '4'
+					END AS judge, 
+			      	maxUseWatage, 
+			      	CASE WHEN recommDemandPower = '-' THEN ROUND(demandPower - maxUseWatage,2)
+			      		   ELSE  ROUND(recommDemandPower - maxUseWatage,2)
+	                       END AS   useWatageDiff,
+			      	totalWatage, 
+			      	IFNULL(ROUND((totalWatage / (SELECT COUNT(*) FROM TH_STR_CHN_ELEC_USE_DD_SUM WHERE STR_CD = A.strCd AND YYYYMMDD BETWEEN CONCAT('201701','01') AND CONCAT('201701','31')
+			                    )),2)
+			              , 0 ) AS avgWatage
+			     , (SELECT COUNT(*)
+			          FROM TH_STR_CHN_ELEC_USE_DD_SUM
+					 WHERE STR_CD = A.strCd
+			           AND YYYYMMDD BETWEEN CONCAT(#{scrDate},'01') AND CONCAT(#{scrDate},'31')
+			        ) operDayCnt
+			FROM (
+					SELECT A.STR_CD AS strCd
+			             , A.VIEW_STR_CD AS viewStrCd
+			             , A.STR_NM AS strNm
+			             , fnGetOrgFullName(a.COMPANY_CD, A.ORG_CD) AS orgNm
+			             , IFNULL(A.STR_AREA_SPEC,'-') AS strAreaSpec
+			             , IFNULL(IFNULL(B.DEMAND_POWER,A.OLD_CONT_DEMAND_POWER), '-') AS demandPower
+			             , IFNULL(A.CONT_DEMAND_POWER, '-') AS recommDemandPower
+			             , ROUND((C.EP_1CH_EFT_WATAGE/1000),2) AS totalWatage
+			             , IFNULL(C.MAX_TOTAL_USE_WATAGE, '-') AS maxUseWatage
+			             , (
+								SELECT CONCAT(SUBSTR(YYYYMM,1,4),'-',SUBSTR(YYYYMM,5,2)) AS yearMon
+								FROM TH_STR_CHN_ELEC_USE_MM_SUM AA
+								WHERE STR_CD = A.STR_CD
+								AND MAX_TOTAL_USE_WATAGE =
+										(SELECT MAX(MAX_TOTAL_USE_WATAGE) AS MAX_TOTAL_USE_WATAGE
+										FROM TH_STR_CHN_ELEC_USE_MM_SUM AAA
+										WHERE STR_CD = AA.STR_CD
+										GROUP BY STR_CD)
+								LIMIT 1
+							) AS yearMon
+					     , (
+								SELECT MAX(MAX_TOTAL_USE_WATAGE) AS MAX_TOTAL_USE_WATAGE
+								FROM TH_STR_CHN_ELEC_USE_MM_SUM AA
+								WHERE STR_CD = A.STR_CD
+								GROUP BY STR_CD
+							) AS maxWatage
+			          FROM (
+			          			SELECT A.STR_CD
+				                     , A.VIEW_STR_CD
+				                     , A.STR_NM
+				                     , A.ORG_CD
+				                     , A.COMPANY_CD
+				                     , A.STR_AREA_SPEC
+				                     , ROUND(A.OLD_CONT_DEMAND_POWER/1000,0) AS OLD_CONT_DEMAND_POWER
+								     , ROUND(A.CONT_DEMAND_POWER/1000,0) AS CONT_DEMAND_POWER
+								FROM TH_STR_INFO_MST A
+		                     	  LEFT JOIN TH_STR_GW_MST B
+		                     	  ON  A.STR_CD = B.STR_CD
+				                 WHERE  A.USE_YN     = 'Y'
+		            			AND B.GW_ADDR != '000000000000'			
+		            			AND B.GW_IP is NOT NULL
+		                    	AND B.USE_YN		= 'Y'
+		]]>	 
+							<if test="scrStrNm != null and scrStrNm != ''">
+	 		  					AND ((A.VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+	 		  					OR (A.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%')))
+							</if>  
+							<if test="scrOrgCd != null and scrOrgCd != ''">
+				  				AND ORG_CD = #{scrOrgCd}				
+							</if>					
+					
+		<![CDATA[		                 
+		
+								AND COMPANY_CD = #{companyCd}
+							) A
+							LEFT OUTER JOIN TH_ELECTRICENT_STR_MAP B
+			            	ON A.STR_CD = B.STR_CD
+					  		LEFT JOIN TH_STR_CHN_ELEC_USE_MM_SUM C
+				            ON A.STR_CD = C.STR_CD
+				            AND C.YYYYMM = #{scrDate}
+				            GROUP BY strCd
+				            		, viewStrCd
+					                , strNm
+					                , orgNm
+					                , strAreaSpec
+					                , demandPower
+					                , recommDemandPower
+					                , totalWatage
+					) A
+					,(SELECT STR_CD,
+			       			COUNT(*) AS operDayCnt
+			          FROM TH_STR_CHN_ELEC_USE_DD_SUM
+					 WHERE YYYYMMDD BETWEEN CONCAT(#{scrDate},'01') AND CONCAT(#{scrDate},'31')
+			         GROUP BY STR_CD
+			        ) B
+			        WHERE A.strCd = B.STR_CD
+	    ) T
+    ]]>
+    	WHERE 1=1
+    <if test="scrJudge != null and scrJudge != ''">
+		AND judge = #{scrJudge}				
+	</if> 
+    </select>
+
+</mapper>

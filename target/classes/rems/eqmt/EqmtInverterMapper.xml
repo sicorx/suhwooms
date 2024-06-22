@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtInverterMapper">
+
+	<!-- 주영 -->
+	<select id="retrieveStoreInverter" parameterType="Map" resultType="GridStoreInverterVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[		 
+		
+		SELECT 
+			A.COMPANY_CD  AS companyCd
+			, A.ORG_CD AS orgCd
+			, D.ORG_NM	AS orgNm
+			, A.STR_CD AS strCd
+			, A.VIEW_STR_CD AS viewStrCd
+			, A.STR_NM AS strNm
+		    , SUM( B.ALARM_COUNT ) AS alarmCnt
+			, B.ALARM_DATE_E AS alarmGenTime            
+            , '0' AS temp8
+			, '0' AS temp7
+			, '0' AS temp6
+			, '0' AS temp5
+			, '0' AS temp4
+			, '0' AS temp3
+			, '0' AS temp2
+			, '0' AS temp1
+			, '0' AS link
+			, '0' AS  comp
+			, '0' AS  lowPressure
+			, '0' AS  highPressure
+			, '0' AS  deSensor
+			, '0' AS  inSensor
+			, '0' AS lowTemp
+			, '0' AS highTemp                        
+            , SUM( if( B.ALARM_TYPE = 'Y', 1, 0) ) AS alarm						
+			, SUM( if( B.ALARM_TYPE = 'E', 1, 0) ) AS commErr   
+		FROM 
+			th_str_info_mst A    
+			LEFT JOIN
+			th_gcm_as_result B
+			ON
+			A.STR_CD = B.STR_CD
+			AND            
+			DATE_FORMAT( B.ALARM_DATE_E, '%Y%m%d') = DATE_FORMAT( now(), '%Y%m%d')
+			AND
+            B.TEMON_TYPE = 'I' 	
+		    LEFT JOIN
+		    TH_STR_GW_MST C
+		    ON
+		    A.STR_CD = C.STR_CD    
+		    LEFT OUTER JOIN 
+		    TH_COMPANY_ORG_MST D
+            ON A.ORG_CD = D.ORG_CD
+            AND D.COMPANY_CD		= #{companyCd}  
+            LEFT JOIN TH_STR_REMS_DEVICE_CNT_MNT E
+            ON
+            A.STR_CD = E.STR_CD 
+		WHERE			
+			A.USE_YN = 'Y'
+		    AND
+		    C.USE_YN = 'Y'    
+			AND
+			A.COMPANY_CD = #{companyCd}
+			AND
+            (E.INV != '0' OR E.INV != null )
+		    AND
+		    C.GW_ADDR != '000000000000'
+	]]>
+		    <if test='strCd != null and strCd != ""'>
+       		AND A.STR_CD	= #{strCd}
+			</if>			
+	<![CDATA[
+		GROUP BY A.STR_CD
+	]]>
+		<if test='alarmYn != null and alarmYn == "Y"'>
+		           HAVING alarmCnt > 0
+		</if>
+	<![CDATA[
+	ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+</mapper>

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.RemsConfigMgntMapper">
+
+	<select id="retrieveRemsConfigDataList" parameterType="Map" resultType="RemsConfigMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+        <![CDATA[
+                
+        	SELECT 
+					TSIM.STR_CD           as strCd, 
+					TSIM.STR_NM           as strNm,
+					TSIM.VIEW_STR_CD      as viewStrCd,
+					TSIM.COMPANY_CD       as companyCd,
+					TSIM.ORG_CD           as orgCd,
+					TCOM.ORG_NM           as orgNm,  
+					fnGetOrgFullName(TSIM.COMPANY_CD, TSIM.ORG_CD)	as orgFullNm, 
+					CASE WHEN ( SUM(CASE WHEN TSC.CONF_SP = 'PEAK_TYPE' THEN ( CASE WHEN TSC.CONF_VAL = 'P0' THEN 0
+									WHEN TSC.CONF_VAL = NULL THEN 0 ELSE 1 END ) ELSE 0 END) 
+									> 0 ) THEN "O" ELSE "X" END
+									AS peakType,
+					CASE WHEN ( SUM(CASE WHEN TSC.CONF_SP = 'TEMP_TYPE' THEN ( CASE WHEN TSC.CONF_VAL = 'T0' THEN 0
+									WHEN TSC.CONF_VAL = NULL THEN 0 ELSE 1 END ) ELSE 0 END) 
+									> 0 ) THEN "O" ELSE "X" END
+									AS tempType,
+					CASE WHEN (SUM(CASE WHEN TSC.CONF_SP = 'SIGN_TYPE' THEN ( CASE WHEN TSC.CONF_VAL = 'S0' THEN 0
+									WHEN TSC.CONF_VAL = NULL THEN 0 ELSE 1 END ) ELSE 0 END) 
+									> 0 ) THEN "O" ELSE "X" END
+									AS signType                                              
+					FROM 
+					  TH_STR_INFO_MST TSIM
+					  LEFT JOIN 
+					    TH_STR_ENV_CONF_MST TSC
+					  ON
+					    TSIM.STR_CD = TSC.STR_CD
+					  LEFT JOIN 
+					    TH_COMPANY_ORG_MST TCOM
+					ON 
+					    TSIM.ORG_CD = TCOM.ORG_CD
+					  AND 
+					    TSIM.COMPANY_CD = #{companyCd} 
+					WHERE 1=1
+					AND TSIM.COMPANY_CD = #{companyCd} 
+					AND TSIM.USE_YN = 'Y'
+					]]>
+					<if test="strNm != null and strNm != ''" >
+            		<![CDATA[
+            			AND
+					    INSTR(TSIM.STR_NM, #{strNm}) > 0
+					    OR 
+	        			INSTR(TSIM.VIEW_STR_CD, #{strNm}) > 0
+					]]>
+					</if>
+					<if test="orgCd != null and orgCd != ''" >
+					<![CDATA[
+            			AND TSIM.ORG_CD = #{orgCd}
+            		]]>
+            		</if>            		
+        			<![CDATA[
+					GROUP BY TSIM.STR_CD
+					ORDER BY ${sidx} ${sord}			
+					]]>
+					<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />					
+    
+    </select>
+    
+    <select id="retrieveRemsConfMst" parameterType="String" resultType="RemsConfigMstVo">
+
+		SELECT 
+			 (SELECT contents from TH_ENV_CONF_CD where conf_val = 'p0' and conf_sp = 'peak_type') as p0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'p1' and conf_sp = 'peak_type') as p1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'd0' and conf_sp = 'dimm_type') as d0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'd1' and conf_sp = 'dimm_type') as d1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'd2' and conf_sp = 'dimm_type') as d2
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'd3' and conf_sp = 'dimm_type') as d3
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't0' and conf_sp = 'temp_type') as t0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't1' and conf_sp = 'temp_type') as t1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't2' and conf_sp = 'temp_type') as t2
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't3' and conf_sp = 'temp_type') as t3
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't4' and conf_sp = 'temp_type') as t4
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't5' and conf_sp = 'temp_type') as t5
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't6' and conf_sp = 'temp_type') as t6
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't7' and conf_sp = 'temp_type') as t7
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't8' and conf_sp = 'temp_type') as t8
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 's0' and conf_sp = 'sign_type') as s0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 's1' and conf_sp = 'sign_type') as s1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 's2' and conf_sp = 'sign_type') as s2
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 's3' and conf_sp = 'sign_type') as s3
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 's4' and conf_sp = 'sign_type') as s4
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'tm' and conf_sp = 'oper_elec') as tm
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'sd' and conf_sp = 'sign_dely') as sd
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'l0' and conf_sp = 'temp_strn') as strnL0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'l1' and conf_sp = 'temp_strn') as strnL1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'l0' and conf_sp = 'temp_wind') as windL0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'l1' and conf_sp = 'temp_wind') as windL1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'l2' and conf_sp = 'temp_wind') as windL2
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 't1' and conf_sp = 'TEMP_CONF') as confT1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'h1' and conf_sp = 'TEMP_CONF') as confH1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'c0' and conf_sp = 'TEMP_LEVL') as c0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'c1' and conf_sp = 'TEMP_LEVL') as c1
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'h0' and conf_sp = 'TEMP_LEVL') as h0
+			,(SELECT contents from TH_ENV_CONF_CD where conf_val = 'h1' and conf_sp = 'TEMP_LEVL') as h1
+
+    </select>
+
+	<select id="retrieveStoreContractPower" parameterType="Map" resultType="String">
+		SELECT CONT_DEMAND_POWER
+		  FROM TH_STR_INFO_MST
+		WHERE STR_CD = #{strCd}
+    </select>
+    
+	<select id="retrieveStoreRemsPart" parameterType="Map" resultType="GridRemsDeviceMgntVo">
+		SELECT
+			 	   METER_CH1_RST as mainMeter
+		 	 	 , HACON  AS hacon
+		 	 	 , SIGN AS sign
+		 FROM TH_STR_REMS_DEVICE_CNT_MNT
+		WHERE STR_CD = #{strCd}
+    </select>
+
+	<!-- 기존데이터 지우기 -->
+	<delete id="deleteRemsConfigMgnt" parameterType="Map">
+		<![CDATA[
+		DELETE FROM TH_STR_ENV_CONF_MST
+			WHERE STR_CD = #{strCd}
+			AND CONF_SP = #{confSp}
+			AND CONF_VAL <> #{confVal}
+		]]>
+	</delete>
+    
+	<update id="saveRemsConfigMgnt" parameterType="Map">
+		<if test="mode eq 'A'.toString() " >
+         <![CDATA[
+         	INSERT INTO TH_STR_ENV_CONF_MST
+			SET
+				STR_CD = 			#{strCd},
+				CONF_SP = 			#{confSp},
+				CONF_VAL = 			#{confVal},
+				STR_CONF_VAL = 		#{strConfVal},
+				STR_CONF_VAL_OLD = 	#{strConfValOld},
+				APPDT_DT = 			DATE_FORMAT( now(), '%Y%m%d'),
+				REGI_ID = 			#{userId},
+				REGI_DTTM = 		now(),		
+				FINAL_MOD_ID = 		#{userId},
+				FINAL_MOD_DTTM = 	now()			
+			ON DUPLICATE KEY UPDATE
+                STR_CONF_VAL = 		#{strConfVal},
+				STR_CONF_VAL_OLD = 	#{strConfValOld},
+				APPDT_DT = 			DATE_FORMAT( now(), '%Y%m%d'),
+				FINAL_MOD_ID = 		#{userId},
+				FINAL_MOD_DTTM = 	now()
+		]]>
+		</if>
+		<if test="mode eq 'B'.toString() " >
+         <![CDATA[
+         	UPDATE TH_STR_ENV_CONF_MST
+			SET
+				STR_CONF_VAL = 		#{strConfVal},
+				STR_CONF_VAL_OLD = 	#{strConfValOld},
+				APPDT_DT = 			DATE_FORMAT( now(), '%Y%m%d'),
+				FINAL_MOD_ID = 		#{userId},
+				FINAL_MOD_DTTM = 	now()			
+			WHERE
+				STR_CD = #{strCd}
+				AND
+				CONF_SP = #{confSp}
+				AND
+				CONF_VAL = #{confVal}
+		]]>
+		</if>
+	</update>
+	
+	<update id="updateStoreContractPower" parameterType="Map">
+		UPDATE TH_STR_INFO_MST
+		     SET   CONT_DEMAND_POWER = 		#{peakVal}
+			       , FINAL_MOD_ID         	= #{userId}
+			       , FINAL_MOD_DTTM        	= #{now}
+		 WHERE STR_CD = #{strCd}
+	</update>
+	
+	<update id="deleteRemsConfigPaticularData" parameterType="Map">
+		DELETE FROM TH_STR_ENV_CONF_MST
+        WHERE STR_CD = #{strCd}
+			AND CONF_SP = #{confSp}
+	</update>
+	
+	<select id="retrieveRemsConfigParticularData" parameterType="Map" resultType="RemsConfigMgntVo">
+		SELECT 
+                     CONF_SP AS confSP
+		           , CONF_VAL AS confVal
+		           , CASE WHEN CONF_SP = "SIGN_TYPE" THEN ifnull(STR_CONF_VAL,"18:00,08:00") ELSE STR_CONF_VAL END AS strConfVal
+		           , CASE WHEN CONF_SP = "SIGN_TYPE" THEN ifnull(STR_CONF_VAL_OLD,"18:00,08:00") ELSE STR_CONF_VAL_OLD END AS strConfValOld
+		           , APPDT_DT as appdtDt
+	     FROM TH_STR_ENV_CONF_MST
+       WHERE STR_CD = #{strCd}
+           AND CONF_SP = #{confSp}
+    </select>
+    
+    	<select id="retrieveRemsConfigTempLevelData" parameterType="Map" resultType="RemsConfigMstVo">
+		SELECT 
+			(SELECT 
+				   STR_CONF_VAL
+			  FROM TH_STR_ENV_CONF_MST
+			 WHERE STR_CD   = #{strCd}
+			   AND CONF_SP  = 'temp_levl'
+			   AND CONF_VAL = 'C0'
+			) AS C0
+			,
+			(SELECT 
+				   STR_CONF_VAL
+			  FROM TH_STR_ENV_CONF_MST
+			 WHERE STR_CD   = #{strCd}
+			   AND CONF_SP  = 'temp_levl'
+			   AND CONF_VAL = 'C1'
+			) AS C1
+			,
+			(SELECT 
+				   STR_CONF_VAL
+			  FROM TH_STR_ENV_CONF_MST
+			 WHERE STR_CD   = #{strCd}
+			   AND CONF_SP  = 'temp_levl'
+			   AND CONF_VAL = 'H0'
+			) AS H0
+			,
+			(SELECT 
+				   STR_CONF_VAL
+			  FROM TH_STR_ENV_CONF_MST
+			 WHERE STR_CD   = #{strCd}
+			   AND CONF_SP  = 'temp_levl'
+			   AND CONF_VAL = 'H1'
+			) AS H1
+    </select>
+
+	<update id="saveConfigMgnt_init" parameterType="Map">	
+		INSERT INTO 
+				TH_STR_ENV_CONF_MST 
+				( 
+				STR_CD,
+				CONF_SP,
+			    CONF_VAL,
+			    STR_CONF_VAL,
+				STR_CONF_VAL_OLD,
+			   	APPDT_DT,	    
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="InfoStrConfDataListVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.strCd},
+					#{item.confSp},
+					#{item.confVal},
+					#{item.strConfVal},
+					#{item.strConfValOld},
+					date_format(now(), '%Y%m%d'),					
+					#{item.regiId},
+					now(),
+					#{item.finalModId},
+					now()
+				)			    
+		   		</foreach>		
+	</update>
+	
+	<!-- 지우기 -->
+	<delete id="delConfigMgnt" parameterType="Map">
+		delete from 
+			TH_STR_ENV_CONF_MST 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+	
+	<!-- 엑셀다운로드 -->
+	<select id="downloadRemsConfigDataListExcel" parameterType="Map" resultType="HashMap">
+        <![CDATA[
+                
+        	SELECT 
+					TSIM.STR_CD           as strCd, 
+					TSIM.STR_NM           as strNm,
+					TSIM.VIEW_STR_CD      as viewStrCd,
+					TSIM.COMPANY_CD       as companyCd,
+					TSIM.ORG_CD           as orgCd,
+					TCOM.ORG_NM           as orgNm,  
+					fnGetOrgFullName(TSIM.COMPANY_CD, TSIM.ORG_CD)	as orgFullNm, 
+					CASE WHEN ( SUM(CASE WHEN TSC.CONF_SP = 'PEAK_TYPE' THEN ( CASE WHEN TSC.CONF_VAL = 'P0' THEN 0
+									WHEN TSC.CONF_VAL = NULL THEN 0 ELSE 1 END ) ELSE 0 END) 
+									> 0 ) THEN "O" ELSE "X" END
+									AS peakType,
+					CASE WHEN ( SUM(CASE WHEN TSC.CONF_SP = 'TEMP_TYPE' THEN ( CASE WHEN TSC.CONF_VAL = 'T0' THEN 0
+									WHEN TSC.CONF_VAL = NULL THEN 0 ELSE 1 END ) ELSE 0 END) 
+									> 0 ) THEN "O" ELSE "X" END
+									AS tempType,
+					CASE WHEN (SUM(CASE WHEN TSC.CONF_SP = 'SIGN_TYPE' THEN ( CASE WHEN TSC.CONF_VAL = 'S0' THEN 0
+									WHEN TSC.CONF_VAL = NULL THEN 0 ELSE 1 END ) ELSE 0 END) 
+									> 0 ) THEN "O" ELSE "X" END
+									AS signType                                              
+					FROM 
+					  TH_STR_INFO_MST TSIM
+					  LEFT JOIN 
+					    TH_STR_ENV_CONF_MST TSC
+					  ON
+					    TSIM.STR_CD = TSC.STR_CD
+					  LEFT JOIN 
+					    TH_COMPANY_ORG_MST TCOM
+					ON 
+					    TSIM.ORG_CD = TCOM.ORG_CD
+					  AND 
+					    TSIM.COMPANY_CD = #{companyCd} 
+					WHERE 1=1
+					AND TSIM.COMPANY_CD = #{companyCd} 
+					AND TSIM.USE_YN = 'Y'
+					]]>
+					<if test="strNm != null and strNm != ''" >
+            		<![CDATA[
+            			AND
+					    INSTR(TSIM.STR_NM, #{strNm}) > 0
+					    OR 
+	        			INSTR(TSIM.VIEW_STR_CD, #{strNm}) > 0
+					]]>
+					</if>
+					<if test="orgCd != null and orgCd != ''" >
+					<![CDATA[
+            			AND TSIM.ORG_CD = #{orgCd}
+            		]]>
+            		</if>            		
+        			<![CDATA[
+					GROUP BY TSIM.STR_CD
+					ORDER BY TSIM.STR_NM		
+					]]>
+    
+    </select>
+</mapper>

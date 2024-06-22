@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.SystemMapper">
+    <select id="retrieveLoginUser" parameterType="UserVo" resultType="SessionUserVo">
+        SELECT A.USER_ID                   AS sessionUserId
+             , A.USER_NM                   AS sessionUserNm
+             , A.COMPANY_CD                AS sessionCompanyCd
+             , D.COMPANY_NM                AS sessionCompanyNm
+             , E.VENDOR_CD                 AS sessionVendorCd
+             , E.VENDOR_NM                 AS sessionVendorNm
+             , A.USE_YN                    AS sessionUseYn
+             , A.EULA_YN                   AS sessionEulaYn
+             , IFNULL(B.TIME_DIFF,0)       AS sessionTimeDiff
+             , G.AUTH_SP                   AS sessionAuthSp
+             , G.AUTH_ID				   AS sessionAUthId
+             , A.STR_CD				   	   AS sessionStrCd
+             , H.ELECTRICENT_CD			   AS sessionElectricentCd
+             , H.ELECTRICENT_NM			   AS sessionElectricentNm
+          FROM TH_USER_MST A
+               LEFT JOIN TH_STR_INFO_MST B 		ON A.COMPANY_CD = B.COMPANY_CD AND A.STR_CD = B.STR_CD
+               LEFT JOIN TH_COMPANY_MST D  		ON A.COMPANY_CD = D.COMPANY_CD
+               LEFT JOIN TH_VENDOR_MST E   		ON A.VENDOR_CD  = E.VENDOR_CD
+		       LEFT JOIN TH_USER_AUTH F    		ON A.COMPANY_CD = F.COMPANY_CD AND A.USER_ID = F.USER_ID
+		       LEFT JOIN TH_AUTH G         		ON A.COMPANY_CD = G.COMPANY_CD AND F.AUTH_ID = G.AUTH_ID
+		       LEFT JOIN TH_ELECTRICENT_MST H	ON A.VENDOR_CD  = H.ELECTRICENT_CD
+         WHERE A.USER_ID = #{userId}     
+           AND A.USE_YN  = 'Y'
+        <if test="userId != 'remssysadmin' " >
+            <![CDATA[
+            AND D.USE_YN  = 'Y'
+            ]]>
+        </if>
+    
+    /* rems.system.persistence.SystemMapper.retrieveLoginUser */
+    </select>
+
+    <select id="retrieveUserPw" parameterType="Map" resultType="String">   
+        SELECT CAST(AES_DECRYPT(A.USER_PW, #{encKey}) AS CHAR(50))  AS userPw
+          FROM TH_USER_MST A
+         WHERE A.USER_ID = #{userId}
+           AND A.USE_YN  = 'Y'
+    
+    /* rems.system.persistence.SystemMapper.retrieveUserPw */
+    </select>
+
+    <update id="saveEulaYn" parameterType="Map">
+        UPDATE TH_USER_MST A
+        SET A.EULA_YN        = #{eulaYn}
+        , A.FINAL_MOD_ID   = #{userId}
+        , A.FINAL_MOD_DTTM = #{now}
+        WHERE A.USER_ID = #{userId}
+
+        /* rems.system.persistence.SystemMapper.saveEulaYn */
+    </update>
+
+    <select id="retrieveTopAreaInfo" parameterType="Map" resultType="Map">
+        <![CDATA[
+        SELECT (SELECT COUNT(A.AS_RESULT)
+                  FROM TH_GCM_AS_RESULT A
+                       INNER JOIN TH_STR_INFO_MST B ON A.STR_CD = B.STR_CD
+                 WHERE A.AS_RESULT <> 'Y'
+                   AND B.COMPANY_CD = #{companyCd}
+               ) AS messageCnt
+              ,(SELECT COUNT(A.NOTICE_ID)  AS noticeCnt
+                  FROM TH_NOTICE A
+                       LEFT OUTER JOIN TH_NOTICE_VIEW B ON A.COMPANY_CD = B.COMPANY_CD AND A.NOTICE_ID = B.NOTICE_ID AND B.USER_ID = #{userId}
+                 WHERE A.COMPANY_CD = #{companyCd}
+                   AND A.PUB_YN = 'Y'
+                   AND A.PUB_START_DT <= DATE_FORMAT(NOW(), '%Y%m%d')
+                   AND A.PUB_END_DT >= DATE_FORMAT(NOW(), '%Y%m%d')
+                   AND (#{authId} = 1
+                        OR
+                        #{authId} IN (SELECT AA.AUTH_ID
+                                        FROM TH_AUTH AA
+                                             INNER JOIN TH_NOTICE_TARGET BB     ON AA.COMPANY_CD = BB.COMPANY_CD AND AA.AUTH_ID = BB.AUTH_ID
+                                       WHERE AA.COMPANY_CD = A.COMPANY_CD
+                                         AND AA.AUTH_SP <> 'S'
+                                         AND BB.NOTICE_ID = A.NOTICE_ID
+                                     )
+                        OR
+                        #{authId} IN (SELECT AA.AUTH_ID
+                                        FROM TH_AUTH AA
+                                             INNER JOIN TH_NOTICE_TARGET BB     ON AA.COMPANY_CD = BB.COMPANY_CD AND AA.AUTH_ID = BB.AUTH_ID
+                                             INNER JOIN TH_NOTICE_TARGET_ORG CC ON AA.COMPANY_CD = CC.COMPANY_CD AND BB.NOTICE_ID = CC.NOTICE_ID AND BB.AUTH_ID = CC.AUTH_ID
+                                             INNER JOIN TH_STR_INFO_MST DD      ON CC.COMPANY_CD = DD.COMPANY_CD AND CC.ORG_CD = DD.ORG_CD
+                                             LEFT OUTER JOIN TH_USER_MST FF     ON FF.USER_ID = #{userId} AND DD.COMPANY_CD = FF.COMPANY_CD AND DD.STR_CD = FF.STR_CD
+                                             LEFT OUTER JOIN TH_STR_USER_MAP GG  ON GG.USER_ID = #{userId} AND GG.STR_CD = FF.STR_CD
+                                       WHERE AA.COMPANY_CD = A.COMPANY_CD
+                                         AND AA.AUTH_SP = 'S'
+                                         AND BB.NOTICE_ID = A.NOTICE_ID
+                                         AND (DD.STR_CD IS NOT NULL OR FF.STR_CD IS NOT NULL)
+                                     )
+                       )
+                   AND B.REGI_DTTM IS NULL
+               ) AS noticeCnt
+
+        /* rems.system.persistence.SystemMapper.retrieveMenu */
+        ]]>
+    </select>
+
+    <select id="retrieveMenu" parameterType="Map" resultType="Map">
+        SELECT A.MENU_ID        AS menuId
+              ,CASE WHEN #{locale} = 'en' THEN A.MENU_ENG_NM
+                    ELSE A.MENU_NM
+               END              AS text
+              ,A.MENU_TYPE      AS menuType
+              ,A.URL            AS url
+              ,A.INDEX_HIER     AS indexHier
+              ,A.USE_YN         AS useYn
+          FROM TH_MENU A
+               INNER JOIN TH_MENU_AUTH B  ON A.COMPANY_CD = B.COMPANY_CD AND A.MENU_ID = B.MENU_ID
+               INNER JOIN TH_USER_AUTH C  ON B.COMPANY_CD = C.COMPANY_CD AND B.AUTH_ID = C.AUTH_ID
+               INNER JOIN TH_AUTH D       ON C.COMPANY_CD = D.COMPANY_CD AND C.AUTH_ID = D.AUTH_ID
+         WHERE A.COMPANY_CD = #{companyCd}
+           AND C.USER_ID = #{userId}
+           AND D.USE_YN = 'Y'
+         ORDER BY A.INDEX_HIER ASC
+
+        /* rems.system.persistence.SystemMapper.retrieveMenu */
+    </select>    
+    
+</mapper>

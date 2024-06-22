@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Grid Table</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Grid Table</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Grid Table</a></div>
+    
+    
+    <div class="r_grid">
+      <div class="r_gridTitle">
+        <h3>Grid Table</h3>
+      </div>
+      <table>
+        <caption>Grid Table</caption>
+        <col width="20%" />
+        <col width="20%" />
+        <col width="30%" />
+        <col width="30%" />
+        <thead>
+          <tr>
+            <th scope="col">번호</th>
+            <th scope="col">시스템</th>
+            <th scope="col">화면 명</th>
+            <th class="r_last" scope="col">설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_even">
+            <td>2</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_select">
+            <td>3</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_even">
+            <td>4</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_last">
+            <td>5</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="r_grid r_halfGrid_l r_secondTbl">
+      <div class="r_gridTitle">
+        <h3>Grid Table Left side</h3>
+      </div>
+      <table>
+        <caption>Grid Table</caption>
+        <col width="20%" />
+        <col width="20%" />
+        <col width="30%" />
+        <col width="30%" />
+        <thead>
+          <tr>
+            <th scope="col">번호</th>
+            <th scope="col">시스템</th>
+            <th scope="col">화면 명</th>
+            <th class="r_last" scope="col">설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_even">
+            <td>2</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_select">
+            <td>3</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_even">
+            <td>4</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_last">
+            <td>5</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <div class="r_grid r_halfGrid_r r_secondTbl">
+      <div class="r_gridTitle">
+        <h3>Grid Table Right side</h3>
+      </div>
+      <table>
+        <caption>Grid Table</caption>
+        <col width="20%" />
+        <col width="20%" />
+        <col width="30%" />
+        <col width="30%" />
+        <thead>
+          <tr>
+            <th scope="col">번호</th>
+            <th scope="col">시스템</th>
+            <th scope="col">화면 명</th>
+            <th class="r_last" scope="col">설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_even">
+            <td>2</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_select">
+            <td>3</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_even">
+            <td>4</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+          <tr class="r_last">
+            <td>5</td>
+            <td>모바일</td>
+            <td class="textLeft">에너지조회</td>
+            <td class="r_last textLeft">에너지조회</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    
+  </div>
+</div>
+</body>
+</html>

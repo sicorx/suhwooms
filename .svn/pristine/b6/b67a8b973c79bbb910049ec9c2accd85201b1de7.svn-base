@@ -1,0 +1,470 @@
+@import url(http://fonts.googleapis.com/earlyaccess/notosanskr.css);
+
+.dashboard * {
+    box-sizing: border-box;
+}
+
+/* .dashboard html,
+.dashboard body { */
+.dashboard #dash {
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: bold;
+    background: #f1f1f1;
+}
+
+.dashboard ul,
+.dashboard ol,
+.dashboard li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dashboard .row {
+	margin: 0;
+}
+
+.dashboard .row > .columns {
+    float: left;
+    width: 50%;
+    padding: 0 1%;
+}
+
+.dashboard .clearfix:after,
+.dashboard .row:after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+.dashboard .left {
+    float: left;
+}
+
+.dashboard .right {
+    float: right;
+}
+
+.dashboard .columns-3 > * {
+    width: 33.3333333%;
+}
+
+.dashboard .columns-4 > * {
+    width: 25%;
+}
+
+.dashboard .padding-left-0 {
+    padding-left: 0 !important;
+}
+
+.dashboard .padding-right-0 {
+    padding-right: 0 !important;
+}
+
+.dashboard .color-green {
+    color: #4fa217 !important;
+}
+
+.dashboard .color-red {
+    color: #c00c3f !important;
+}
+
+.dashboard .viewport {
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+}
+
+.dashboard .viewport.aside-actived {
+    padding-left: 210px;
+}
+
+.dashboard .aside {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    width: 210px;
+    height: 100%;
+    background: #262930;
+}
+
+.dashboard .viewport.aside-actived .aside {
+    display: block;
+}
+
+.dashboard .container {
+    overflow: hidden;
+    height: 100%;
+    background: #f1f1f1;
+}
+
+.dashboard .topbar {
+    background: #fff;
+    height: 40px;
+    border-bottom: 1px solid #ddd;
+}
+
+.dashboard .contents {
+    padding: 20px 40px;
+}
+
+.dashboard .heading {
+    margin-bottom: 25px;
+    height: 85px;
+}
+
+.dashboard .heading2 {
+    margin-bottom: 20px;
+    height: 85px;
+}
+
+.dashboard .h1 {
+    margin-top: 35px;
+    margin-bottom: 0;
+    font-size: 40px;
+    letter-spacing: -2px;
+    font-weight: bold;
+}
+
+.dashboard .today {
+    padding: 10px 20px;
+    /* background: #afb4ac;
+    color: #fff; */
+}
+
+.dashboard .calendar-day {
+    display: inline-block;
+    font-size: 65px;
+    margin-right: 20px;
+}
+
+.dashboard .calendar-date {
+    display: block;
+    font-size: 21px;
+    margin-top: 8px;
+}
+
+.dashboard .calendar-time {
+    font-size: 15px;
+}
+
+.dashboard .weather {
+    text-align: center;
+}
+
+.dashboard .weather:before {
+    content: '';
+    display: block;
+    float: left;
+    margin-left: 35px;
+    margin-right: 15px;
+    width: 2px;
+    height: 65px;
+    background: #bfcac9;
+}
+
+.dashboard .weather-symbol {
+    display: block;
+    width: 105px;
+    padding-top: 5px;
+}
+
+.dashboard .weather-data {
+    display: block;
+    width: 140px;
+    margin-top: 5px;
+    font-size: 15px;
+}
+
+.dashboard .weather-temperature {
+    font-size: 36px;
+}
+
+.dashboard .box-size {
+	margin-bottom: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+	height: 270px;
+}
+
+.dashboard .box {
+    margin-bottom: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+}
+
+.dashboard .box-head {
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    font-size: 18px;
+}
+
+.dashboard .box-body {
+    padding: 15px 20px;
+    overflow: hidden;
+}
+
+.dashboard .box-head2 {
+    padding: 12px 20px;
+    border-bottom: 1px solid #ddd;
+    font-size: 18px;
+}
+
+.dashboard .box-body2 {
+    padding: 10px 20px;
+    overflow: hidden;
+}
+
+.dashboard .summary {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.dashboard .summary-title {
+    display: block;
+    width: 270px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    padding: 25px 40px;
+    background: #e3e3e3;
+    font-size: 30px;
+    color: #262930;
+    line-height: 1.2;
+}
+
+.dashboard .summary-setting {
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+    padding:0;
+    border: none;
+    background: none;
+}
+
+.dashboard .summary-lists {
+    float: left;
+    overflow: hidden;
+    width: 100%;
+    padding: 20px 0;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.dashboard .summary-title + .summary-lists {
+    width: calc(100% - 280px);
+    margin-left: 280px;
+}
+
+.dashboard .summary-lists li {
+    float: left;
+    padding: 20px 0;
+    border-right: 3px solid #c8c8c8;
+    color: #888;
+    font-size: 20px;
+}
+
+.dashboard .summary-lists li:last-child {
+    border-right: none;
+}
+
+.dashboard .summary-lists strong {
+    display: block;
+    margin-bottom: 15px;
+    font-size: 45px;
+    color: #666;
+}
+
+.dashboard .summary-lists2 {
+    float: left;
+    overflow: hidden;
+    width: 100%;
+    padding: 15px 0;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.dashboard .summary-title + .summary-lists2 {
+    width: calc(100% - 280px);
+    margin-left: 280px;
+}
+
+.dashboard .summary-lists2 li {
+    float: left;
+    padding: 0;
+    border-right: 3px solid #c8c8c8;
+    color: #888;
+    font-size: 20px;
+}
+
+.dashboard .summary-lists2 li:last-child {
+    border-right: none;
+}
+
+.dashboard .summary-lists2 strong {
+    display: block;
+    margin-bottom: 15px;
+    font-size: 45px;
+    color: #666;
+}
+
+.dashboard .graph2 {
+    text-align: center;
+}
+
+.dashboard .graph2-graph {
+    display: inline-block;
+}
+
+.dashboard .graph2-data {
+    display: inline-block;
+    margin-left: 30px;
+    font-weight: normal;
+    vertical-align: top;
+}
+
+.dashboard .graph2-data li {
+    margin-bottom: 25px;
+}
+
+.dashboard .graph2-data li:last-child {
+    margin-bottom: 0;
+}
+
+.dashboard .graph2-data strong {
+    display: inline-block;
+    width: 86px;
+    height: 26px;
+    line-height: 26px;
+    /* background: #f2f4f6; */
+    font-size: 18px;
+    color: #757679;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.dashboard .graph2-data span {
+    display: inline-block;
+    width: 90px;
+    font-size: 40px;
+    color: #000;
+    text-align: right;
+    vertical-align: middle;
+}
+
+.dashboard .alarm {
+    position: relative;
+    padding-left: 140px;
+    background: #e3e3e3;
+    text-align: center;
+}
+
+.dashboard .alarm-title {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 140px;
+    padding-top: 27px;
+    background: #a50034;
+    color: #fff;
+}
+
+.dashboard .alarm-title span {
+    display: block;
+    margin-top: 8px;
+    font-size: 15px;
+}
+
+.dashboard .alarm-lists {
+    overflow: hidden;
+    border: 1px solid #ddd;
+    border-left: none;
+    font-size: 20px;
+    color: #888;
+}
+
+.dashboard .alarm-lists li {
+    float: left;
+    width: 25%;
+    padding: 20px 0;
+}
+
+.dashboard .alarm-lists strong {
+    display: block;
+    margin-bottom: 15px;
+    font-size: 35px;
+    text-decoration: underline;
+    color: #a50034;
+}
+
+.dashboard table {
+    width: 100%;
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-collapse: collapse;
+    font-weight: normal;
+}
+
+.dashboard table thead th {
+    background: #f5f7f6;
+    color: #666;
+}
+
+.dashboard table tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.dashboard table th,
+.dashboard table td {
+    height: 31px;
+    padding: 8px 0;
+    font-weight: normal;
+}
+
+.dashboard .table-scroll {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.dashboard .toggle-division-trigger {
+    width: 100%;
+    height: 19px;
+    background: #fff;
+    background: -moz-linear-gradient(top, #fff 0%, #f2f2f2 100%);
+    background: -webkit-linear-gradient(top, #fff 0%, #f2f2f2 100%);
+    background: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+    text-align: center;
+    border: 1px solid #bfbfbf;
+    cursor: pointer;
+}
+
+.dashboard .toggle-division-trigger:after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #adadad;
+    vertical-align: top;
+    margin-top: 3px;
+}
+
+.dashboard .toggle-division-trigger.actived:after {
+    -webkit-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+
+.dashboard .toggle-division-target {
+    display: none;
+}

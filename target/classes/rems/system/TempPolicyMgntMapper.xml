@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.TempPolicyMgntMapper">
+
+	<!-- 권고온도 내역 -->
+	<select id="retrieveRemsTempPolicyList" parameterType="Map" resultType="GridTempPolicyMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT
+		         companyCd
+		       , yyyy
+			   , m1
+			   , m2
+			   , m3
+			   , m4
+			   , m5
+			   , m6
+			   , m7
+			   , m8
+			   , m9
+			   , m10
+			   , m11
+			   , m12
+		  FROM (	SELECT
+				            COMPANY_CD as companyCd
+				          , SUBSTR(YYYYMM, 1, 4) as yyyy
+				          , SUM( case when substr(yyyymm, 5, 2) = '01' then recomm_temp else '' end ) as m1
+		     		      , SUM( case when substr(yyyymm, 5, 2) = '02' then recomm_temp else '' end ) as m2
+			    	      , SUM( case when substr(yyyymm, 5, 2) = '03' then recomm_temp else '' end ) as m3
+				          , SUM( case when substr(yyyymm, 5, 2) = '04' then recomm_temp else '' end ) as m4
+				          , SUM( case when substr(yyyymm, 5, 2) = '05' then recomm_temp else '' end ) as m5
+				          , SUM( case when substr(yyyymm, 5, 2) = '06' then recomm_temp else '' end ) as m6
+				          , SUM( case when substr(yyyymm, 5, 2) = '07' then recomm_temp else '' end ) as m7
+				          , SUM( case when substr(yyyymm, 5, 2) = '08' then recomm_temp else '' end ) as m8
+				          , SUM( case when substr(yyyymm, 5, 2) = '09' then recomm_temp else '' end ) as m9
+					      , SUM( case when substr(yyyymm, 5, 2) = '10' then recomm_temp else '' end ) as m10
+				          , SUM( case when substr(yyyymm, 5, 2) = '11' then recomm_temp else '' end ) as m11
+				          , SUM( case when substr(yyyymm, 5, 2) = '12' then recomm_temp else '' end ) as m12
+				 	  FROM TH_HAC_RECOMM_TEMP_MNT
+				     WHERE COMPANY_CD = #{companyCd}
+		              AND SUBSTR(YYYYMM, 1, 4) <= DATE_FORMAT( DATE_ADD( NOW(), INTERVAL +1 YEAR ), '%Y')
+			 	    GROUP BY YYYY
+		        ) A 
+		 ORDER BY ${sidx} ${sord}
+        ]]>
+        
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+	<!-- 권고온도 상세내역 -->
+	<select id="retrieveRemsTempPolicy" parameterType="Map" resultType="GridTempPolicyMgntVo">
+	<![CDATA[
+		SELECT
+		         companyCd
+		       , yyyy
+			   , m1
+			   , m2
+			   , m3
+			   , m4
+			   , m5
+			   , m6
+			   , m7
+			   , m8
+			   , m9
+			   , m10
+			   , m11
+			   , m12
+		  FROM (	SELECT
+				            COMPANY_CD as companyCd
+				          , SUBSTR(YYYYMM, 1, 4) as yyyy
+				          , SUM( case when substr(yyyymm, 5, 2) = '01' then recomm_temp else '' end ) as m1
+		     		      , SUM( case when substr(yyyymm, 5, 2) = '02' then recomm_temp else '' end ) as m2
+			    	      , SUM( case when substr(yyyymm, 5, 2) = '03' then recomm_temp else '' end ) as m3
+				          , SUM( case when substr(yyyymm, 5, 2) = '04' then recomm_temp else '' end ) as m4
+				          , SUM( case when substr(yyyymm, 5, 2) = '05' then recomm_temp else '' end ) as m5
+				          , SUM( case when substr(yyyymm, 5, 2) = '06' then recomm_temp else '' end ) as m6
+				          , SUM( case when substr(yyyymm, 5, 2) = '07' then recomm_temp else '' end ) as m7
+				          , SUM( case when substr(yyyymm, 5, 2) = '08' then recomm_temp else '' end ) as m8
+				          , SUM( case when substr(yyyymm, 5, 2) = '09' then recomm_temp else '' end ) as m9
+					      , SUM( case when substr(yyyymm, 5, 2) = '10' then recomm_temp else '' end ) as m10
+				          , SUM( case when substr(yyyymm, 5, 2) = '11' then recomm_temp else '' end ) as m11
+				          , SUM( case when substr(yyyymm, 5, 2) = '12' then recomm_temp else '' end ) as m12
+				 	  FROM TH_HAC_RECOMM_TEMP_MNT
+				     WHERE COMPANY_CD = #{companyCd}
+				      AND SUBSTR(YYYYMM, 1, 4) = #{yyyy}
+			 	    GROUP BY YYYY
+		        ) A 
+	 	]]>
+    </select>
+
+	<!-- 권고온도 저장 -->
+	<update id="saveTempPolicyMgnt" parameterType="Map">
+        INSERT INTO TH_HAC_RECOMM_TEMP_MNT
+            (
+			   COMPANY_CD
+			 , YYYYMM
+			 , RECOMM_TEMP
+			 , REGI_ID
+			 , REGI_DTTM
+			 , FINAL_MOD_ID
+ 			 , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+			   #{companyCd}
+			 , #{yyyyMm}
+			 , #{recommTemp}
+			 , #{regiId}
+			 , now()
+			 , #{finalModId}
+ 			 , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  YYYYMM               = #{yyyyMm}
+                                , RECOMM_TEMP      = #{recommTemp}
+                                , FINAL_MOD_ID       = #{finalModId}
+                                , FINAL_MOD_DTTM  = now()
+
+	</update>
+	
+	<!-- 금년, 차년 select -->
+	<select id="retrieveYearList" resultType="SelectVo">
+        SELECT
+                    DATE_FORMAT(NOW(), '%Y') as name
+                  , DATE_FORMAT(NOW(), '%Y')  as value
+           FROM DUAL
+        UNION   
+        SELECT
+                    DATE_FORMAT(DATE_ADD(NOW(), INTERVAL +1 YEAR ), '%Y')  as name
+                  , DATE_FORMAT(DATE_ADD(NOW(), INTERVAL +1 YEAR ), '%Y')   as value
+           FROM DUAL
+    </select>
+	
+</mapper>

@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.closing.persistence.ClosingMapper">
+
+    <select id="retrieveSearchComboList" resultType="SelectVo">
+        SELECT '' AS value
+		     , '전체' AS name
+		FROM DUAL
+		UNION
+		SELECT DISTINCT
+		   CLOSING_YM AS value
+		 , CONCAT(SUBSTRING(CLOSING_YM,1,4),"-",SUBSTRING(CLOSING_YM,5,2)) AS name
+		FROM TH_STR_CLOSING_DATA
+    </select>
+    
+    <select id="retrieveGridComboList" resultType="SelectVo">
+        SELECT
+		    A.date AS value,
+		    CONCAT(SUBSTRING(A.date,1,4),"-",SUBSTRING(A.date,5,2)) AS name
+		FROM(
+		    SELECT '' AS date FROM DUAL
+		    UNION
+		    SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -2 MONTH), '%Y%m') AS date FROM DUAL
+		    UNION
+		    SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 MONTH), '%Y%m') AS date FROM DUAL
+		    UNION
+		    SELECT DATE_FORMAT(NOW(), '%Y%m') AS date FROM DUAL
+		    UNION
+		    SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL +1 MONTH), '%Y%m') AS date FROM DUAL
+		    UNION
+		    SELECT DATE_FORMAT(DATE_ADD(NOW(), INTERVAL +2 MONTH), '%Y%m') AS date FROM DUAL
+		)A
+    </select>
+	
+	<select id="retrieveClosingList" parameterType="Map" resultType="GridClosingVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+	SELECT * FROM (
+	    SELECT
+	           A.strCd
+	         , A.strNm
+	         , viewStrCd
+	         , remsStartDt
+	         , gwAddr
+	         , remsDeivceVendor
+	         , case when cntGw_after is not null then cntGw_after
+	                when cntGw_after is null then cntGw_before
+	                else 0 end as cntGw
+	         , case when cntTemon_after is not null then cntTemon_after
+	                when cntTemon_after is null then cntTemon_before
+	                else 0 end as cntTemon
+	         , case when cntLine_after is not null then cntLine_after
+	                when cntLine_after is null then cntLine_before
+	                else 0 end as cntLine
+	         , case when cntHacon_after is not null then cntHacon_after
+	                when cntHacon_after is null then cntHacon_before
+	                else 0 end as cntHacon
+	         , case when cntTsensor_after is not null then cntTsensor_after
+	                when cntTsensor_after is null then cntTsensor_before
+	                else 0 end as cntTsensor
+	         , case when cntMeter_after is not null then cntMeter_after
+	                when cntMeter_after is null then cntMeter_before
+	                else 0 end as cntMeter
+	         , case when cntCt_after is not null then cntCt_after
+	                when cntCt_after is null then cntCt_before
+	                else 0 end as cntCt
+	         , case when cntBox_after is not null then cntBox_after
+	                when cntBox_after is null then cntBox_before
+	                else 0 end as cntBox
+	         , case when cntFe_after is not null then cntFe_after
+	                when cntFe_after is null then cntFe_before
+	                else 0 end as cntFe_before
+	         , closingYm
+	         , IFNULL(vendorClosingYn, 'N') AS vendorClosingYn
+	         , (SELECT USER_NM
+	              FROM TH_USER_MST
+	             WHERE USER_ID = B.vendorClosingUserId
+	            ) AS vendorClosingUserId
+	         , vendorClosingDttm
+	         , IFNULL(managerClosingYn, 'N') AS managerClosingYn
+	         , (SELECT USER_NM
+	              FROM TH_USER_MST
+	             WHERE USER_ID = B.managerClosingUserId
+	            ) AS managerClosingUserId
+	         , managerClosingDttm
+	         , IFNULL(prtYn, 'N') AS prtYn
+	
+	      FROM (SELECT
+	                   B.STR_CD AS strCd
+	                 , C.STR_NM AS strNm
+	                 , C.VIEW_STR_CD AS viewStrCd
+	                 , C.REMS_START_DT AS remsStartDt
+	                 , gwAddr
+	                 , remsDeivceVendor
+	                 , cntGw_before
+	                 , cntTemon_before
+	                 , cntLine_before
+	                 , cntHacon_before
+	                 , cntTsensor_before
+	                 , cntMeter_before
+	                 , cntCt_before
+	                 , cntBox_before
+	                 , cntFe_before
+	              FROM (
+	                    SELECT A.GW_ADDR as gwAddr
+	                         , A.VENDOR AS remsDeivceVendor
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'GW' THEN B.CNT ELSE 0 END) AS cntGw_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'TM' THEN B.CNT ELSE 0 END) AS cntTemon_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'LS' THEN B.CNT ELSE 0 END) AS cntLine_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'HA' THEN B.CNT ELSE 0 END) AS cntHacon_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'TS' THEN B.CNT ELSE 0 END) AS cntTsensor_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'DM' THEN B.CNT ELSE 0 END) AS cntMeter_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'CT' THEN B.CNT ELSE 0 END) AS cntCt_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'BX' THEN B.CNT ELSE 0 END) AS cntBox_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'FE' THEN B.CNT ELSE 0 END) AS cntFe_before
+	                      FROM TH_REMS_BOX_MONITOR_CLOSING_BASE A
+	                         , TH_REMS_BOX_MONITOR_CLOSING_BASE_DETAIL B
+	                     WHERE 1=1
+	                       AND A.GW_ADDR = B.GW_ADDR
+	                     GROUP BY gwAddr, remsDeivceVendor
+	                   ) A
+	              LEFT OUTER JOIN TH_STR_GW_MST B
+	                ON A.gwAddr = B.GW_ADDR
+	              LEFT JOIN TH_STR_INFO_MST C
+	                ON B.STR_CD = C.STR_CD
+	           ) A
+	      LEFT OUTER JOIN
+	           (SELECT A.STR_CD AS strCd
+	                 , CLOSING_YM AS closingYm
+	                 , VENDOR_CLOSING_YN AS vendorClosingYn
+	                 , VENDOR_CLOSING_USER_ID AS vendorClosingUserId
+	                 , DATE_FORMAT(VENDOR_CLOSING_DTTM,'%Y%m%d') AS vendorClosingDttm
+	                 , MANAGER_CLOSING_YN AS managerClosingYn
+	                 , MANAGER_CLOSING_USER_ID AS managerClosingUserId
+	                 , DATE_FORMAT(MANAGER_CLOSING_DTTM,'%Y%m%d') AS managerClosingDttm
+	                 , PRT_YN AS prtYn
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'GW' THEN B.CNT ELSE NULL END) AS cntGw_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'TM' THEN B.CNT ELSE NULL END) AS cntTemon_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'LS' THEN B.CNT ELSE NULL END) AS cntLine_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'HA' THEN B.CNT ELSE NULL END) AS cntHacon_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'TS' THEN B.CNT ELSE NULL END) AS cntTsensor_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'DM' THEN B.CNT ELSE NULL END) AS cntMeter_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'CT' THEN B.CNT ELSE NULL END) AS cntCt_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'BX' THEN B.CNT ELSE NULL END) AS cntBox_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'FE' THEN B.CNT ELSE NULL END) AS cntFe_after
+	              FROM TH_STR_CLOSING_DATA A
+	              LEFT OUTER JOIN TH_STR_CLOSING_DATA_DETAIL B
+	                ON A.STR_CD = B.STR_CD
+	             GROUP BY strCd, closingYm, vendorClosingYn, vendorClosingUserId, vendorClosingDttm, managerClosingYn, managerClosingUserId, managerClosingDttm, PRT_YN
+	           ) B
+	        ON A.strCd = b.strCd
+	    ) X
+	]]>
+	WHERE 1=1
+    <if test="searchVal != null and searchVal != ''">
+        AND X.strCd LIKE CONCAT('%',#{searchVal},'%') OR X.strNm LIKE CONCAT('%',#{searchVal},'%')
+	</if>		
+	<if test="searchFromDate != null and searchFromDate != '' and searchToDate != null and searchToDate != ''">
+        AND X.remsStartDt BETWEEN #{searchFromDate} AND #{searchToDate}
+    </if>
+	<if test="vendorCd != null and vendorCd != ''">
+        AND X.remsDeivceVendor = #{vendorCd}
+	</if>
+	<if test="vendorClosingYn != null and vendorClosingYn != ''">
+        AND X.vendorClosingYn = #{vendorClosingYn}
+    </if>
+    <if test="closingYn != null and closingYn != ''">
+        AND X.managerClosingYn = #{closingYn}
+    </if>
+    <if test="closingDate != null and closingDate != ''">
+        AND X.managerClosingDttm = #{closingDate}
+    </if>
+    <if test="prtYn != null and prtYn != ''">
+        AND X.prtYn = #{prtYn}
+    </if>	
+	<![CDATA[
+	   ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<select id="saveModifyNumber">
+		INSERT
+        INTO TH_STR_CLOSING_DATA
+		     ( CLOSING_YM
+		     , STR_CD
+		     , RMK
+		     , VENDOR_CLOSING_YN
+		     , VENDOR_CLOSING_USER_ID
+		     , VENDOR_CLOSING_DTTM
+		     , MANAGER_CLOSING_YN
+		     , MANAGER_CLOSING_USER_ID
+		     , MANAGER_CLOSING_DTTM
+		     , PRT_YN
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES
+		     ( #{closingYm}
+		     , #{strCd}
+		     , NULL
+		     , 'N'
+		     , NULL
+		     , NULL
+		     , 'N'
+		     , NULL
+		     , NULL
+		     , 'N'
+		     , #{userId}
+		     , now()
+		     , #{userId}
+		     , now()
+		     )
+		   ON DUPLICATE  KEY UPDATE
+			  FINAL_MOD_ID      = #{userId}
+			, FINAL_MOD_DTTM    = now()
+	</select>
+	
+	<select id="saveModifyNumberDetail" parameterType="Map">
+	  INSERT
+	  INTO TH_STR_CLOSING_DATA_DETAIL
+	     ( STR_CD
+	     , ITEM_TYPE
+	     , CNT
+	     , REGI_ID
+	     , REGI_DTTM
+	     , FINAL_MOD_ID
+	     , FINAL_MOD_DTTM
+	     )
+	   VALUES
+	     ( #{strCd}
+	     , #{itemType}
+	     , #{cnt}
+	     , #{userId}
+	     , now()
+	     , #{userId}
+	     , now()
+	     )
+       ON DUPLICATE  KEY UPDATE
+		  CNT               = #{cnt}   
+		, FINAL_MOD_ID      = #{userId}
+		, FINAL_MOD_DTTM    = now()
+    </select>
+    
+     <select id="updateFixVendor" parameterType="Map">
+        UPDATE TH_STR_CLOSING_DATA
+        SET
+          VENDOR_CLOSING_YN = 'Y'
+        , VENDOR_CLOSING_USER_ID = #{userId}
+        , VENDOR_CLOSING_DTTM = now()
+        , FINAL_MOD_ID = #{userId}
+        , FINAL_MOD_DTTM = now()
+        WHERE CLOSING_YM = #{closingYm}
+        AND STR_CD = #{strCd}
+    </select>
+    
+    <select id="updateFixClosing" parameterType="Map">
+		UPDATE TH_STR_CLOSING_DATA
+        SET
+	      MANAGER_CLOSING_YN = 'Y'
+	    , MANAGER_CLOSING_USER_ID = #{userId}
+	    , MANAGER_CLOSING_DTTM = now()
+	    , FINAL_MOD_ID = #{userId}
+	    , FINAL_MOD_DTTM = now()
+        WHERE CLOSING_YM = #{closingYm}
+        AND STR_CD = #{strCd}
+    </select>
+    
+    <select id="updateModifyClosingMon" parameterType="Map">
+		INSERT
+        INTO TH_STR_CLOSING_DATA
+		     ( CLOSING_YM
+		     , STR_CD
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES
+		     ( #{closingYm_new}
+		     , #{strCd}
+		     , #{userId}
+		     , now()
+		     , #{userId}
+		     , now()
+		     )
+		   ON DUPLICATE  KEY UPDATE
+			  FINAL_MOD_ID      = #{userId}
+			, FINAL_MOD_DTTM    = now()
+    </select>
+	
+	<select id="downloadClosingMngtExcel" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+	SELECT * FROM (
+	    SELECT
+	           A.strCd
+	         , A.strNm
+	         , viewStrCd
+	         , remsStartDt
+	         , gwAddr
+	         , remsDeivceVendor
+	         , case when cntGw_after is not null then cntGw_after
+	                when cntGw_after is null then cntGw_before
+	                else 0 end as cntGw
+	         , case when cntTemon_after is not null then cntTemon_after
+	                when cntTemon_after is null then cntTemon_before
+	                else 0 end as cntTemon
+	         , case when cntLine_after is not null then cntLine_after
+	                when cntLine_after is null then cntLine_before
+	                else 0 end as cntLine
+	         , case when cntHacon_after is not null then cntHacon_after
+	                when cntHacon_after is null then cntHacon_before
+	                else 0 end as cntHacon
+	         , case when cntTsensor_after is not null then cntTsensor_after
+	                when cntTsensor_after is null then cntTsensor_before
+	                else 0 end as cntTsensor
+	         , case when cntMeter_after is not null then cntMeter_after
+	                when cntMeter_after is null then cntMeter_before
+	                else 0 end as cntMeter
+	         , case when cntCt_after is not null then cntCt_after
+	                when cntCt_after is null then cntCt_before
+	                else 0 end as cntCt
+	         , case when cntBox_after is not null then cntBox_after
+	                when cntBox_after is null then cntBox_before
+	                else 0 end as cntBox
+	         , case when cntFe_after is not null then cntFe_after
+	                when cntFe_after is null then cntFe_before
+	                else 0 end as cntFe_before
+	         , closingYm
+	         , IFNULL(vendorClosingYn, 'N') AS vendorClosingYn
+	         , (SELECT USER_NM
+	              FROM TH_USER_MST
+	             WHERE USER_ID = B.vendorClosingUserId
+	            ) AS vendorClosingUserId
+	         , vendorClosingDttm
+	         , IFNULL(managerClosingYn, 'N') AS managerClosingYn
+	         , (SELECT USER_NM
+	              FROM TH_USER_MST
+	             WHERE USER_ID = B.managerClosingUserId
+	            ) AS managerClosingUserId
+	         , managerClosingDttm
+	         , IFNULL(prtYn, 'N') AS prtYn
+	
+	      FROM (SELECT
+	                   B.STR_CD AS strCd
+	                 , C.STR_NM AS strNm
+	                 , C.VIEW_STR_CD AS viewStrCd
+	                 , DATE_FORMAT(C.REMS_START_DT,'%Y-%m-%d') AS remsStartDt
+	                 , gwAddr
+	                 , remsDeivceVendor
+	                 , cntGw_before
+	                 , cntTemon_before
+	                 , cntLine_before
+	                 , cntHacon_before
+	                 , cntTsensor_before
+	                 , cntMeter_before
+	                 , cntCt_before
+	                 , cntBox_before
+	                 , cntFe_before
+	              FROM (
+	                    SELECT A.GW_ADDR as gwAddr
+	                         , A.VENDOR AS remsDeivceVendor
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'GW' THEN B.CNT ELSE 0 END) AS cntGw_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'TM' THEN B.CNT ELSE 0 END) AS cntTemon_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'LS' THEN B.CNT ELSE 0 END) AS cntLine_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'HA' THEN B.CNT ELSE 0 END) AS cntHacon_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'TS' THEN B.CNT ELSE 0 END) AS cntTsensor_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'DM' THEN B.CNT ELSE 0 END) AS cntMeter_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'CT' THEN B.CNT ELSE 0 END) AS cntCt_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'BX' THEN B.CNT ELSE 0 END) AS cntBox_before
+	                         , SUM(CASE WHEN B.ITEM_TYPE = 'FE' THEN B.CNT ELSE 0 END) AS cntFe_before
+	                      FROM TH_REMS_BOX_MONITOR_CLOSING_BASE A
+	                         , TH_REMS_BOX_MONITOR_CLOSING_BASE_DETAIL B
+	                     WHERE 1=1
+	                       AND A.GW_ADDR = B.GW_ADDR
+	                     GROUP BY gwAddr, remsDeivceVendor
+	                   ) A
+	              LEFT OUTER JOIN TH_STR_GW_MST B
+	                ON A.gwAddr = B.GW_ADDR
+	              LEFT JOIN TH_STR_INFO_MST C
+	                ON B.STR_CD = C.STR_CD
+	           ) A
+	      LEFT OUTER JOIN
+	           (SELECT A.STR_CD AS strCd
+	                 , CLOSING_YM AS closingYm
+	                 , VENDOR_CLOSING_YN AS vendorClosingYn
+	                 , VENDOR_CLOSING_USER_ID AS vendorClosingUserId
+	                 , DATE_FORMAT(VENDOR_CLOSING_DTTM,'%Y-%m-%d') AS vendorClosingDttm
+	                 , MANAGER_CLOSING_YN AS managerClosingYn
+	                 , MANAGER_CLOSING_USER_ID AS managerClosingUserId
+	                 , DATE_FORMAT(MANAGER_CLOSING_DTTM,'%Y-%m-%d') AS managerClosingDttm
+	                 , PRT_YN AS prtYn
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'GW' THEN B.CNT ELSE NULL END) AS cntGw_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'TM' THEN B.CNT ELSE NULL END) AS cntTemon_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'LS' THEN B.CNT ELSE NULL END) AS cntLine_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'HA' THEN B.CNT ELSE NULL END) AS cntHacon_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'TS' THEN B.CNT ELSE NULL END) AS cntTsensor_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'DM' THEN B.CNT ELSE NULL END) AS cntMeter_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'CT' THEN B.CNT ELSE NULL END) AS cntCt_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'BX' THEN B.CNT ELSE NULL END) AS cntBox_after
+	                 , SUM(CASE WHEN B.ITEM_TYPE = 'FE' THEN B.CNT ELSE NULL END) AS cntFe_after
+	              FROM TH_STR_CLOSING_DATA A
+	              LEFT OUTER JOIN TH_STR_CLOSING_DATA_DETAIL B
+	                ON A.STR_CD = B.STR_CD
+	             GROUP BY strCd, closingYm, vendorClosingYn, vendorClosingUserId, vendorClosingDttm, managerClosingYn, managerClosingUserId, managerClosingDttm, PRT_YN
+	           ) B
+	        ON A.strCd = b.strCd
+	    ) X
+	]]>
+	WHERE 1=1
+    <if test="searchVal != null and searchVal != ''">
+        AND X.strCd LIKE CONCAT('%',#{searchVal},'%') OR X.strNm LIKE CONCAT('%',#{searchVal},'%')
+	</if>		
+	<if test="searchFromDate != null and searchFromDate != '' and searchToDate != null and searchToDate != ''">
+        AND X.remsStartDt BETWEEN #{searchFromDate} AND #{searchToDate}
+    </if>
+	<if test="vendorCd != null and vendorCd != ''">
+        AND X.remsDeivceVendor = #{vendorCd}
+	</if>
+	<if test="vendorClosingYn != null and vendorClosingYn != ''">
+        AND X.vendorClosingYn = #{vendorClosingYn}
+    </if>
+    <if test="closingYn != null and closingYn != ''">
+        AND X.managerClosingYn = #{closingYn}
+    </if>
+    <if test="closingDate != null and closingDate != ''">
+        AND X.managerClosingDttm = #{closingDate}
+    </if>
+    <if test="prtYn != null and prtYn != ''">
+        AND X.prtYn = #{prtYn}
+    </if>	
+	</select>
+</mapper>

@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Input Table</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Input Table</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Input Table</a></div>
+    
+    
+    <div class="r_inputTbl">
+      <div class="r_inputTblTitle">
+          <h3>Vertical Input Table</h3>
+      </div>
+      <table>
+        <caption>Vertical Input Table Sample</caption>
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <col width="12.5%" />
+        <thead>
+          <tr>
+            <th scope="col">구분</th>
+            <th scope="col">낮 / 일광</th>
+            <th scope="col">밤 / 일광</th>
+            <th scope="col">낮 / 비일광</th>
+            <th scope="col">밤 / 비일광</th>
+            <th scope="col">작업자 ID</th>
+            <th scope="col">작업자 명</th>
+            <th class="r_last" scope="col">최종 작업 일지</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>맑음</td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td>김엘지</td>
+            <td>김엘지</td>
+            <td class="r_last">2014-01-05 11:25</td>
+          </tr>
+          <tr class="r_even">
+            <td>구름조금</td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td>강가나</td>
+            <td>강가나</td>
+            <td class="r_last">2014-01-05 11:25</td>
+          </tr>
+          <tr>
+            <td>비 / 눈</td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td>신나라</td>
+            <td>신나라</td>
+            <td class="r_last">2014-01-05 11:25</td>
+          </tr>
+          <tr class="r_even r_last">
+            <td>안개</td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td class="r_gridInput"><input type="text" /></td>
+            <td>박하나</td>
+            <td>박하나</td>
+            <td class="r_last">2014-01-05 11:25</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="r_inputTbl r_horizonTbl r_secondTbl">
+      <div class="r_inputTblTitle">
+          <h3>Horizontal Input Table</h3>
+      </div>
+    <table>
+      <tr>
+        <th width="30%">회사<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <input type="text" class="r_Input r_disable" value="LG CNS" disabled="disabled" style="width:184px;" />
+        </td>
+      </tr>
+      <tr>
+        <th width="30%">매장<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+          <input class="r_Input r_disable" type="text" style="width:100px;" />
+          <div class="r_innerSearch">
+          <input class="r_Input" type="text" style="width:150px;" />
+          <a href="#">
+          <img src="../images/ico_innerSearch.png" alt="inner search" />
+          </a>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th width="30%">EC ID<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <input type="text" class="r_Input" value="abcabc" style="width:184px;" />
+        <span class="innerBtn">
+          <button>중복확인</button>
+        </span>
+        </td>
+      </tr>
+      <tr>
+        <th width="30%">MAC ADDR<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <input type="text" class="r_Input" value="" style="width:184px;" />
+        </td>
+      </tr>
+      <tr class="r_last">
+        <th width="30%">사용 여부<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <span class="r_radio">
+          <input type="radio" name="system" id="mobile" checked="checked" />
+          <label for="mobile">사용</label>
+          <input type="radio"  name="system" id="web"/>
+          <label class="r_last" for="web">미사용</label>
+        </span>
+        </td>
+      </tr>
+    </table>
+    </div>
+    
+    
+  </div>
+</div>
+</body>
+</html>

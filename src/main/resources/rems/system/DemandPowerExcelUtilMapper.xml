@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.DemandPowerExcelUtilMapper">
+	
+	<select id="getDemandPowerStoreList" parameterType="Map" resultType="DemandPowerExcelDataVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT
+			DISTINCT
+				C.STR_CD					as strCd,
+				C.STR_NM					as strNm,
+				A.CALCULATE_YN				as calculateYn,
+				C.STR_AREA_SPEC				as storeArea,
+				A.DEMAND_POWER				as demandPower,
+				A.RECOMMEND_DEMAND_POWER	as recommendDemandPower
+		FROM TH_ELECTRICENT_STR_MAP A			
+		LEFT JOIN TH_STR_INFO_MST C
+		ON A.STR_CD = C.STR_CD
+		WHERE C.STR_NM LIKE '%${strNm}%'
+		AND C.COMPANY_CD = #{companyCd}
+		AND C.USE_YN = 'Y'
+	]]>
+	
+	<if test='calculateYn != null and calculateYn != ""'>
+		<if test='calculateYn == "Y"'>
+		AND A.CALCULATE_YN = 'Y'
+		</if>
+		<if test='calculateYn == "N"'>
+		AND A.CALCULATE_YN = 'N'
+		</if>
+	</if>
+	<if test='authId == "5"'>
+		AND A.ELECTRICENT_CD = #{electricentCd}
+	</if>
+	
+	<![CDATA[
+		ORDER BY ${sidx} ${sord}, A.STR_CD DESC
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	
+	<update id="insertRecommendDemandPower" parameterType="Map">
+		UPDATE TH_ELECTRICENT_STR_MAP
+		   SET 
+		   	CALCULATE_YN = 				#{calculateYn},
+		   	STORE_AREA =  				#{storeArea},
+		   	DEMAND_POWER = 				#{demandPower},
+		   	RECOMMEND_DEMAND_POWER = 	#{recommendDemandPower},
+		   	FINAL_MOD_ID = 				#{userId},
+		   	FINAL_MOD_DTTM = 			now()   
+	     WHERE 
+	     	STR_CD    = #{strCd}	       
+	</update>
+	
+	
+	<update id="insertStoreArea" parameterType="Map">
+		UPDATE TH_STR_INFO_MST
+		   SET 
+		   	STR_AREA_SPEC =				#{storeArea},
+		   	CONT_DEMAND_POWER = 		#{recommendDemandPowerK},
+		   	FINAL_MOD_ID = 				#{userId},		   	
+		   	FINAL_MOD_DTTM = 			now()   			    
+	     WHERE 
+	     	STR_CD    = #{strCd}	       
+	</update>
+	
+	<update id="insertStorePeak" parameterType="Map">
+		UPDATE TH_STR_ENV_CONF_MST
+		   SET 
+		    CONF_VAL = 					'P1',
+		   	STR_CONF_VAL =				#{recommendDemandPowerDiv},
+		   	STR_CONF_VAL_OLD =  		#{recommendDemandPowerDiv},
+		   	FINAL_MOD_ID = 				#{userId},		   	
+		   	FINAL_MOD_DTTM = 			now()   			    
+	     WHERE 
+	     	STR_CD    = #{strCd}
+	     	AND
+	     	CONF_SP	  = 'PEAK_TYPE'      
+	</update>
+	
+	<update id="saveElectricEnt_init" parameterType="Map">
+		INSERT INTO th_electricent_str_map SET				 
+				ELECTRICENT_CD = 		#{electricEnt},
+				STR_CD = 				#{strCd},
+				CALCULATE_YN = 			'N',			
+				DEMAND_POWER = 			#{demandPower},
+				STORE_AREA =			#{strAreaSpec},
+			    REGI_ID =				#{regiId},
+				REGI_DTTM = 			now(),
+				FINAL_MOD_ID =			#{finalModId},
+				FINAL_MOD_DTTM =		now()		
+	</update>
+	
+	<update id="updateElectricEnt" parameterType="Map">
+		UPDATE TH_ELECTRICENT_STR_MAP
+		   SET 
+		   	RECOMMEND_DEMAND_POWER = 	#{recommendDemandPower},
+		   	FINAL_MOD_ID = 				#{userId},
+		   	FINAL_MOD_DTTM = 			now()   
+	     WHERE 
+	     	STR_CD    = #{strCd}
+	</update>	
+	
+	<!-- 지우기 -->
+	<delete id="delElectricEnt" parameterType="Map">
+		delete from 
+			th_electricent_str_map 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+	
+	<select id="retrieveExcelDemandPowerStoreList" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+		SELECT
+			DISTINCT
+				C.STR_CD					as strCd,
+				C.VIEW_STR_CD				as viewStrCd,
+				C.STR_NM					as strNm,
+				A.CALCULATE_YN				as calculateYn,
+				C.STR_AREA_SPEC				as storeArea,
+				A.DEMAND_POWER				as demandPower,
+				A.RECOMMEND_DEMAND_POWER	as recommendDemandPower
+		FROM TH_ELECTRICENT_STR_MAP A			
+		LEFT JOIN TH_STR_INFO_MST C
+		ON A.STR_CD = C.STR_CD
+		WHERE C.STR_NM LIKE '%${strNm}%'
+		AND C.COMPANY_CD = #{companyCd}
+		AND C.USE_YN = 'Y'
+	]]>
+	
+	<if test='calculateYn != null and calculateYn != ""'>
+		<if test='calculateYn == "Y"'>
+		AND A.CALCULATE_YN = 'Y'
+		</if>
+		<if test='calculateYn == "N"'>
+		AND A.CALCULATE_YN = 'N'
+		</if>
+	</if>
+	<if test='authId == "5"'>
+		AND A.ELECTRICENT_CD = #{electricentCd}
+	</if>
+	
+	<![CDATA[
+			ORDER BY A.STR_CD DESC
+	]]>
+	</select>
+		
+</mapper>

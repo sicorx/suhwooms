@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.energy.persistence.EnergyLightAllMapper">
+		
+	<select id="retrieveWeatherStatusList" parameterType="UserVo" resultType="EpWeatherStatusListVo">
+		<![CDATA[
+		select substr(a.yyyymmdd, 1, 6)                                 as yyyymm
+		     , round(sum(if(a.weather_cd in ('1', '2'), 1, 0)) / 8, 0)  as sunnyCount
+		     , round(sum(if(a.weather_cd in ('3', '4'), 1, 0)) / 8, 0)  as cloudyCount
+		     , round(count(*) / 8, 0)                                   as rowCount
+		  from th_forecast_latest a
+		     , th_str_info_mst b
+		 where a.local_area_cd = b.local_area_cd
+		   and a.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})
+		   and b.company_cd    = #{companyCd}
+		   and date_format(#{now}, '%Y%m%d') between b.rems_start_dt and ifnull(b.rems_end_dt, '29991231')
+		   and a.yyyymmdd between date_format(date_add(#{now}, interval - 6 month), '%Y%m%d') and date_format(date_add(#{now}, interval - 1 month), '%Y%m%d')
+		 group by substr(a.yyyymmdd, 1, 6)
+		 
+		 /* rems.energy.persistence.EnergyLightAllMapper.retrieveWeatherStatusList */
+		]]>
+	</select>
+
+		
+</mapper>

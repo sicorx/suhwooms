@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtElectricMgntMapper">
+
+	<select id="retrieveElecMgntList" parameterType="Map" resultType="SystemVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+		SELECT A.ELECTRICENT_CD as electricentCd
+		     , A.ELECTRICENT_NM as electricentNm
+		     , CASE WHEN A.USE_YN = 'Y' THEN '사용' ELSE '미사용' END AS useYnNm 
+		     , A.FINAL_MOD_ID as finalModId
+		     , (SELECT USER_NM
+                  FROM TH_USER_MST X
+                 WHERE X.USER_ID = A.FINAL_MOD_ID
+                   AND X.COMPANY_CD = A.COMPANY_CD
+                ) as finalModNm
+		     , A.FINAL_MOD_DTTM as finalModDttm
+		  FROM TH_ELECTRICENT_MST A 
+		 WHERE 1=1
+		   AND A.COMPANY_CD = #{companyCd}
+     ]]>
+	    <if test='useYn != null and useYn != ""'>
+	       AND A.USE_YN = #{useYn}
+	    </if>
+    <![CDATA[
+    	ORDER BY ${sidx} ${sord}
+    ]]>	 
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+
+	<select id="checkElecCd" parameterType="String" resultType="int">
+       SELECT COUNT(*)
+         FROM TH_ELECTRICENT_MST
+        WHERE ELECTRICENT_CD = #{electricentCd}
+          AND COMPANY_CD = #{companyCd}
+    </select>
+
+    
+	<update id="saveElectricMgnt" parameterType="SystemVo">   
+ 	INSERT INTO TH_ELECTRICENT_MST
+		(
+		   ELECTRICENT_CD
+		 , ELECTRICENT_NM
+		 , COMPANY_CD
+		 , USE_YN  
+		 , REGI_ID
+		 , REGI_DTTM
+		 , FINAL_MOD_ID
+		 , FINAL_MOD_DTTM
+		)
+		VALUES
+		(
+		   #{electricentCd}
+		 , #{electricentNm}
+		 , #{companyCd}
+		 , #{useYn}
+		 , #{regiId}
+		 , now()
+		 , #{finalModId}
+		 , now()
+		)
+	ON DUPLICATE KEY UPDATE
+		  ELECTRICENT_NM	= #{electricentNm}
+		, USE_YN			= #{useYn}
+		, FINAL_MOD_ID   	= #{finalModId}
+		, FINAL_MOD_DTTM	= now()
+		, COMPANY_CD 		= #{companyCd}
+	</update>
+    
+	<select id="checkElectricTF" parameterType="SystemVo" resultType="int">
+	SELECT 
+		COUNT(*) 
+	FROM 
+		TH_ENGINEER_STR_MAP 
+	WHERE 1 = 1 
+		AND USER_ID IN (
+ 			SELECT 
+ 				USER_ID 
+ 			FROM 
+ 				TH_USER
+ 			WHERE 1 = 1 
+ 				AND COMPANY_CD = #{companyCd} 
+ 				AND VENDOR_CD = #{vendorCd} 
+ 				AND USE_YN = 'Y'
+		)
+    </select>
+    
+	<delete id="deleteElectricMgnt" parameterType="SystemVo">
+	DELETE 
+	FROM 
+		TH_VENDOR_MST 
+	WHERE 1 = 1 
+		AND VENDOR_CD	= #{vendorCd}
+		AND COMPANY_CD	= #{companyCd}
+	</delete>
+			
+</mapper>

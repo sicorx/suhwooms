@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtSystemHistoryMapper">
+
+	<select id="retrieveAuthIdList" parameterType="Map" resultType="SystemVo">
+		SELECT AUTH_ID as authId, 
+		   	   AUTH_NM as authNm 
+		  FROM TH_AUTH
+		 WHERE COMPANY_CD = #{companyCd}
+	</select>
+	
+	
+	<select id="retrieveSysHistory" parameterType="Map"  resultType="SystemVo">
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+		    <![CDATA[
+				SELECT A.USER_ID as userId
+				     , B.USER_NM as userNm
+				     , D.AUTH_ID as authId
+				     , D.AUTH_NM as authNm
+				     , A.CNT as sysCnt
+				  FROM (SELECT USER_ID, COUNT(*) AS CNT
+				          FROM TH_MOBILE_USE_LOG
+				         WHERE 1=1
+			]]>
+				<if test="userId != null and userId != ''">
+  					AND USER_ID LIKE CONCAT('%',#{userId},'%') 		
+				</if> 			
+				<if test="scrDateFrom != null and scrDateFrom != ''">
+  					AND YYYYMMDD >=  ${scrDateFrom}				
+				</if> 
+				<if test="scrDateTo != null and scrDateTo != ''">
+  					OR YYYYMMDD >=  ${scrDateTo}				
+				</if> 
+
+		<![CDATA[			
+			GROUP BY USER_ID) A
+				     , TH_USER_MST B
+				     , TH_USER_AUTH C
+				     , TH_AUTH D
+				 WHERE B.COMPANY_CD = D.COMPANY_CD
+				   AND A.USER_ID = B.USER_ID
+				   AND A.USER_ID = C.USER_ID
+				   AND B.COMPANY_CD = C.COMPANY_CD
+				   AND C.AUTH_ID = D.AUTH_ID
+				   AND B.COMPANY_CD = #{companyCd}	
+		]]>
+			<if test="authId != null and authId != ''">
+  					AND D.AUTH_ID = ${authId}				
+			</if>  
+		<![CDATA[		   	   
+		ORDER BY ${sidx} ${sord}
+		]]>
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>		
+    
+    
+	<select id="retrieveSysHistory2" parameterType="Map"  resultType="SystemVo">
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+		    <![CDATA[
+				SELECT A.MENU_ID as menuId
+				     , MENU_NM as menuNm
+				     , COUNT(*) as sysCnt
+				     , A.USER_ID as userId 
+				     , C.AUTH_ID as authId
+				  FROM TH_MOBILE_USE_LOG A, TH_MENU_MOBILE B, TH_USER_AUTH C
+				 WHERE 1=1
+				   AND A.MENU_ID = B.MENU_ID
+				   AND A.USER_ID=C.USER_ID
+				   AND B.COMPANY_CD = C.COMPANY_CD
+				   AND JOB_SP = 'V'	
+				   AND B.COMPANY_CD = #{companyCd}	 
+			]]>	
+				<if test="userId != null and userId != ''">
+  					AND A.USER_ID LIKE CONCAT('%',#{userId},'%') 			
+				</if> 	
+				<if test="authId != null and authId != ''">
+  					AND C.AUTH_ID = ${authId}				
+				</if> 					 
+				<if test="scrDateFrom != null and scrDateFrom != ''">
+					<![CDATA[
+  					AND YYYYMMDD >=  ${scrDateFrom}			
+  					]]>
+				</if> 
+				<if test="scrDateTo != null and scrDateTo != ''">
+					<![CDATA[
+  					AND YYYYMMDD <=  ${scrDateTo}			
+  					]]>	
+				</if> 			 
+		<![CDATA[
+			 GROUP BY menuId, menuNm
+			 ORDER BY ${sidx} ${sord}
+		]]>
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>    
+</mapper>

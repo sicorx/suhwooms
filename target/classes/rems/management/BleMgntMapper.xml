@@ -1,0 +1,936 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.management.persistence.BleMgntMapper">
+	
+	<select id="retrieveBleMgnt" parameterType="Map" resultType="GridBleVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[		 
+
+		SELECT
+			A.STR_CD				as strCd,
+		    A.STR_NM				as strNm,
+		    A.ELEC_VENDOR_NM		as elecVendorNm,
+		    A.ELEC_NOTI_DATE		as elecNotiDate,
+		    A.ELEC_CHECK			as elecCheck,
+		    
+		    A.SENSOR_VENDOR_NM		as sensorVendorNm,
+		    A.SENSOR_NOTI_DATE		as sensorNotiDate,
+		    A.SENSOR_CHECK			as sensorCheck,
+		    
+		    A.NETWORK_VENDOR_NM		as networkVendorNm,
+		    A.NETWORK_NOTI_DATE		as networkNotiDate,
+		    A.NETWORK_CHECK			as networkCheck,
+		    
+		    A.SIGN_VENDOR_NM		as signVendorNm,
+		    A.SIGN_NOTI_DATE		as signNotiDate,
+		    A.SIGN_CHECK			as signCheck,		    
+		    
+		    A.CHECK_SUCCESS			as checkSuccess,
+		    A.ONE_CONTENTS			as oneContents,
+		    A.TWO_CONTENTS			as twoContents,
+		    A.THREE_CONTENTS		as threeContents,
+		    A.FOUR_CONTENTS			as fourContents,
+		    A.ETC_CONTENTS			as etcContents,
+		    B.REMS_READY_DT			as remsReadyDt,
+		    B.REMS_START_DT			as remsStartDt,
+		    C.GW_STATUS_YN			as gwStatusYn,
+		    D.STR_CONF_VAL			as strConfVal
+            
+		FROM
+				TH_STR_BLE_CHECK_MST A
+		        LEFT JOIN TH_STR_INFO_MST B
+		        ON
+		        A.STR_CD = B.STR_CD
+		        LEFT JOIN TH_STR_GW_MST C
+		        ON
+		        A.STR_CD = C.STR_CD
+                LEFT JOIN TH_STR_ENV_CONF_MST D
+                ON
+                A.STR_CD = D.STR_CD
+		WHERE
+				D.CONF_SP = 'SIGN_OPER'
+                AND
+				B.STR_NM like 				#{strNm}
+				AND
+				A.STR_CD like 				#{strCd}
+				AND
+				A.ELEC_VENDOR_NM like 		#{elecVendorNm}
+		        AND
+		        A.SENSOR_VENDOR_NM like 	#{sensorVendorNm}
+		        AND
+		        A.NETWORK_VENDOR_NM like 	#{networkVendorNm}
+		        AND
+		        A.SIGN_VENDOR_NM like 		#{signVendorNm}
+		        AND
+		        A.ELEC_CHECK like 			#{elecCheck}
+		        AND
+		        A.SENSOR_CHECK like 		#{sensorCheck}
+		        AND
+		        A.NETWORK_CHECK like 		#{networkCheck}
+		        AND
+		        A.SIGN_CHECK like 			#{signCheck}
+		        AND
+		        A.CHECK_SUCCESS like		#{checkSuccess}
+		        AND
+		        B.REMS_READY_DT like 		#{readyDt}
+		        AND
+		        B.REMS_READY_DT like		#{startDt}
+		ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	
+	
+	
+	
+	<select id="retrieveBleMgntElecInfo" parameterType="Map" resultType="GridBleVo">		
+	<![CDATA[		 
+
+		SELECT
+			A.STR_CD			as strCd,
+		    A.NOTI_DATE			as elecNotiDate,
+		    A.RST				as rst,
+		    A.EP_CNT			as epCnt,
+		    A.EP_1CH_ACC		as ep1chAcc,
+		    A.EP_2CH_ACC		as ep2chAcc,
+		    A.EP_3CH_ACC		as ep3chAcc,
+		    A.EP_4CH_ACC		as ep4chAcc,
+		    A.EP_5CH_ACC		as ep5chAcc,
+		    A.EP_6CH_ACC		as ep6chAcc,
+		    A.EP_7CH_R_ACC		as ep7chRAcc,
+		    A.EP_7CH_S_ACC		as ep7chSAcc,
+		    A.EP_7CH_T_ACC		as ep7chTAcc,
+		    A.EP_8CH_R_ACC		as ep8chRAcc,
+		    A.EP_8CH_S_ACC		as ep8chSAcc,
+		    A.EP_8CH_T_ACC		as ep8chTAcc,
+		    
+		    A.EP_1CH_INST		as ep1chInst,
+		    A.EP_2CH_INST		as ep2chInst,
+		    A.EP_3CH_INST		as ep3chInst,
+		    A.EP_4CH_INST		as ep4chInst,
+		    A.EP_5CH_INST		as ep5chInst,
+		    A.EP_6CH_INST		as ep6chInst,
+		    A.EP_7CH_R_INST		as ep7chRInst,
+		    A.EP_7CH_S_INST		as ep7chSInst,
+		    A.EP_7CH_T_INST		as ep7chTInst,
+		    A.EP_8CH_R_INST		as ep8chRInst,
+		    A.EP_8CH_S_INST		as ep8chSInst,
+		    A.EP_8CH_T_INST		as ep8chTInst,  
+		    
+		    A.EP_1CH_STATUS		as ep1chStatus,
+		    A.EP_2CH_STATUS		as ep2chStatus,
+		    A.EP_3CH_STATUS		as ep3chStatus,
+		    A.EP_4CH_STATUS		as ep4chStatus,
+		    A.EP_5CH_STATUS		as ep5chStatus,
+		    A.EP_6CH_STATUS		as ep6chStatus,
+		    A.EP_7CH_R_STATUS	as ep7chRStatus,
+		    A.EP_7CH_S_STATUS	as ep7chSStatus,
+		    A.EP_7CH_T_STATUS	as ep7chTStatus,
+		    A.EP_8CH_R_STATUS	as ep8chRStatus,
+		    A.EP_8CH_S_STATUS	as ep8chSStatus,
+		    A.EP_8CH_T_STATUS	as ep8chTStatus,
+		    B.NOTI_DATE			as deviceNotiDate,
+		    B.TEMON_ID			as temonId,
+		    B.TEMON_TYPE		as temonType,
+		    B.PORT_NO			as portNo,
+		    B.DEVICE_TYPE		as deviceType,
+		    B.DEVICE_LOC		as deviceLoc,
+		    B.TEMP				as devicetemp,
+		    B.MAX_TEMP			as maxTemp,
+		    B.MIN_TEMP			as minTemp,
+		    B.DELAY_TIME		as delayTime,
+		    B.PUSH_TERM			as pushTerm,
+		    B.USE_YN			as useYn,
+		    B.BATTERY			as battery,
+		    B.RSSI				as rssi,
+		    B.STATUS			as deviceStatus,
+		    C.NOTI_DATE			as sensorNotiDate,
+		    C.HACON_EXIST_N1	as haconExistN1,
+		    C.HACON_EXIST_N2	as haconExistN2,
+		    C.HACON_EXIST_N3	as haconExistN3,
+		    C.HACON_EXIST_N4	as haconExistN4,
+		    C.HACON_EXIST_N5	as haconExistN5,
+		    C.HACON_TEMP_N1		as haconTempN1,
+		    C.HACON_TEMP_N2		as haconTempN2,
+		    C.HACON_TEMP_N3		as haconTempN3,
+		    C.HACON_TEMP_N4		as haconTempN4,
+		    C.HACON_TEMP_N5		as haconTempN5,
+		    C.HACON_ONOFF_N1	as haconOnOffN1,
+		    C.HACON_ONOFF_N2	as haconOnOffN2,
+		    C.HACON_ONOFF_N3	as haconOnOffN3,
+		    C.HACON_ONOFF_N4	as haconOnOffN4,
+		    C.HACON_ONOFF_N5	as haconOnOffN5,
+		    C.HACON_STAT_CD_N1	as haconStatusN1,
+		    C.HACON_STAT_CD_N2	as haconStatusN2,
+		    C.HACON_STAT_CD_N3	as haconStatusN3,
+		    C.HACON_STAT_CD_N4	as haconStatusN4,
+		    C.HACON_STAT_CD_N5	as haconStatusN5,
+		    
+		    C.T_SENSOR_EXIST_N1	as tSensorExistN1,
+		    C.T_SENSOR_EXIST_N2	as tSensorExistN2,
+		    C.T_SENSOR_EXIST_N3	as tSensorExistN3,
+		    C.T_SENSOR_EXIST_N4	as tSensorExistN4,
+		    C.T_SENSOR_EXIST_N5	as tSensorExistN5,
+		    C.T_SENSOR_TEMP_N1		as tSensorTempN1,
+		    C.T_SENSOR_TEMP_N2		as tSensorTempN2,
+		    C.T_SENSOR_TEMP_N3		as tSensorTempN3,
+		    C.T_SENSOR_TEMP_N4		as tSensorTempN4,
+		    C.T_SENSOR_TEMP_N5		as tSensorTempN5,
+		    C.T_SENSOR_STAT_CD_N1	as tSensorStatusN1,
+		    C.T_SENSOR_STAT_CD_N2	as tSensorStatusN2,
+		    C.T_SENSOR_STAT_CD_N3	as tSensorStatusN3,
+		    C.T_SENSOR_STAT_CD_N4	as tSensorStatusN4,
+		    C.T_SENSOR_STAT_CD_N5	as tSensorStatusN5,
+		    C.SIGN_STAT_CD			as signStatus,
+		    C.SIGN_ONOFF			as signOnOff
+		FROM
+			th_str_ble_elec_mst A
+            LEFT JOIN
+		    th_str_ble_device_mst B
+            ON
+            A.STR_CD = B.STR_CD
+            AND
+            A.NOTI_DATE = B.NOTI_DATE
+            LEFT JOIN            
+		    th_str_ble_sensor_mst C
+            ON
+            A.STR_CD = C.STR_CD
+            AND
+		    A.NOTI_DATE = C.NOTI_DATE
+		WHERE			
+		    A.STR_CD = #{strCd}
+		    AND
+		    A.USER_TYPE = '1'		    
+		    AND
+		    A.NOTI_DATE = #{elecNotiDate}
+		    ORDER BY B.TEMON_ID, B.TEMON_TYPE, B.PORT_NO+0
+	]]>
+	
+	</select>
+	
+	
+	<select id="retrieveBleMgntSensorInfo" parameterType="Map" resultType="GridBleVo">		
+	<![CDATA[		 
+
+		SELECT
+			A.STR_CD			as strCd,
+		    A.NOTI_DATE			as elecNotiDate,
+		    A.RST				as rst,
+		    A.EP_CNT			as epCnt,
+		    A.EP_1CH_ACC		as ep1chAcc,
+		    A.EP_2CH_ACC		as ep2chAcc,
+		    A.EP_3CH_ACC		as ep3chAcc,
+		    A.EP_4CH_ACC		as ep4chAcc,
+		    A.EP_5CH_ACC		as ep5chAcc,
+		    A.EP_6CH_ACC		as ep6chAcc,
+		    A.EP_7CH_R_ACC		as ep7chRAcc,
+		    A.EP_7CH_S_ACC		as ep7chSAcc,
+		    A.EP_7CH_T_ACC		as ep7chTAcc,
+		    A.EP_8CH_R_ACC		as ep8chRAcc,
+		    A.EP_8CH_S_ACC		as ep8chSAcc,
+		    A.EP_8CH_T_ACC		as ep8chTAcc,
+		    
+		    A.EP_1CH_INST		as ep1chInst,
+		    A.EP_2CH_INST		as ep2chInst,
+		    A.EP_3CH_INST		as ep3chInst,
+		    A.EP_4CH_INST		as ep4chInst,
+		    A.EP_5CH_INST		as ep5chInst,
+		    A.EP_6CH_INST		as ep6chInst,
+		    A.EP_7CH_R_INST		as ep7chRInst,
+		    A.EP_7CH_S_INST		as ep7chSInst,
+		    A.EP_7CH_T_INST		as ep7chTInst,
+		    A.EP_8CH_R_INST		as ep8chRInst,
+		    A.EP_8CH_S_INST		as ep8chSInst,
+		    A.EP_8CH_T_INST		as ep8chTInst,  
+		    
+		    A.EP_1CH_STATUS		as ep1chStatus,
+		    A.EP_2CH_STATUS		as ep2chStatus,
+		    A.EP_3CH_STATUS		as ep3chStatus,
+		    A.EP_4CH_STATUS		as ep4chStatus,
+		    A.EP_5CH_STATUS		as ep5chStatus,
+		    A.EP_6CH_STATUS		as ep6chStatus,
+		    A.EP_7CH_R_STATUS	as ep7chRStatus,
+		    A.EP_7CH_S_STATUS	as ep7chSStatus,
+		    A.EP_7CH_T_STATUS	as ep7chTStatus,
+		    A.EP_8CH_R_STATUS	as ep8chRStatus,
+		    A.EP_8CH_S_STATUS	as ep8chSStatus,
+		    A.EP_8CH_T_STATUS	as ep8chTStatus,
+		    B.NOTI_DATE			as deviceNotiDate,
+		    B.TEMON_ID			as temonId,
+		    B.TEMON_TYPE		as temonType,
+		    B.PORT_NO			as portNo,
+		    B.DEVICE_TYPE		as deviceType,
+		    B.DEVICE_LOC		as deviceLoc,
+		    B.TEMP				as devicetemp,
+		    B.MAX_TEMP			as maxTemp,
+		    B.MIN_TEMP			as minTemp,
+		    B.DELAY_TIME		as delayTime,
+		    B.PUSH_TERM			as pushTerm,
+		    B.USE_YN			as useYn,
+		    B.BATTERY			as battery,
+		    B.RSSI				as rssi,
+		    B.STATUS			as deviceStatus,
+		    C.NOTI_DATE			as sensorNotiDate,
+		    C.HACON_EXIST_N1	as haconExistN1,
+		    C.HACON_EXIST_N2	as haconExistN2,
+		    C.HACON_EXIST_N3	as haconExistN3,
+		    C.HACON_EXIST_N4	as haconExistN4,
+		    C.HACON_EXIST_N5	as haconExistN5,
+		    C.HACON_TEMP_N1		as haconTempN1,
+		    C.HACON_TEMP_N2		as haconTempN2,
+		    C.HACON_TEMP_N3		as haconTempN3,
+		    C.HACON_TEMP_N4		as haconTempN4,
+		    C.HACON_TEMP_N5		as haconTempN5,
+		    C.HACON_ONOFF_N1	as haconOnOffN1,
+		    C.HACON_ONOFF_N2	as haconOnOffN2,
+		    C.HACON_ONOFF_N3	as haconOnOffN3,
+		    C.HACON_ONOFF_N4	as haconOnOffN4,
+		    C.HACON_ONOFF_N5	as haconOnOffN5,
+		    C.HACON_STAT_CD_N1	as haconStatusN1,
+		    C.HACON_STAT_CD_N2	as haconStatusN2,
+		    C.HACON_STAT_CD_N3	as haconStatusN3,
+		    C.HACON_STAT_CD_N4	as haconStatusN4,
+		    C.HACON_STAT_CD_N5	as haconStatusN5,
+		    
+		    C.T_SENSOR_EXIST_N1	as tSensorExistN1,
+		    C.T_SENSOR_EXIST_N2	as tSensorExistN2,
+		    C.T_SENSOR_EXIST_N3	as tSensorExistN3,
+		    C.T_SENSOR_EXIST_N4	as tSensorExistN4,
+		    C.T_SENSOR_EXIST_N5	as tSensorExistN5,
+		    C.T_SENSOR_TEMP_N1		as tSensorTempN1,
+		    C.T_SENSOR_TEMP_N2		as tSensorTempN2,
+		    C.T_SENSOR_TEMP_N3		as tSensorTempN3,
+		    C.T_SENSOR_TEMP_N4		as tSensorTempN4,
+		    C.T_SENSOR_TEMP_N5		as tSensorTempN5,
+		    C.T_SENSOR_STAT_CD_N1	as tSensorStatusN1,
+		    C.T_SENSOR_STAT_CD_N2	as tSensorStatusN2,
+		    C.T_SENSOR_STAT_CD_N3	as tSensorStatusN3,
+		    C.T_SENSOR_STAT_CD_N4	as tSensorStatusN4,
+		    C.T_SENSOR_STAT_CD_N5	as tSensorStatusN5,
+		    C.SIGN_STAT_CD			as signStatus,
+		    C.SIGN_ONOFF			as signOnOff
+		FROM
+			th_str_ble_elec_mst A
+            LEFT JOIN
+		    th_str_ble_device_mst B
+            ON
+            A.STR_CD = B.STR_CD
+            AND
+            A.NOTI_DATE = B.NOTI_DATE
+            LEFT JOIN            
+		    th_str_ble_sensor_mst C
+            ON
+            A.STR_CD = C.STR_CD
+            AND
+		    A.NOTI_DATE = C.NOTI_DATE
+		WHERE			
+		    A.STR_CD = #{strCd}
+		    AND
+		    A.USER_TYPE = '2'		    
+		    AND
+		    A.NOTI_DATE = #{sensorNotiDate}
+		    ORDER BY B.TEMON_ID, B.TEMON_TYPE, B.PORT_NO+0
+	]]>
+	
+	</select>
+	
+	
+	<select id="retrieveBleMgntNetworkInfo" parameterType="Map" resultType="GridBleVo">		
+	<![CDATA[		 
+
+		SELECT
+			A.STR_CD			as strCd,
+		    A.NOTI_DATE			as elecNotiDate,
+		    A.RST				as rst,
+		    A.EP_CNT			as epCnt,
+		    A.EP_1CH_ACC		as ep1chAcc,
+		    A.EP_2CH_ACC		as ep2chAcc,
+		    A.EP_3CH_ACC		as ep3chAcc,
+		    A.EP_4CH_ACC		as ep4chAcc,
+		    A.EP_5CH_ACC		as ep5chAcc,
+		    A.EP_6CH_ACC		as ep6chAcc,
+		    A.EP_7CH_R_ACC		as ep7chRAcc,
+		    A.EP_7CH_S_ACC		as ep7chSAcc,
+		    A.EP_7CH_T_ACC		as ep7chTAcc,
+		    A.EP_8CH_R_ACC		as ep8chRAcc,
+		    A.EP_8CH_S_ACC		as ep8chSAcc,
+		    A.EP_8CH_T_ACC		as ep8chTAcc,
+		    
+		    A.EP_1CH_INST		as ep1chInst,
+		    A.EP_2CH_INST		as ep2chInst,
+		    A.EP_3CH_INST		as ep3chInst,
+		    A.EP_4CH_INST		as ep4chInst,
+		    A.EP_5CH_INST		as ep5chInst,
+		    A.EP_6CH_INST		as ep6chInst,
+		    A.EP_7CH_R_INST		as ep7chRInst,
+		    A.EP_7CH_S_INST		as ep7chSInst,
+		    A.EP_7CH_T_INST		as ep7chTInst,
+		    A.EP_8CH_R_INST		as ep8chRInst,
+		    A.EP_8CH_S_INST		as ep8chSInst,
+		    A.EP_8CH_T_INST		as ep8chTInst,  
+		    
+		    A.EP_1CH_STATUS		as ep1chStatus,
+		    A.EP_2CH_STATUS		as ep2chStatus,
+		    A.EP_3CH_STATUS		as ep3chStatus,
+		    A.EP_4CH_STATUS		as ep4chStatus,
+		    A.EP_5CH_STATUS		as ep5chStatus,
+		    A.EP_6CH_STATUS		as ep6chStatus,
+		    A.EP_7CH_R_STATUS	as ep7chRStatus,
+		    A.EP_7CH_S_STATUS	as ep7chSStatus,
+		    A.EP_7CH_T_STATUS	as ep7chTStatus,
+		    A.EP_8CH_R_STATUS	as ep8chRStatus,
+		    A.EP_8CH_S_STATUS	as ep8chSStatus,
+		    A.EP_8CH_T_STATUS	as ep8chTStatus,
+		    B.NOTI_DATE			as deviceNotiDate,
+		    B.TEMON_ID			as temonId,
+		    B.TEMON_TYPE		as temonType,
+		    B.PORT_NO			as portNo,
+		    B.DEVICE_TYPE		as deviceType,
+		    B.DEVICE_LOC		as deviceLoc,
+		    B.TEMP				as devicetemp,
+		    B.MAX_TEMP			as maxTemp,
+		    B.MIN_TEMP			as minTemp,
+		    B.DELAY_TIME		as delayTime,
+		    B.PUSH_TERM			as pushTerm,
+		    B.USE_YN			as useYn,
+		    B.BATTERY			as battery,
+		    B.RSSI				as rssi,
+		    B.STATUS			as deviceStatus,
+		    C.NOTI_DATE			as sensorNotiDate,
+		    C.HACON_EXIST_N1	as haconExistN1,
+		    C.HACON_EXIST_N2	as haconExistN2,
+		    C.HACON_EXIST_N3	as haconExistN3,
+		    C.HACON_EXIST_N4	as haconExistN4,
+		    C.HACON_EXIST_N5	as haconExistN5,
+		    C.HACON_TEMP_N1		as haconTempN1,
+		    C.HACON_TEMP_N2		as haconTempN2,
+		    C.HACON_TEMP_N3		as haconTempN3,
+		    C.HACON_TEMP_N4		as haconTempN4,
+		    C.HACON_TEMP_N5		as haconTempN5,
+		    C.HACON_ONOFF_N1	as haconOnOffN1,
+		    C.HACON_ONOFF_N2	as haconOnOffN2,
+		    C.HACON_ONOFF_N3	as haconOnOffN3,
+		    C.HACON_ONOFF_N4	as haconOnOffN4,
+		    C.HACON_ONOFF_N5	as haconOnOffN5,
+		    C.HACON_STAT_CD_N1	as haconStatusN1,
+		    C.HACON_STAT_CD_N2	as haconStatusN2,
+		    C.HACON_STAT_CD_N3	as haconStatusN3,
+		    C.HACON_STAT_CD_N4	as haconStatusN4,
+		    C.HACON_STAT_CD_N5	as haconStatusN5,
+		    
+		    C.T_SENSOR_EXIST_N1	as tSensorExistN1,
+		    C.T_SENSOR_EXIST_N2	as tSensorExistN2,
+		    C.T_SENSOR_EXIST_N3	as tSensorExistN3,
+		    C.T_SENSOR_EXIST_N4	as tSensorExistN4,
+		    C.T_SENSOR_EXIST_N5	as tSensorExistN5,
+		    C.T_SENSOR_TEMP_N1		as tSensorTempN1,
+		    C.T_SENSOR_TEMP_N2		as tSensorTempN2,
+		    C.T_SENSOR_TEMP_N3		as tSensorTempN3,
+		    C.T_SENSOR_TEMP_N4		as tSensorTempN4,
+		    C.T_SENSOR_TEMP_N5		as tSensorTempN5,
+		    C.T_SENSOR_STAT_CD_N1	as tSensorStatusN1,
+		    C.T_SENSOR_STAT_CD_N2	as tSensorStatusN2,
+		    C.T_SENSOR_STAT_CD_N3	as tSensorStatusN3,
+		    C.T_SENSOR_STAT_CD_N4	as tSensorStatusN4,
+		    C.T_SENSOR_STAT_CD_N5	as tSensorStatusN5,
+		    C.SIGN_STAT_CD			as signStatus,
+		    C.SIGN_ONOFF			as signOnOff
+		FROM
+			th_str_ble_elec_mst A
+            LEFT JOIN
+		    th_str_ble_device_mst B
+            ON
+            A.STR_CD = B.STR_CD
+            AND
+            A.NOTI_DATE = B.NOTI_DATE
+            LEFT JOIN            
+		    th_str_ble_sensor_mst C
+            ON
+            A.STR_CD = C.STR_CD
+            AND
+		    A.NOTI_DATE = C.NOTI_DATE
+		WHERE			
+		    A.STR_CD = #{strCd}
+		    AND
+		    A.USER_TYPE = '3'
+		    AND		    
+		    A.NOTI_DATE = #{networkNotiDate}
+		    ORDER BY B.TEMON_ID, B.TEMON_TYPE, B.PORT_NO+0
+	]]>
+	</select>
+	
+	<select id="retrieveBleMgntNetworkIp" parameterType="Map" resultType="GridBleVo">		
+	<![CDATA[		 
+
+		SELECT
+			STR_CD			as strCd,
+			STR_NM			as strNm,
+			GW_ID			as gwId,
+			MAC				as mac,
+			VIEW_STR_CD		as viewStrCd,
+			IP				as gwIp,
+			NETMASK			as gwNetmask,
+			GATEWAY			as gwGateway,
+			IFIP			as ifIp,
+			IFPORT			as ifPort
+		FROM
+			th_str_ble_mst
+		WHERE
+			NOTI_DATE = #{networkNotiDate}		    
+	
+	]]>	
+	</select>
+	
+	
+	<select id="retrieveBleMgntSignInfo" parameterType="Map" resultType="GridBleVo">		
+	<![CDATA[		 
+
+		SELECT
+			A.STR_CD			as strCd,
+		    A.NOTI_DATE			as elecNotiDate,
+		    A.RST				as rst,
+		    A.EP_CNT			as epCnt,
+		    A.EP_1CH_ACC		as ep1chAcc,
+		    A.EP_2CH_ACC		as ep2chAcc,
+		    A.EP_3CH_ACC		as ep3chAcc,
+		    A.EP_4CH_ACC		as ep4chAcc,
+		    A.EP_5CH_ACC		as ep5chAcc,
+		    A.EP_6CH_ACC		as ep6chAcc,
+		    A.EP_7CH_R_ACC		as ep7chRAcc,
+		    A.EP_7CH_S_ACC		as ep7chSAcc,
+		    A.EP_7CH_T_ACC		as ep7chTAcc,
+		    A.EP_8CH_R_ACC		as ep8chRAcc,
+		    A.EP_8CH_S_ACC		as ep8chSAcc,
+		    A.EP_8CH_T_ACC		as ep8chTAcc,
+		    
+		    A.EP_1CH_INST		as ep1chInst,
+		    A.EP_2CH_INST		as ep2chInst,
+		    A.EP_3CH_INST		as ep3chInst,
+		    A.EP_4CH_INST		as ep4chInst,
+		    A.EP_5CH_INST		as ep5chInst,
+		    A.EP_6CH_INST		as ep6chInst,
+		    A.EP_7CH_R_INST		as ep7chRInst,
+		    A.EP_7CH_S_INST		as ep7chSInst,
+		    A.EP_7CH_T_INST		as ep7chTInst,
+		    A.EP_8CH_R_INST		as ep8chRInst,
+		    A.EP_8CH_S_INST		as ep8chSInst,
+		    A.EP_8CH_T_INST		as ep8chTInst,  
+		    
+		    A.EP_1CH_STATUS		as ep1chStatus,
+		    A.EP_2CH_STATUS		as ep2chStatus,
+		    A.EP_3CH_STATUS		as ep3chStatus,
+		    A.EP_4CH_STATUS		as ep4chStatus,
+		    A.EP_5CH_STATUS		as ep5chStatus,
+		    A.EP_6CH_STATUS		as ep6chStatus,
+		    A.EP_7CH_R_STATUS	as ep7chRStatus,
+		    A.EP_7CH_S_STATUS	as ep7chSStatus,
+		    A.EP_7CH_T_STATUS	as ep7chTStatus,
+		    A.EP_8CH_R_STATUS	as ep8chRStatus,
+		    A.EP_8CH_S_STATUS	as ep8chSStatus,
+		    A.EP_8CH_T_STATUS	as ep8chTStatus,
+		    B.NOTI_DATE			as deviceNotiDate,
+		    B.TEMON_ID			as temonId,
+		    B.TEMON_TYPE		as temonType,
+		    B.PORT_NO			as portNo,
+		    B.DEVICE_TYPE		as deviceType,
+		    B.DEVICE_LOC		as deviceLoc,
+		    B.TEMP				as devicetemp,
+		    B.MAX_TEMP			as maxTemp,
+		    B.MIN_TEMP			as minTemp,
+		    B.DELAY_TIME		as delayTime,
+		    B.PUSH_TERM			as pushTerm,
+		    B.USE_YN			as useYn,
+		    B.BATTERY			as battery,
+		    B.RSSI				as rssi,
+		    B.STATUS			as deviceStatus,
+		    C.NOTI_DATE			as sensorNotiDate,
+		    C.HACON_EXIST_N1	as haconExistN1,
+		    C.HACON_EXIST_N2	as haconExistN2,
+		    C.HACON_EXIST_N3	as haconExistN3,
+		    C.HACON_EXIST_N4	as haconExistN4,
+		    C.HACON_EXIST_N5	as haconExistN5,
+		    C.HACON_TEMP_N1		as haconTempN1,
+		    C.HACON_TEMP_N2		as haconTempN2,
+		    C.HACON_TEMP_N3		as haconTempN3,
+		    C.HACON_TEMP_N4		as haconTempN4,
+		    C.HACON_TEMP_N5		as haconTempN5,
+		    C.HACON_ONOFF_N1	as haconOnOffN1,
+		    C.HACON_ONOFF_N2	as haconOnOffN2,
+		    C.HACON_ONOFF_N3	as haconOnOffN3,
+		    C.HACON_ONOFF_N4	as haconOnOffN4,
+		    C.HACON_ONOFF_N5	as haconOnOffN5,
+		    C.HACON_STAT_CD_N1	as haconStatusN1,
+		    C.HACON_STAT_CD_N2	as haconStatusN2,
+		    C.HACON_STAT_CD_N3	as haconStatusN3,
+		    C.HACON_STAT_CD_N4	as haconStatusN4,
+		    C.HACON_STAT_CD_N5	as haconStatusN5,
+		    
+		    C.T_SENSOR_EXIST_N1	as tSensorExistN1,
+		    C.T_SENSOR_EXIST_N2	as tSensorExistN2,
+		    C.T_SENSOR_EXIST_N3	as tSensorExistN3,
+		    C.T_SENSOR_EXIST_N4	as tSensorExistN4,
+		    C.T_SENSOR_EXIST_N5	as tSensorExistN5,
+		    C.T_SENSOR_TEMP_N1		as tSensorTempN1,
+		    C.T_SENSOR_TEMP_N2		as tSensorTempN2,
+		    C.T_SENSOR_TEMP_N3		as tSensorTempN3,
+		    C.T_SENSOR_TEMP_N4		as tSensorTempN4,
+		    C.T_SENSOR_TEMP_N5		as tSensorTempN5,
+		    C.T_SENSOR_STAT_CD_N1	as tSensorStatusN1,
+		    C.T_SENSOR_STAT_CD_N2	as tSensorStatusN2,
+		    C.T_SENSOR_STAT_CD_N3	as tSensorStatusN3,
+		    C.T_SENSOR_STAT_CD_N4	as tSensorStatusN4,
+		    C.T_SENSOR_STAT_CD_N5	as tSensorStatusN5,
+		    C.SIGN_STAT_CD			as signStatus,
+		    C.SIGN_ONOFF			as signOnOff
+		FROM
+			th_str_ble_elec_mst A
+            LEFT JOIN
+		    th_str_ble_device_mst B
+            ON
+            A.STR_CD = B.STR_CD
+            AND
+            A.NOTI_DATE = B.NOTI_DATE
+            LEFT JOIN            
+		    th_str_ble_sensor_mst C
+            ON
+            A.STR_CD = C.STR_CD
+            AND
+		    A.NOTI_DATE = C.NOTI_DATE
+		WHERE			
+		    A.STR_CD = #{strCd}
+		    AND
+		    A.USER_TYPE = '4'
+		    AND
+		    A.NOTI_DATE = #{signNotiDate}
+		    ORDER BY B.TEMON_ID, B.TEMON_TYPE, B.PORT_NO+0
+	]]>
+	</select>
+	
+	
+	
+	
+	<update id="saveBleCheck" parameterType="Map">	
+	<![CDATA[		 
+		UPDATE 
+			TH_STR_BLE_CHECK_MST
+		SET 
+			CHECK_SUCCESS = 		#{checkSuccess},    
+		    ONE_CONTENTS = 			#{oneContents},
+		    TWO_CONTENTS = 			#{twoContents},
+		    THREE_CONTENTS = 		#{threeContents},
+		    FOUR_CONTENTS = 		#{fourContents},
+		    ETC_CONTENTS = 			#{etcContents}
+		WHERE
+			STR_CD = #{strCd}
+		
+	]]>
+	</update>
+	
+	
+	<update id="saveSignOper" parameterType="Map">	
+	<![CDATA[		 
+		UPDATE 
+			TH_STR_ENV_CONF_MST
+		SET 
+			STR_CONF_VAL = 		#{strConfVal},
+			STR_CONF_VAL_OLD = 	#{strConfVal}
+		    
+		WHERE
+			STR_CD = #{strCd}
+			AND
+			CONF_SP = 'SIGN_OPER'
+		
+	]]>
+	</update>
+	
+	
+	
+	
+	
+	
+	<select id="retrieveCloseCntMst" parameterType="Map" resultType="GridBleVo">		
+	<![CDATA[		 
+
+			SELECT
+				STR_CD																	as strCd, 
+				( SELECT GW_ADDR FROM TH_STR_GW_MST WHERE STR_CD = #{strCd} ) 			as mac,
+				'1'																			as gwCnt,
+				( select SUM( METER_CH1_RST + METER_CH2_RST + METER_CH3_RST + METER_CH4_RST + METER_CH5_RST + METER_CH6_RST + METER_CH7_R + METER_CH7_S + METER_CH7_T + METER_CH8_R + METER_CH8_S + METER_CH8_T ) * 3
+ 					from th_str_rems_device_cnt_mnt WHERE STR_CD = #{strCd} ) as ctCnt,
+				( select SUM( METER_CH1_RST + METER_CH2_RST + METER_CH3_RST + METER_CH4_RST + METER_CH5_RST + METER_CH6_RST + METER_CH7_R + METER_CH7_S + METER_CH7_T + METER_CH8_R + METER_CH8_S + METER_CH8_T )
+ 					from th_str_rems_device_cnt_mnt WHERE STR_CD = #{strCd} ) as meterCnt, 
+				HACON			as haconCnt,
+				T_SENSOR		as tSensorCnt,
+				TEMON			as temonCnt,
+				( select COUNT(USE_YN)
+ 					from th_str_rems_device_mst WHERE STR_CD = #{strCd} AND USE_YN = 'Y' AND TEMON_TYPE = 'T' ) as tempSensorCnt, 
+				ZIGBEE			as zigbeeCnt,
+				ALMON			as almonCnt,
+				INV				as invCnt,
+				SIGN			as signCnt,
+				'1'				as sisnetCnt,
+				'1'				as boxCnt,
+				'1'				as swCnt
+			FROM 
+				th_str_rems_device_cnt_mnt
+			WHERE 
+				STR_CD = #{strCd}
+	
+	]]>
+	</select>
+	
+	
+	
+	<update id="saveCloseData" parameterType="Map">	
+		INSERT INTO 
+				th_str_closing_data 
+				( 
+				STR_CD,
+				CLOSING_YM,
+				VENDOR_CLOSING_YN,
+				MANAGER_CLOSING_YN,
+				MANAGER_CLOSING_USER_ID,
+			   MANAGER_CLOSING_DTTM,			    			    	    
+			   REGI_ID,
+			   REGI_DTTM,
+			   FINAL_MOD_ID,
+			   FINAL_MOD_DTTM			   
+			   )
+			   values			   				   			   			   		   
+			   (
+					#{strCd},
+					#{closingYm},
+					'N',
+					'N',
+					#{ID},
+					now(),
+					'SEMS2.0',
+					now(),
+					'SEMS2.0',
+					now()
+			   ) ON DUPLICATE KEY UPDATE
+			   		CLOSING_YM = #{closingYm},
+					MANAGER_CLOSING_YN = 'Y',
+					MANAGER_CLOSING_USER_ID = #{ID},
+			   		MANAGER_CLOSING_DTTM = now(),	
+			   	 	FINAL_MOD_ID = 'SEMS2.0', 
+			   		FINAL_MOD_DTTM = now()
+		   			
+	</update>
+	
+	
+	
+	<update id="saveCloseDataDetail" parameterType="Map">	
+		INSERT INTO 
+				th_str_closing_data_detail 
+				( 
+				STR_CD,
+				ITEM_TYPE,
+			    CNT,			    	    
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="closeDataVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.strCd},
+					#{item.itemType},
+					#{item.cnt},										
+					'SEMS2.0',
+					now(),
+					'SEMS2.0',
+					now()
+				)
+				</foreach>
+				ON DUPLICATE KEY UPDATE			
+					FINAL_MOD_ID = 'SEMS2.0',
+					FINAL_MOD_DTTM = now()
+		   			
+	</update>
+
+	<update id="saveCloseBase" parameterType="Map">	
+		INSERT INTO 
+				th_rems_box_monitor_closing_base 
+				( 
+				GW_ADDR,
+				VENDOR,							    			    	    
+			   	REGI_ID,
+			   	REGI_DTTM,
+			   	FINAL_MOD_ID,
+			   	FINAL_MOD_DTTM			   
+			   	)
+			   	values			   				   			   			   		   
+			   	(
+					#{mac},
+					'TNM',	
+					'SEMS2.0',				
+					now(),
+					'SEMS2.0',					
+					now()
+			   ) ON DUPLICATE KEY UPDATE			   			
+			   	 	FINAL_MOD_ID = 'SEMS2.0', 
+			   		FINAL_MOD_DTTM = now()
+		   			
+	</update>
+
+
+	<update id="saveCloseBaseDetail" parameterType="Map">	
+		INSERT INTO 
+				th_rems_box_monitor_closing_base_detail 
+				( 
+				GW_ADDR,
+				ITEM_TYPE,
+			    CNT,	
+			    UPDATE_TIMES,		    	    
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="closeDataVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.mac},
+					#{item.itemType},
+					#{item.cnt},
+					'1',										
+					'SEMS2.0',
+					now(),
+					'SEMS2.0',
+					now()
+				)
+				</foreach>
+				ON DUPLICATE KEY UPDATE
+					FINAL_MOD_ID = 'SEMS2.0',
+					FINAL_MOD_DTTM = now()
+		   			
+	</update>
+	
+	<select id="retrieveRealData" parameterType="Map" resultType="GridBleVo">	
+	
+	<![CDATA[		 
+	
+		SELECT 
+		'-'							as epCnt,
+		'-'							as rst,
+		A.STR_CD					as strCd,
+	    A.YYYYMMDD					as yyyymmdd,
+	    A.HHMIN						as hhmin,
+	    A.EP_1CH_EFT_WATAGE			as ep1chAcc,
+	    A.EP_2CH_EFT_WATAGE			as ep2chAcc,
+	    A.EP_3CH_EFT_WATAGE			as ep3chAcc,
+	    A.EP_4CH_EFT_WATAGE			as ep4chAcc,
+	    A.EP_5CH_EFT_WATAGE			as ep5chAcc,
+	    A.EP_6CH_EFT_WATAGE			as ep6chAcc,
+	    A.EP_7CH_R_EFT_WATAGE		as ep7chRAcc,
+	    A.EP_7CH_S_EFT_WATAGE		as ep7chSAcc,
+	    A.EP_7CH_T_EFT_WATAGE		as ep7chTAcc,
+	    A.EP_8CH_R_EFT_WATAGE		as ep8chRAcc,
+	    A.EP_8CH_S_EFT_WATAGE		as ep8chSAcc,
+	    A.EP_8CH_T_EFT_WATAGE		as ep8chTAcc,
+	    
+	    A.EP_1CH_EFT_WATAGE			as ep1chInst,
+	    A.EP_2CH_EFT_WATAGE			as ep2chInst,
+	    A.EP_3CH_EFT_WATAGE			as ep3chInst,
+	    A.EP_4CH_EFT_WATAGE			as ep4chInst,
+	    A.EP_5CH_EFT_WATAGE			as ep5chInst,
+	    A.EP_6CH_EFT_WATAGE			as ep6chInst,
+	    A.EP_7CH_R_EFT_WATAGE		as ep7chRInst,
+	    A.EP_7CH_S_EFT_WATAGE		as ep7chSInst,
+	    A.EP_7CH_T_EFT_WATAGE		as ep7chTInst,
+	    A.EP_8CH_R_EFT_WATAGE		as ep8chRInst,
+	    A.EP_8CH_S_EFT_WATAGE		as ep8chSInst,
+	    A.EP_8CH_T_EFT_WATAGE		as ep8chTInst,
+	    
+	    A.EP_1CH_STATUS				as ep1chStatus,
+	    A.EP_2CH_STATUS				as ep2chStatus,
+	    A.EP_3CH_STATUS				as ep3chStatus,
+	    A.EP_4CH_STATUS				as ep4chStatus,
+	    A.EP_5CH_STATUS				as ep5chStatus,
+	    A.EP_6CH_STATUS				as ep6chStatus,
+	    A.EP_7CH_R_STATUS			as ep7chRStatus,
+	    A.EP_7CH_S_STATUS			as ep7chSStatus,
+	    A.EP_7CH_T_STATUS			as ep7chTStatus,
+	    A.EP_8CH_R_STATUS			as ep8chRStatus,
+	    A.EP_8CH_S_STATUS			as ep8chSStatus,
+	    A.EP_8CH_T_STATUS			as ep8chTStatus,
+        
+        B.SENSE_TEMP_N1		as haconTempN1,
+        B.SENSE_TEMP_N2		as haconTempN2,
+        B.SENSE_TEMP_N3		as haconTempN3,
+        B.SENSE_TEMP_N4		as haconTempN4,
+        B.SENSE_TEMP_N5		as haconTempN5,
+        
+        B.HACON_STAT_CD_N1	as haconStatusN1,
+        B.HACON_STAT_CD_N2	as haconStatusN2,
+        B.HACON_STAT_CD_N3	as haconStatusN3,
+        B.HACON_STAT_CD_N4	as haconStatusN4,
+        B.HACON_STAT_CD_N5	as haconStatusN5,
+        
+        B.T_SENSOR_SENSE_TEMP_N1	as tSensorTempN1,
+        B.T_SENSOR_SENSE_TEMP_N2	as tSensorTempN2,
+        B.T_SENSOR_SENSE_TEMP_N3	as tSensorTempN3,
+        B.T_SENSOR_SENSE_TEMP_N4	as tSensorTempN4,
+        B.T_SENSOR_SENSE_TEMP_N5	as tSensorTempN5,
+        
+        B.T_SENSOR_STAT_CD_N1		as tSensorStatusN1,
+        B.T_SENSOR_STAT_CD_N1		as tSensorStatusN2,
+        B.T_SENSOR_STAT_CD_N1		as tSensorStatusN3,
+        B.T_SENSOR_STAT_CD_N1		as tSensorStatusN4,
+        B.T_SENSOR_STAT_CD_N1		as tSensorStatusN5,
+        
+        C.SIGN_STAT					as signOnOff,
+        
+        D.TEMON_ID					as temonId,
+        D.TEMON_TYPE				as temonType,
+        D.PORT_NO					as portNo,
+        D.DEVICE_TYPE				as deviceType,
+        D.SENS_TEMP					as devicetemp
+        
+        
+	    
+	FROM 
+		th_str_chn_elec_use_base A,
+        th_str_sensor_base B,
+        th_str_sign_status C,
+        th_str_rems_device_base D
+	WHERE 		
+		A.STR_CD = #{strCd}
+	    AND 
+	    B.STR_CD = #{strCd}
+	    AND
+	    C.STR_CD = #{strCd}
+	    AND
+	    D.STR_CD = #{strCd}
+	    AND
+	    CONCAT(A.YYYYMMDD, A.HHMIN) >= DATE_FORMAT( DATE_SUB(now(), INTERVAL 15 minute), '%Y%m%d%H%i' )
+        AND
+        CONCAT(B.YYYYMMDD, B.HHMIN) >= DATE_FORMAT( DATE_SUB(now(), INTERVAL 15 minute), '%Y%m%d%H%i' )
+        AND
+        CONCAT(C.YYYYMMDD, C.HHMIN) >= DATE_FORMAT( DATE_SUB(now(), INTERVAL 15 minute), '%Y%m%d%H%i' )
+        AND
+        CONCAT(D.YYYYMMDD, D.HHMIN) >= DATE_FORMAT( DATE_SUB(now(), INTERVAL 15 minute), '%Y%m%d%H%i' )
+        AND
+        A.STR_CD = B.STR_CD
+        AND
+        A.STR_CD = C.STR_CD
+        AND
+        A.STR_CD = D.STR_CD
+        AND
+        CONCAT(A.YYYYMMDD, A.HHMIN) = CONCAT( B.YYYYMMDD, B.HHMIN )
+        AND
+        CONCAT(A.YYYYMMDD, A.HHMIN) = CONCAT( C.YYYYMMDD, C.HHMIN )
+        AND
+        CONCAT(A.YYYYMMDD, A.HHMIN) = CONCAT( D.YYYYMMDD, D.HHMIN )
+        GROUP BY D.TEMON_TYPE, D.PORT_NO
+	]]>
+	
+	</select>
+	
+	
+	
+</mapper>

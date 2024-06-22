@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Button</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Button</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Button</a></div>
+    
+    
+    <div class="r_inputTbl r_horizonTbl">
+      <div class="r_inputTblTitle">
+        <h3>Module Button in Title Area</h3>
+        <span class="r_detailBtn">Module Button</span>
+        <span class="r_detailBtn r_disable">Disabled Button</span>
+      </div>
+    <table>
+      <tr>
+        <th width="25%">REMS 장치 등록</th>
+        <td class="r_gridInput">설명1</td>
+        <td  width="100" class="r_last textCenter r_gridInput">
+        <span class="innerBtn">
+          <button>Inline Button</button>
+        </span>
+        </td>
+      </tr>
+      <tr>
+        <th width="25%">시설물 장치 등록</th>
+        <td class="r_gridInput">설명2</td>
+        <td  width="100" class="r_last textCenter r_gridInput">
+        <span class="innerBtn">
+          <button>Inline Button</button>
+        </span>
+        </td>
+      </tr>
+      <tr>
+        <th width="25%">레이아웃 등록</th>
+        <td class="r_gridInput">설명3</td>
+        <td  width="100" class="r_last textCenter r_gridInput">
+        <span class="innerBtn">
+          <button>Inline Button</button>
+        </span>
+        </td>
+      </tr>
+      <tr>
+        <th width="25%">인버터 등록</th>
+        <td class="r_gridInput">설명4</td>
+        <td  width="100" class="r_last textCenter r_gridInput">
+        <span class="innerBtn">
+          <button>Inline Button</button>
+        </span>
+        </td>
+      </tr>
+      <tr class="r_last">
+        <th width="25%">REMS 환경 정보 등록</th>
+        <td class="r_gridInput">설명5</td>
+        <td  width="100" class="r_last textCenter r_gridInput">
+        <span class="innerBtn">
+          <button>Inline Button</button>
+        </span>
+        </td>
+      </tr>
+    </table>
+    </div>
+    <div class="r_moduleBtn">
+      <span class="moduleSave">
+        <button>저장</button>
+      </span>
+    </div>
+    
+    <div class="r_pageBtnWrapper">
+      <span class="pageNormal">
+        <button>취소</button>
+      </span>
+      <span class="pageConfirm">
+        <button>저장</button>
+      </span>
+      <span class="pageNormal r_last">
+        <button>삭제</button>
+      </span>
+      <span class="pageNormal">
+        <button>수정</button>
+      </span>
+      <span class="pageNormal">
+        <button>신규</button>
+      </span>
+    </div>
+    
+    
+  </div>
+</div>
+</body>
+</html>

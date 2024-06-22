@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Form</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Form</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Form</a></div>
+    
+    <span style="margin-bottom:15px; font-size:14px; display:block;">Text Field</span>    
+
+    <input type="text" class="r_Input" value="Text Field">
+    <br /><br/>
+    <input type="text" class="r_Input r_disable" value="Text Field Disabled" disabled="disabled">    
+    <br /><br/>
+    <input type="text" class="r_Input r_error" value="Text Field Errored">
+    <span class="r_errorTxt"><img src="../images/ico_error.png" />The error has been occured</span>
+
+    <span style="margin:30px 0 15px; font-size:14px; display:block;">Textarea</span>
+    
+    <textarea rows="5" cols="40">Textarea</textarea>
+    <br /><br/>
+    <textarea class="r_disable" rows="5" cols="40" disabled="disabled">Textarea Disabled</textarea>
+    <br /><br/>
+    <textarea class="r_error" rows="5" cols="40">Textarea Errored</textarea>
+    <span class="r_errorTxt"><img src="../images/ico_error.png" />The error has been occured</span>
+
+    <span style="margin:30px 0 15px; font-size:14px; display:block;">Radio Button</span>
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Radio Button Normal</span>
+    <span class="r_radio">
+      <input type="radio" name="radioGroup1" id="radio1" checked="checked">
+      <label for="radio1">radio1</label>
+      <input type="radio" name="radioGroup1" id="radio2">
+      <label class="r_last" for="radio2">radio2</label>
+    </span>
+    
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Radio Button Disabled</span>
+    <span class="r_radio">
+      <input type="radio" name="radioGroup2" id="radio3" checked="checked" disabled="disabled">
+      <label for="radio3">radio3</label>
+      <input type="radio" name="radioGroup2" id="radio4" disabled="disabled">
+      <label class="r_last" for="radio4">radio4</label>
+    </span>
+    
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Radio Button Errored</span>
+    <span class="r_radio r_error">
+      <input type="radio" name="radioGroup3" id="radio5">
+      <label for="radio5">radio5</label>
+      <input type="radio" name="radioGroup3" id="radio6">
+      <label class="r_last" for="radio6">radio6</label>
+      <span class="r_errorTxt"><img src="../images/ico_error.png" />The error has been occured</span>
+    </span>
+
+    <span style="margin:30px 0 15px; font-size:14px; display:block;">Checkbox</span>
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Checkbox Normal</span>
+    <span class="r_checkbox">
+      <input id="check01" type="checkbox" checked="checked">
+      <label for="check01">Checkbox checked</label>
+      <input id="check02" type="checkbox">
+      <label for="check02">Checkbox unchecked</label>
+    </span>
+
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Checkbox Disabled</span>
+    <span class="r_checkbox">
+      <input id="check03" type="checkbox" checked="checked" disabled="disabled">
+      <label for="check03">Checkbox checked disabled</label>
+      <input id="check04" type="checkbox" disabled="disabled">
+      <label for="check04">Checkbox unchecked disabled</label>
+    </span>
+
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Checkbox Errored</span>
+    <span class="r_checkbox r_error">
+      <input id="check05" type="checkbox">
+      <label for="check05">Checkbox errored</label>
+      <input id="check06" type="checkbox">
+      <label class="r_last" for="check06">Checkbox errored</label>
+      <span class="r_errorTxt"><img src="../images/ico_error.png" />The error has been occured</span>
+    </span>
+
+    <span style="margin:30px 0 15px; font-size:14px; display:block;">Checkbox without Style</span>
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Checkbox Normal</span>
+    <input id="check07" type="checkbox" checked="checked">
+    <label for="check07">Checkbox checked</label>
+    <input id="check08" type="checkbox">
+    <label for="check08">Checkbox unchecked</label>
+    
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Checkbox Disabled</span>
+    <input id="check09" type="checkbox" checked="checked" disabled="disabled">
+    <label for="check09">Checkbox checked disabled</label>
+    <input id="check10" type="checkbox" disabled="disabled">
+    <label for="check10">Checkbox unchecked disabled</label>
+
+    <span style="margin:15px 0 10px; font-size:12px; display:block;">-Checkbox Errored</span>
+    <input class="r_error" id="check11" type="checkbox">
+    <label for="check11">Checkbox errored</label>
+    <input class="r_error" id="check12" type="checkbox">
+    <label class="r_last" for="check12">Checkbox errored</label>
+    <span class="r_checkbox"><span class="r_errorTxt"><img src="../images/ico_error.png" />The error has been occured</span></span>
+    
+    
+    <span style="margin:30px 0 15px; font-size:14px; display:block;">Select</span>
+    <select name="select" style="width:160px;">
+      <option>Select</option>
+      <option>Select1</option>
+      <option>Select2</option>
+    </select>
+    <br /><br/>
+    <select name="select" style="width:160px;" disabled="disabled">
+      <option>Select Disabled</option>
+      <option>Select1</option>
+      <option>Select2</option>
+    </select>
+    <br /><br/>
+    <select class="r_error" name="select" style="width:160px;">
+      <option>Select Errored</option>
+      <option>Select1</option>
+      <option>Select2</option>
+    </select>
+    <span class="r_checkbox"><span class="r_errorTxt"><img src="../images/ico_error.png" />The error has been occured</span></span>
+
+
+    <span style="margin:30px 0 15px; font-size:14px; display:block;">Calendar</span>
+    <input type="text" class="r_Input" value="2015-01-01" style="width:85px;">
+    <a class="r_calendarBtn" href="#"><img src="../images/btn_calendar.png" align="calendar"></a>
+
+
+  </div>
+</div>
+</body>
+</html>

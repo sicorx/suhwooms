@@ -1,0 +1,128 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8" session="true" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
+
+<c:set var="smAutoLogin"><spring:message code="autoLogin"/></c:set>
+<c:set var="smChangeLocale"><spring:message code="changeLocale"/></c:set>
+<c:set var="smSelectLocale"><spring:message code="selectLocale"/></c:set>
+<c:set var="smLogin"><spring:message code="login"/></c:set>
+<c:set var="smInputId"><spring:message code="inputId"/></c:set>
+<c:set var="smInputPw"><spring:message code="inputPw"/></c:set>
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>REMS</title>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+	<link rel="stylesheet" type="text/css" media="screen" href="/resources/css/rems_global.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/resources/css/rems_login.css" />
+	
+	<style>
+		@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+	</style>
+	
+	<script src="/resources/js/jquery-1.11.1.min.js" type="text/javascript"></script>
+	<script src="/resources/js/placeholders.js" type="text/javascript"></script>
+
+	<!-- 추후활용을 위해 남겨둠, 현재는 활용하는 곳 없음 -->
+	<sec:authorize access="isFullyAuthenticated()" var="ifa" />
+	<sec:authorize access="isRememberMe()" var="irm" />
+	<!-- 추후활용을 위해 남겨둠, 현재는 활용하는 곳 없음 -->
+	
+	<script type="text/javascript">
+	$(window).load(function() {
+
+		if( "${message }" != null && "${message }" != "" ) {
+			alert( "${message }" );	
+		}		
+		
+		$('#userId').focus();
+	});
+	
+	$(document).ready(function () {
+
+		$( "#userPw" ).keydown(function(e) {
+			if( e.which == 13 ) {
+				fncLogin();	
+			}
+		});		
+	});
+	
+	
+	function fncChangeLocale(val) {
+		location.href = "changeLocale?locale=" + val;
+	}
+	
+	
+	function fncLogin() {
+		var loginId   = document.loginForm.userId.value.replace(/ /gi,"");
+		var loginPass = document.loginForm.userPw.value.replace(/ /gi,"");
+		
+		if(loginId == null || loginId.length < 1){
+			alert("${smInputId}");
+			document.loginForm.userId.value = "";
+						
+			$('#userId').focus();
+			
+			return false;
+		}
+		
+		if(loginPass == null || loginPass.length < 1){
+			alert("${smInputPw}");
+			
+			document.loginForm.userPw.value = "";
+			
+			$('#userPw').focus();
+			
+			return false;
+		}
+		
+		document.loginForm.method = 'post';
+		document.loginForm.submit();
+	}		
+	</script>	
+
+</head>
+
+<body>
+	<div class="loginInput">
+	    <div class="loginCont">
+	    	<img src="/images/login/login_solution_logo54.png" alt="LG CNS Remote Energy Management" />
+	      
+	        <div class="loginInputCont">
+				<form name="loginForm" action="/j_spring_security_check">
+		        	<input type="text" class="user_id" id="userId" name="userId" placeholder="User ID" tabindex="1" style="ime-mode:disabled;" value="" />
+		        	<input type="password" class="password" id="userPw" name="userPw" placeholder="Password" tabindex="2" value="" />
+		        	<input type="button" class="submit" onclick="javascript:fncLogin()" tabindex="3" />
+		        	
+		        	<span class="checkSignIn">
+		        		<input type="checkbox" id="staySignedIn" />
+		        		<label for="staySignedIn">${smAutoLogin}</label>
+		        	</span>
+		        	<!--
+		        	<span class="language">
+						${smSelectLocale} :&nbsp;
+						<select onchange="javascript:fncChangeLocale(this.value)">
+							<option value="ko" <c:if test="${loc == 'ko'}"> selected </c:if> >한글</option>
+							<option value="en" <c:if test="${loc == 'en'}"> selected </c:if> >English</option>
+						</select> 
+		        	</span>
+		        	-->
+		        </form>
+	      </div>
+	  </div>
+	</div>
+	  
+	<div class="loginImg">
+		<img src="/images/login/img_login.png" />
+	</div>
+	
+	<div class="loginLogo">
+		<img src="/images/login/logo_1stnoon.png" alt="1stnoon CNS LOGO" />		
+	</div>
+</body>
+</html>

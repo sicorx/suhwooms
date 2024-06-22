@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.energy.persistence.EnergySemsMapper">
+
+	<select id="retrieveSems" parameterType="Map"  resultType="SemsVo">
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+	    <![CDATA[
+			SELECT A.STR_CD as strCd
+			     , VIEW_STR_CD as viewStrCd
+			     , STR_NM as strNm
+			     , ORG_CD as orgCd
+			     , orgFullNm
+			     , CONCAT(SUBSTRING(REMS_START_DT, 1, 4), '-', SUBSTRING(REMS_START_DT, 5, 2), '-', SUBSTRING(REMS_START_DT, 7, 2)) as remsStartDt
+			     , VENDOR_NM as vendorNm
+			     , VENDOR_CD as vendorCd
+			     , CNT as vendorCnt
+			  FROM (SELECT A.STR_CD
+			             , A.VIEW_STR_CD
+			             , A.STR_NM
+			             , B.ORG_CD	 
+			             , IFNULL(B.ORG_NM, '-') AS ORG_NM
+			             , fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD)	as orgFullNm
+			             , A.REMS_START_DT
+			          FROM TH_STR_INFO_MST A
+				      LEFT OUTER JOIN
+			               TH_COMPANY_ORG_MST B
+						ON A.ORG_CD = B.ORG_CD
+					   AND A.COMPANY_CD = B.COMPANY_CD
+					 WHERE A.USE_YN = 'Y'
+			           AND A.COMPANY_CD = #{companyCd}
+			        ) A
+			  LEFT OUTER JOIN 
+			        (SELECT 	
+			        		A.VENDOR_CD
+			              , B.VENDOR_NM
+			              , A.STR_CD
+                             , count( C.USER_ID ) AS CNT
+			           FROM 
+				          TH_VENDOR_STR_MAP A
+                             LEFT JOIN TH_VENDOR_MST B
+                             ON
+                             A.VENDOR_CD = B.VENDOR_CD
+                             LEFT JOIN TH_ENGINEER_STR_MAP C
+                             ON
+                             A.STR_CD = C.STR_CD
+			          WHERE 1=1				            				            
+                         GROUP BY VENDOR_CD, VENDOR_NM, STR_CD
+			        ) B
+	 
+			    ON A.STR_CD = B.STR_CD
+			   WHERE 1=1
+		 ]]>
+		<if test="scrStrNm != null and scrStrNm != ''">
+				AND (
+					INSTR(STR_NM, #{scrStrNm}) > 0
+					OR
+					INSTR(VIEW_STR_CD, #{scrStrNm}) > 0
+				)
+		</if>
+		<if test="scrOrgCd != null and scrOrgCd != ''">
+  				AND ORG_CD = #{scrOrgCd}				
+		</if>		
+		<if test="vendorCd != null and vendorCd != ''">
+  				AND VENDOR_CD = #{vendorCd}				
+		</if>
+		<if test="allocationYn != null and allocationYn != ''">
+			<if test='allocationYn == "Y"'>
+  				AND VENDOR_CD IS NOT NULL
+  			</if>
+			<if test='allocationYn == "N"'>
+  				AND VENDOR_CD IS NULL
+  			</if>
+		</if>
+		<![CDATA[
+		ORDER BY ${sidx} ${sord}
+		]]>
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+    
+    <select id="retrieveVendorList" parameterType="Map"  resultType="SemsVo">
+    	SELECT  VENDOR_CD AS vendorCd,
+    	  		VENDOR_NM AS vendorNm	      
+    	  FROM  TH_VENDOR_MST
+         WHERE  USE_YN = 'Y' 
+           AND  COMPANY_CD = #{companyCd}
+    </select>    
+    
+    
+    
+    <select id="retrieveExcelSems" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+	SELECT A.STR_CD as strCd
+		     , VIEW_STR_CD as viewStrCd
+		     , STR_NM as strNm
+		     , ORG_CD as orgCd
+		     , orgFullNm
+		     , CONCAT(SUBSTRING(REMS_START_DT, 1, 4), '-', SUBSTRING(REMS_START_DT, 5, 2), '-', SUBSTRING(REMS_START_DT, 7, 2)) as remsStartDt
+		     , VENDOR_NM as vendorNm
+		     , VENDOR_CD as vendorCd
+		     , CNT as vendorCnt
+		  FROM (SELECT A.STR_CD
+		             , A.VIEW_STR_CD
+		             , A.STR_NM
+		             , B.ORG_CD	 
+		             , IFNULL(B.ORG_NM, '-') AS ORG_NM
+		             , fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD)	as orgFullNm
+		             , A.REMS_START_DT
+		          FROM TH_STR_INFO_MST A
+			      LEFT OUTER JOIN
+		               TH_COMPANY_ORG_MST B
+					ON A.ORG_CD = B.ORG_CD
+				   AND A.COMPANY_CD = B.COMPANY_CD
+				 WHERE A.USE_YN = 'Y'
+		           AND A.COMPANY_CD = #{companyCd}
+		        ) A
+		  LEFT OUTER JOIN 
+		        (SELECT A.VENDOR_CD
+		              , VENDOR_NM
+		              , A.STR_CD
+		              , COUNT(*) AS CNT
+		           FROM TH_VENDOR_STR_MAP A 
+			          , TH_ENGINEER_STR_MAP B
+			          , TH_VENDOR_MST C
+		          WHERE 1=1
+		            AND A.STR_CD = B.STR_CD
+		            AND A.VENDOR_CD = C.VENDOR_CD
+		          GROUP BY VENDOR_CD, VENDOR_NM, STR_CD
+		        ) B
+ 
+		    ON A.STR_CD = B.STR_CD
+		   WHERE 1=1
+		 ]]>
+		<if test="scrStrNm != null and scrStrNm != ''">
+  				AND INSTR(STR_NM, #{scrStrNm}) > 0   				
+		</if>
+		<if test="scrOrgCd != null and scrOrgCd != ''">
+  				AND ORG_CD = #{scrOrgCd}				
+		</if>		
+		<if test="vendorCd != null and vendorCd != ''">
+  				AND VENDOR_CD = #{vendorCd}				
+		</if>
+		<![CDATA[
+		ORDER BY remsStartDt desc
+		]]>
+	</select>
+</mapper>

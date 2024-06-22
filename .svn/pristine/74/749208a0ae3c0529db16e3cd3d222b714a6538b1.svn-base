@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<!-- spring security에서 사용할 로그인 프로세스 -->
+    <beans:bean id="loginService" class="rems.system.service.MemberService" />
+
+	<http pattern="/favicon.ico" security="none" />
+	<http pattern="/font/**" security="none" />
+	<http pattern="/images/**" security="none" />
+	<http pattern="/resources/css/**" security="none" />
+	<http pattern="/resources/js/**" security="none" />
+	
+    <http auto-config="true" use-expressions="true">
+
+		<intercept-url pattern="/main**" access="hasRole('ROLE_USER')" />
+       	
+       	<form-login login-page="/mnt"
+       				default-target-url="/main2"
+       				authentication-failure-url="/login_error2?err=1"
+       				username-parameter="userId"
+					password-parameter="userPw"
+		/>
+<!--
+		<port-mappings>
+			<port-mapping http="80" https="443"/>
+		</port-mappings>
+ -->		
+		<session-management invalid-session-url="/login_error2?err=2"
+							session-authentication-error-url="/login_error2?err=3" 
+							session-fixation-protection="newSession" >
+			<concurrency-control max-sessions="20" error-if-maximum-exceeded="true" />
+		</session-management>
+		
+		<logout logout-success-url="/mnt" delete-cookies="JSESSIONID" />
+
+		<remember-me key="REMS_ADMIN"
+					 remember-me-parameter="staySignedIn"
+					 user-service-ref="loginService" />
+
+	    <headers>
+	        <cache-control />
+	        <content-type-options />
+	        <hsts />
+	        <frame-options />
+	        <xss-protection />
+	    </headers>		
+    </http>
+       
+    <authentication-manager>
+        <authentication-provider user-service-ref="loginService" />
+    </authentication-manager>        
+</beans:beans>

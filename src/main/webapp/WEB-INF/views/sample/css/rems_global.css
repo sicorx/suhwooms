@@ -1,0 +1,153 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* HTML Elements
+---------------------------------------------------------*/
+* {margin: 0; padding: 0; }
+html {font-smoothing: antialiased; height:100%}
+body {font-size:12px; height:100%; font-family:"Nanum Gothic", sans-serif; color:#222222;}
+ul {list-style:none;}
+a {text-decoration:none; cursor:pointer; color:#a50034;}
+a:hover {text-decoration:underline;}
+img {border: none;}
+input, select, textarea {font-size:12px; font-family:"Nanum Gothic", sans-serif; color: #333333;}
+select {height:27px; padding-left:5px; border:1px solid #c3c3c3; vertical-align:middle;}
+select:disabled {background-color:#ebebeb; border:1px solid #c3c3c3; vertical-align:middle; color:#8a8a8a;}
+select.r_error {border:1px solid #d80546; color:#d80546;}
+
+input[type=text],
+input[type=password] {height:25px; padding:0 5px; border:1px solid #c3c3c3; vertical-align:middle;}
+input[type=text].r_disable {background-color:#ebebeb; border:1px solid #c3c3c3; vertical-align:middle; color:#8a8a8a;}
+input[type=text].r_error {border:1px solid #d80546; color:#d80546;}
+
+textarea {border:1px solid #c3c3c3; padding:3px 5px;}
+textarea.r_disable {background-color:#ebebeb; border:1px solid #c3c3c3;color:#8a8a8a;}
+textarea.r_error {border:1px solid #d80546; color:#d80546;}
+
+.r_radio label,
+.r_checkbox label {display: inline-block; cursor: pointer; position: relative; padding-left: 25px; margin-right: 15px; font-size: 12px;}
+.noLabel label {padding-left:0; margin-right:0;}
+label.r_last {margin-right:0;}
+input[type=radio] {display:none;}
+.r_radio label:before {content: ""; display: inline-block; width: 17px; height: 17px; margin-right: 10px; position: absolute; left: 0; bottom: -2px; background-color: #FFFFFF; border-radius: 9px; border:1px solid #c3c3c3;}
+input[type=radio]:disabled + label:before {background-color: #ebebeb; border-radius: 9px; border:1px solid #c3c3c3;}
+input[type=radio]:disabled:checked + label:before {content: "\25CF"; color: #c3c3c3; font-size: 12px; text-align: center; line-height: 16px;}
+input[type=radio]:checked + label:before {content: "\25CF"; color: #e63c6b; font-size: 12px; text-align: center; line-height: 16px;}
+.r_radio.r_error label:before {content: ""; display: inline-block; width: 17px; height: 17px; margin-right: 10px; position: absolute; left: 0; bottom: -2px; background-color: #FFFFFF; border-radius: 9px; border:1px solid #d80546;}
+
+.r_detailBtn.r_radio label:before {bottom: 6px;}
+
+input[type=checkbox] {width:19px; height:19px; margin-right:3px; vertical-align:middle;}
+input[type=checkbox] + label {vertical-align:middle;margin-right: 15px;}
+input[type=checkbox] + label.r_last {margin-right:0px;}
+input[type=checkbox]:disabled {background-color: #ebebeb;}
+input[type=checkbox].r_error {border:1px solid #d80546;}
+
+.r_checkbox input[type=checkbox] {display: none;}
+.r_checkbox label:before {content: ""; display: inline-block; width: 17px; height: 17px; margin-right: 10px; background-color: #FFFFFF; border:1px solid #c3c3c3; position:absolute; left:0; bottom: -2px;}
+.r_checkbox.noLabel label:before {margin-right:0; position:relative; bottom:auto;}
+.r_checkbox input[type=checkbox]:checked + label:before {background-image:url(../images/ico_check.png); background-repeat:no-repeat; background-position:center; line-height: 15px;}
+.r_checkbox input[type=checkbox]:disabled + label:before {background-color: #ebebeb; border:1px solid #c3c3c3;}
+.r_checkbox input[type=checkbox]:disabled:checked + label:before {background-image:url(../images/ico_check_dis.png); background-repeat:no-repeat; background-position:center; line-height: 15px;}
+.r_checkbox.r_error label:before {content: ""; display: inline-block; width: 17px; height: 17px; margin-right: 10px; position: absolute; left: 0; bottom: -2px; background-color: #FFFFFF; border:1px solid #d80546;}
+
+table {border-collapse:collapse; width:100%;}
+caption {height:0 !important; width:0 !important; overflow:hidden !important; position:absolute !important;}
+button {cursor:pointer; font-family:"Nanum Gothic", sans-serif;}
+.clear {clear:both;}
+.noDis {display:none;}
+.textLeft {text-align:left !important;}
+.textRight {text-align:right !important;}
+.textCenter {text-align:center !important;}
+.r_required {color:#e63c6b; margin-left:2px;}
+
+/* Component
+---------------------------------------------------------*/
+/* Global */
+.mainBody {overflow:auto;}
+.r_wrapper {min-width:1280px; height:100%; background: #f2f4f6;}
+.r_mainWrapper {min-width:1280px; height:100%; background: #e7ebee;}
+.r_popup {background: #f2f4f6; height:100%;}
+.r_left {float:left; width:210px; height:100%; background:#262930; }
+.r_info {height:150px; position:relative; background:#353942}
+.r_logo {position:absolute; left:18px; top:18px}
+.r_user {position:absolute; display:block; font-family:"LG Smart_H"; left:21px; top:101px; width:110px;}
+.r_user .r_userName  {color:#ffffff; font-size:16px; margin-bottom:5px;}
+.r_user .r_userTitle {color:#c0c2c4; font-size:11px;}
+.r_info a.r_logout {position:absolute; top:93px; left:130px; display:inline-block; height:31px; width:31px; background:url(../images/ico_logout.png) no-repeat;}
+.r_info a.r_setting {position:absolute; top:93px; left:161px; display:inline-block; height:31px; width:31px; background:url(../images/ico_setting.png) no-repeat;}
+
+/* Left Menu */
+.r_leftNav {background:#262930;}
+.r_leftNav ul {font-family:"LG Smart_H"; color:#ffffff;}
+.r_leftNav ul li {font-size:14px; font-weight:500; cursor:pointer; border-bottom:1px solid #32353e;}
+
+.r_leftNav ul li.menu_energy {background:url(../images/ico_menu_energy.png) 15px 14px no-repeat;}
+.r_leftNav ul li:hover.menu_energy {background:url(../images/ico_menu_energy_on.png) 15px 14px no-repeat;}
+.r_leftNav ul li.menu_energy.r_open {background:url(../images/ico_menu_energy_on.png) 15px 14px no-repeat;border-bottom:none;}
+.r_leftNav ul li.menu_energy span,
+.r_leftNav ul li:hover.menu_energy span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow.png) no-repeat 182px 20px;}
+.r_leftNav ul li.menu_energy.r_open span,
+.r_leftNav ul li:hover.menu_energy.r_open span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow_on.png) no-repeat 182px 20px;}
+
+.r_leftNav ul li.menu_device {background:url(../images/ico_menu_device.png) 15px 14px no-repeat;}
+.r_leftNav ul li:hover.menu_device {background:url(../images/ico_menu_device_on.png) 15px 14px no-repeat;}
+.r_leftNav ul li.menu_device.r_open {background:url(../images/ico_menu_device_on.png) 15px 14px no-repeat;border-bottom:none;}
+.r_leftNav ul li.menu_device span,
+.r_leftNav ul li:hover.menu_device span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow.png) no-repeat 182px 20px;}
+.r_leftNav ul li.menu_device.r_open span,
+.r_leftNav ul li:hover.menu_device.r_open span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow_on.png) no-repeat 182px 20px;}
+
+.r_leftNav ul li.menu_store {background:url(../images/ico_menu_store.png) 15px 14px no-repeat;}
+.r_leftNav ul li:hover.menu_store {background:url(../images/ico_menu_store_on.png) 15px 14px no-repeat;}
+.r_leftNav ul li.menu_store.r_open {background:url(../images/ico_menu_store_on.png) 15px 14px no-repeat;border-bottom:none;}
+.r_leftNav ul li.menu_store span,
+.r_leftNav ul li:hover.menu_store span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow.png) no-repeat 182px 20px;}
+.r_leftNav ul li.menu_store.r_open span,
+.r_leftNav ul li:hover.menu_store.r_open span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow_on.png) no-repeat 182px 20px;}
+
+.r_leftNav ul li.menu_manage {background:url(../images/ico_menu_manage.png) 15px 14px no-repeat;}
+.r_leftNav ul li:hover.menu_manage {background:url(../images/ico_menu_manage_on.png) 15px 14px no-repeat;}
+.r_leftNav ul li.menu_manage.r_open {background:url(../images/ico_menu_manage_on.png) 15px 14px no-repeat;border-bottom:none;}
+.r_leftNav ul li.menu_manage span,
+.r_leftNav ul li:hover.menu_manage span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow.png) no-repeat 182px 20px;}
+.r_leftNav ul li.menu_manage.r_open span,
+.r_leftNav ul li:hover.menu_manage.r_open span {padding:15px 0; padding-left:38px; display:block; background:url(../images/ico_leftMenu_arrow_on.png) no-repeat 182px 20px;}
+
+/* Left 2Depth Menu */
+.r_leftNav ul.r_subMenu {background:#1b1e26; color:#7b7f8c;}
+.r_leftNav ul.r_subMenu li {font-size:13px; font-weight:500; cursor:pointer; border-bottom:1px solid #32353e;}
+.r_leftNav ul.r_subMenu li:hover {color:#b1b6c4;}
+.r_leftNav ul.r_subMenu li.r_first {border-top:1px solid #32353e;}
+.r_leftNav li.menu_energy ul.r_subMenu li span,
+.r_leftNav li.menu_device ul.r_subMenu li span,
+.r_leftNav li.menu_store ul.r_subMenu li span,
+.r_leftNav li.menu_manage ul.r_subMenu li span,
+.r_leftNav li:hover.menu_energy ul.r_subMenu li span,
+.r_leftNav li:hover.menu_device ul.r_subMenu li span,
+.r_leftNav li:hover.menu_store ul.r_subMenu li span,
+.r_leftNav li:hover.menu_manage ul.r_subMenu li span {padding:14px 0; padding-left:15px; display:block; background:url(../images/ico_subMenu_arrow.png) no-repeat 182px 19px;}
+.r_leftNav ul.r_subMenu li.r_noChild span {background:none;}
+.r_leftNav ul.r_subMenu li.r_open {border-bottom:none; color:#ffffff;}
+.r_leftNav li.menu_energy ul.r_subMenu li.r_open span,
+.r_leftNav li.menu_device ul.r_subMenu li.r_open span,
+.r_leftNav li.menu_store ul.r_subMenu li.r_open span,
+.r_leftNav li.menu_manage ul.r_subMenu li.r_open span {padding:14px 0; padding-left:15px; display:block; background:url(../images/ico_subMenu_arrow_on.png) no-repeat 182px 19px;}
+
+/* Left 3Depth Menu */
+.r_leftNav ul.r_subMenu li ul.r_subsubMenu {padding:4px 0 12px 0; color:#7b7f8c;}
+.r_leftNav ul.r_subMenu li ul.r_subsubMenu li {border-bottom:none; line-height:28px;}
+.r_leftNav ul.r_subMenu li ul.r_subsubMenu li.r_select {color:#ffffff;}
+.r_leftNav ul.r_subMenu li ul.r_subsubMenu li span,
+.r_leftNav ul.r_subMenu li.r_open ul.r_subsubMenu li span,
+.r_leftNav li:hover.menu_energy ul.r_subMenu li ul.r_subsubMenu li span,
+.r_leftNav li:hover.menu_device ul.r_subMenu li ul.r_subsubMenu li span,
+.r_leftNav li:hover.menu_store ul.r_subMenu li ul.r_subsubMenu li span,
+.r_leftNav li:hover.menu_manage ul.r_subMenu li ul.r_subsubMenu li span {display:inline;padding:none !important; background:none !important;}
+.r_leftNav ul li.r_last {border-bottom:1px solid #32353e !important;}
+
+/* Contents Area */
+.r_contents {padding:20px 21px 30px 231px;}
+.r_contents.r_dashboard {padding:0 0 0 210px;}
+
+.r_compWrapper {padding:20px 21px 30px 21px;}

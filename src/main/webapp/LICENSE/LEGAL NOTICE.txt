@@ -1,0 +1,34 @@
+<<REMS>>
+Copyright 2014 LG CNS, Inc. All rights reserved.
+
+Above product contains the open source software detailed below.
+Please refer to the indicated open source licenses (as are included following this notice)
+for the terms and conditions of their use.
+
+/* 알 수 없음 */
+AspectJ, slf4j, log4j, javax, inject, servlet, jstl, junit, MySQL Connector Java, 5.1.26,
+/* 사용된 오픈소스 SW 목록 */
+Spring Framework, 4.0.2.RELEASE, Apache License Version 2.0, http://www.spring.io/
+Apache Commons DBCP, 1.4, Apache License Version 2.0, http://www.apache.org/
+Apache Commons Pool, 1.5.4, Apache License Version 2.0, http://www.apache.org/
+MyBatis, 3.1.0, Apache License Version 2.0, http://mybatis.github.io/mybatis-3
+MyBatis Spring, 1.2.2, Apache License Version 2.0, http://mybatis.github.io/spring
+Tiles Extras, 2.2.2, Apache License Version 2.0, http://www.apache.org/
+Commons Digester, 2, Apache License Version 2.0, http://www.apache.org/
+Commons BeanUtils, 1.8.0, Apache License Version 2.0, http://www.apache.org/
+Commons Collections, 3.2, Apache License Version 2.0, http://www.apache.org/
+Commons Codec, 1.5, Apache License Version 2.0, http://www.apache.org/
+Jackson JSON processor, 1.9.10, Apache License Version 2.0, http://jackson.codehaus.org/
+Apache POI, 3.10-FINAL, Apache License Version 2.0, http://www.apache.org/
+Spring Security, 3.2.4.RELEASE, Apache License Version 2.0, http://www.spring.io/   
+jqGrid, 4.5.4, MIT License, http://www.trirand.com/blog/?page_id=87/
+jqtree, 0.19.0, Apache License Version 2.0, https://github.com/mbraak/jqTree
+jqplot, 1.0.8, MIT License, http://www.jqplot.com/
+jquery, 1.11.0, MIT License, https://jquery.org/license/
+ 
+/* 오픈소스 SW 라이선스 목록 */
+Apache License Version 2.0
+MIT License
+
+/* 오픈소스 SW 라이선스 원문 */
+동일 폴더 별첨

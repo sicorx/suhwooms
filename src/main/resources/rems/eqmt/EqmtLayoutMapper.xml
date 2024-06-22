@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtLayoutMapper">
+
+	<select id="retrieveEqmtCurTempAlarm" parameterType="Map" resultType="Map">
+	<![CDATA[
+	SELECT A.STR_CD 						AS strcd
+	     , A.YYYYMMDD						AS yyyymmdd
+	     , A.HHMIN							AS hhmin
+	     , A.TEMON_ID						AS temonId
+	     , A.TEMON_TYPE					    AS temonType
+	     , A.PORT_NO						AS portNo
+	     , A.DEVICE_TYPE					AS deviceType
+	     , A.ALARM_YN						AS alarmYn
+	     , IFNULL(ROUND(A.SENS_TEMP),'-')	AS sensTemp
+	     , B.DEVICE_LOC					    AS deviceLoc
+	     , B.MAX_TEMP						AS maxTemp
+	     , B.MIN_TEMP						AS minTemp
+	     , B.DELAY_TIME					    AS delayTime
+	  FROM TH_STR_REMS_DEVICE_BASE A
+	     , TH_STR_REMS_DEVICE_MST B
+	 WHERE A.STR_CD     = B.STR_CD 
+	   AND A.TEMON_ID   = B.TEMON_ID 
+	   AND A.PORT_NO    = B.PORT_NO 
+	   AND A.TEMON_TYPE = B.TEMON_TYPE 
+	   AND A.STR_CD     = #{strCd}
+	   AND A.YYYYMMDD  >= DATE_FORMAT( DATE_SUB(#{now}, INTERVAL 7 minute ), '%Y%m%d')
+	   AND A.HHMIN     >= DATE_FORMAT( DATE_SUB(#{now}, INTERVAL 7 minute ), '%H%i')
+	 ORDER BY A.HHMIN, A.TEMON_TYPE, A.TEMON_ID, UNHEX(A.PORT_NO) ASC
+	 
+	/* rems.eqmt.persistence.EqmtLayoutMapper.retrieveEqmtCurTempAlarm */ 
+	]]>
+	</select>
+	
+	
+	<select id="retrieveEqmtDailyAlarm" parameterType="Map" resultType="Map">
+	<![CDATA[
+	select a.yyyymm                           as yyyymm
+	     , sum(if(c.device_type = 'R', a.alarm_cnt, 0)) as rif
+	     , sum(if(c.device_type = 'W', a.alarm_cnt, 0)) as wic
+	     , sum(if(c.device_type = 'O', a.alarm_cnt, 0)) as osc
+	     , sum(if(c.device_type = 'C', a.alarm_cnt, 0)) as comp
+	  from TH_STR_REMS_DEVICE_MM_SUM a
+	     , th_str_info_mst b
+	     , TH_STR_REMS_DEVICE_MST c
+	 where a.str_cd     = b.str_cd
+	   and b.company_cd = #{companyCd}
+	   and a.str_cd     = c.str_cd
+	   and a.temon_id   = c.temon_id
+	   and a.temon_type = c.temon_type
+	   and a.port_no    = c.port_no
+	   and c.use_yn     = 'Y'
+	   and a.yyyymm between date_format(date_add(#{now}, interval -12 month), '%Y%m') and DATE_FORMAT(#{now}, '%Y%m')
+	 group by a.yyyymm
+	 
+	/* rems.eqmt.persistence.EqmtLayoutMapper.retrieveEqmtDailyAlarm */
+	]]>
+	</select>
+	
+	
+	<select	id="retrieveEqmtTempChrt" parameterType="Map" resultType="Map">
+	<if test="hubId == '' or hubId == null or hubId == '0'">
+	<![CDATA[
+	SELECT SUBSTRING(A.YYYYMMDD,1,4)		AS yyyy
+	     , SUBSTRING(A.YYYYMMDD,5,2)		AS mm
+	     , SUBSTRING(A.YYYYMMDD,7,2)		AS dd
+	     , SUBSTRING(A.HHMIN,1,2)		    AS hh
+	     , SUBSTRING(A.HHMIN,3,2)		    AS min
+	     , A.SENS_TEMP   					AS sens_temp
+	     , A.ALARM_YN				    	AS alarm_yn
+	     , B.MIN_TEMP                       AS min_temp
+	     , B.MAX_TEMP                       AS max_temp
+	  FROM TH_STR_REMS_DEVICE_BASE A
+	     , TH_STR_REMS_DEVICE_MST B
+	 WHERE A.STR_CD     = B.STR_CD
+	   AND A.TEMON_ID   = B.TEMON_ID
+	   AND A.TEMON_TYPE = B.TEMON_TYPE
+	   AND A.PORT_NO    = B.PORT_NO 
+	   AND A.STR_CD     = #{strCd}
+	   AND A.YYYYMMDD   = #{yyyymmdd}
+	   AND A.TEMON_ID   = #{temonId}
+	   AND A.TEMON_TYPE = #{temonType}
+	   AND A.PORT_NO    = #{portNo}
+	 ORDER BY A.REGI_DTTM ASC
+	 
+	]]>	
+	</if>
+	<if test="hubId != '' and hubId != null and hubId != '0'">
+	<![CDATA[
+	SELECT SUBSTRING(A.YYYYMMDD,1,4)		         AS yyyy
+	     , SUBSTRING(A.YYYYMMDD,5,2)		         AS mm
+	     , SUBSTRING(A.YYYYMMDD,7,2)		         AS dd
+	     , SUBSTRING(A.HHMIN,1,2)		             AS hh
+	     , SUBSTRING(A.HHMIN,3,2)		             AS min
+	     , A.SENS_TEMP   				             AS sens_temp
+	     , IF(INSTR(A.ALARM_SP, '1') = 0, 'N', 'Y')  AS alarm_yn
+	     , B.MIN_TEMP                                AS min_temp
+	     , B.MAX_TEMP                                AS max_temp
+	  FROM TH_STR_INV_HUB_STATUS A
+	 WHERE A.STR_CD     = #{strCd}
+	   AND A.YYYYMMDD   = #{yyyymmdd}
+	   AND A.HUB_ID     = #{hubId}
+	   AND A.PORT_NO    = #{portNo}
+	 ORDER BY A.REGI_DTTM ASC
+	
+	]]>	
+	</if>	
+	<![CDATA[			
+	
+	/* rems.eqmt.persistence.EqmtLayoutMapper.retrieveEqmtTempChrt */				
+	]]>	
+	</select>	
+
+
+	<select	id="retrieveEqmtAlarmList" parameterType="Map" resultType="Map">
+	<if test="hubId == '' or hubId == null or hubId == '0'">
+	SELECT B.YYYYMMDD         AS yyyymmdd
+	     , B.HHMIN            AS hhmin
+	     , A.DEVICE_LOC       AS deviceLoc
+	     , B.SENS_TEMP        AS sensTemp
+	     , A.MAX_TEMP         AS maxTemp
+	     , A.MIN_TEMP         AS minTemp
+	     , B.ALARM_YN         AS alarmYn
+	  FROM TH_STR_REMS_DEVICE_MST A
+	     , TH_STR_REMS_DEVICE_BASE B
+	 WHERE A.STR_CD     = B.STR_CD
+	   AND A.TEMON_TYPE = B.TEMON_TYPE
+	   AND A.TEMON_ID   = B.TEMON_ID
+	   AND A.PORT_NO    = B.PORT_NO
+	   AND A.STR_CD     = #{strCd}
+	   AND A.TEMON_TYPE = #{temonType}
+	   AND A.TEMON_ID   = #{temonId}
+	   AND A.PORT_NO    = #{portNo}
+	   AND A.USE_YN     = 'Y'
+	   AND B.YYYYMMDD   = #{yyyymmdd}
+	<if test="alarmYn == 'N'">
+	   AND B.ALARM_YN   = #{alarmYn}	
+	</if>
+	<if test="alarmYn != 'N' and alarmYn != '' and alarmYn != null">
+	   AND B.ALARM_YN  != 'N'	
+	</if>			
+	 ORDER BY B.REGI_DTTM ASC
+					
+	</if>
+	<if test="hubId != '' and hubId != null and hubId != '0'">
+	SELECT A.YYYYMMDD         AS yyyymmdd
+	     , A.HHMIN            AS hhmin
+	     , B.DEVICE_LOC       AS deviceLoc
+	     , A.SENS_TEMP        AS sensTemp
+	     , A.MAX_TEMP         AS maxTemp
+	     , A.MIN_TEMP         AS minTemp
+	     , IFNULL(
+	     		  (SELECT AA.COMM_CD_NM
+                     FROM TH_COMM_CD AA
+                    WHERE AA.COMM_GRP_CD = 'VIEW10'
+                      AND AA.COMM_CD = (LENGTH(A.ALARM_SP) - INSTR(A.ALARM_SP, '1'))         
+                 ), 'N')       AS alarmYn
+	  FROM TH_STR_INV_HUB_STATUS A
+         , TH_STR_INV_HUB_MST B
+	 WHERE A.STR_CD  = B.STR_CD
+       AND A.HUB_ID  = B.HUB_ID
+       AND A.PORT_NO = B.PORT_NO
+	   AND B.USE_YN   = 'Y'
+       AND A.STR_CD   = #{strCd}
+	   AND A.HUB_ID   = #{hubId}
+	   AND A.PORT_NO  = #{portNo}
+	   AND A.YYYYMMDD = #{yyyymmdd}	
+	<if test="alarmYn == 'N'">
+	   AND INSTR(A.ALARM_SP, '1') = 0	
+	</if>
+	<if test="alarmYn != 'N' and alarmYn != '' and alarmYn != null">
+	<![CDATA[
+	   AND INSTR(A.ALARM_SP, '1') > 0
+	]]>	
+	</if>
+	</if>
+	
+	/* rems.eqmt.persistence.EqmtLayoutMapper.retrieveEqmtAlarmList */
+	</select>	 		
+</mapper>

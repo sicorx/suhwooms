@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tree</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+jQuery(function($){
+	var tree = $('.tree');
+	var togglePlus = '<button type="button" class="toggle plus">+</button>';
+	var toggleMinus = '<button type="button" class="toggle minus">-</button>';
+	
+	// defalt
+	tree.find('li>ul').css('display','none');
+	tree.find('ul>li:last-child').addClass('last');
+	tree.find('li>ul:hidden').parent('li').prepend(togglePlus);
+	tree.find('li>ul:visible').parent('li').prepend(toggleMinus);
+	
+	// active
+	tree.find('li.active').parents('li').addClass('open');
+	tree.find('li.open').parents('li').addClass('open');
+	tree.find('li.open>.toggle').text('-').removeClass('plus').addClass('minus');
+	tree.find('li.open>ul').slideDown(100);
+	
+	// click toggle
+	$('.tree .toggle').click(function(){
+		t = $(this);
+		t.parent('li').toggleClass('open');
+		if(t.parent('li').hasClass('open')){
+			t.text('-').removeClass('plus').addClass('minus');
+			t.parent('li').find('>ul').slideDown(100);
+		} else {
+			t.text('+').removeClass('minus').addClass('plus');
+			t.parent('li').find('>ul').slideUp(100);
+		}
+	});
+	
+});
+//]]>
+</script>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+  
+    <h1 class="r_pageTitle">Tree</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Tree</a></div>
+
+    
+    <div class="r_treeWrapper">
+      <div class="tree">
+        <ul>
+        <li><button type="button" class="toggle minus">-</button><a href="#">전체</a>
+            <ul style="overflow:hidden; padding-top:0px; margin-top:0px; padding-bottom:0px; margin-bottom:0px;">
+            <li class="open"><button type="button" class="toggle minus">-</button><a href="#">전체</a>
+                <ul style="overflow:hidden; padding-top:0px; margin-top:0px; padding-bottom:0px; margin-bottom:0px;">
+                <li class="active"><a href="#">매장1</a></li>
+                <li class="last"><a href="#">매장2</a></li>
+                </ul>
+            </li>
+            <li><button type="button" class="toggle plus">+</button><a href="#">전체</a>
+                <ul style="overflow:hidden; padding-top:0px; margin-top:0px; padding-bottom:0px; margin-bottom:0px;">
+                <li><a href="#">매장1-1</a></li>
+                <li class="last"><a href="#">매장1-2</a></li>
+                </ul>
+            </li>
+            <li class="last"><button type="button" class="toggle plus">+</button><a href="#">전체</a>
+                <ul style="overflow:hidden; padding-top:0px; margin-top:0px; padding-bottom:0px; margin-bottom:0px;">
+                <li><a href="#">매장1-3</a></li>
+                <li class="last"><a href="#">매장1-4</a></li>
+                </ul>
+            </li>
+            </ul>
+        </li>
+        <li><button type="button" class="toggle plus">+</button><a href="#">전체</a>
+            <ul style="display:none;">
+            <li><a href="#">매장3</a></li>
+            <li class="last"><a href="#">매장4</a></li>
+            </ul>
+        </li>
+        <li class="last"><button type="button" class="toggle plus">+</button><a href="#">전체</a>
+            <ul style="display:none;">
+            <li><a href="#">매장5</a></li>
+            <li class="last"><a href="#">매장6</a></li>
+            </ul>
+        </li>
+        </ul>
+      </div>
+	</div>
+      
+    
+  </div>
+  
+  
+</div>
+
+</body>
+</html>

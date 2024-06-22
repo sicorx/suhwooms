@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtPushMapper">
+
+	<select id="retrieveExcelPushList" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+	SELECT A.NO                                         AS no
+		      ,DATE_FORMAT(A.ALARM_DATE_S,'%Y-%m-%d %T')    AS alarmDateS
+		      ,A.STR_NM                                     AS strNm		      
+		      ,SUBSTRING(SUBSTRING_INDEX( A.ALARM_MESSAGE,'<',1 ),1,100) AS alarmMessage
+		      ,A.DEVICE_LOC                                 AS deviceLoc
+		      ,A.AS_VENDOR_NM                               AS asVendorNm
+		      ,DATE_FORMAT(A.ALARM_DATE_E,'%Y-%m-%d %T')    AS alarmDateE
+			  ,TIMEDIFF(A.ALARM_DATE_E, A.ALARM_DATE_S)     AS lapseHour
+              ,(SELECT COMM_CD_NM
+                  FROM TH_COMM_CD
+                 WHERE COMM_GRP_CD = 'MAST10'
+                   AND COMM_CD = A.AS_METHOD
+                ) AS asContents
+		      ,A.AS_NOTE                                    AS asNote
+			  ,B.VIEW_STR_CD                                AS viewStrCd
+		      ,(SELECT COUNT(NO) FROM TH_GCM_AS_RESULT WHERE STR_CD=A.STR_CD AND TEMON_ID=A.TEMON_ID AND TEMON_TYPE=A.TEMON_TYPE AND PORT_NO=A.PORT_NO) AS alarmCnt
+		  FROM TH_GCM_AS_RESULT A
+		       INNER JOIN TH_STR_INFO_MST B         ON A.STR_CD = B.STR_CD
+		       LEFT OUTER JOIN TH_STR_REMS_DEVICE_MST E ON A.STR_CD = E.STR_CD AND A.TEMON_ID = E.TEMON_ID AND A.TEMON_TYPE = E.TEMON_TYPE AND A.PORT_NO = E.PORT_NO 
+		       LEFT OUTER JOIN TH_STR_INV_HUB_MST F     ON A.STR_CD = F.STR_CD AND A.TEMON_ID = F.HUB_ID AND A.PORT_NO = F.PORT_NO                                   
+		 WHERE 1=1
+		   AND A.YYYYMMDD BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')
+		   AND B.COMPANY_CD = #{companyCd}
+    ]]>	 
+    	<if test="deviceType != null and deviceType != ''">
+		   AND (E.DEVICE_TYPE = #{deviceType} OR F.DEVICE_TYPE = #{deviceType})
+		</if> 	
+    	<if test="temonType != null and temonType != ''">
+		   AND A.TEMON_TYPE = #{temonType} 
+		</if> 	    
+    	<if test="asVendorNm != null and asVendorNm != ''">
+		   AND A.AS_VENDOR_NM = #{asVendorNm} 
+		</if> 	    
+    	<if test="asResult != null and asResult != ''">
+		   AND A.AS_RESULT = #{asResult} 
+		</if> 
+    	<if test="strNm != null and strNm != ''">
+ 		  AND (A.STR_CD LIKE CONCAT('%', #{strNm}, '%')) 
+		</if>   	    
+    <![CDATA[
+      ORDER BY A.YYYYMMDD DESC, A.HHMIN DESC
+    ]]>	    
+	</select>
+	
+
+	<select id="retrievePushList" parameterType="Map" resultType="SystemVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+		SELECT A.NO                                         AS no
+		      ,DATE_FORMAT(A.ALARM_DATE_S,'%Y-%m-%d %T')    AS alarmDateS
+		      ,A.STR_NM                                     AS strNm
+		      ,SUBSTRING(SUBSTRING_INDEX( A.ALARM_MESSAGE,'<',1 ),1,100) AS alarmMessage
+		      ,A.DEVICE_LOC                                 AS deviceLoc
+		      ,A.AS_VENDOR_NM                               AS asVendorNm
+		      ,DATE_FORMAT(A.ALARM_DATE_E,'%Y-%m-%d %T')    AS alarmDateE
+			  ,TIMEDIFF(A.ALARM_DATE_E, A.ALARM_DATE_S)     AS lapseHour
+              ,(SELECT COMM_CD_NM
+                  FROM TH_COMM_CD
+                 WHERE COMM_GRP_CD = 'MAST10'
+                   AND COMM_CD = A.AS_METHOD
+                ) AS asContents
+		      ,A.AS_NOTE                                    AS asNote
+			  ,B.VIEW_STR_CD                                AS viewStrCd
+		      ,(SELECT COUNT(NO) FROM TH_GCM_AS_RESULT WHERE STR_CD=A.STR_CD AND TEMON_ID=A.TEMON_ID AND TEMON_TYPE=A.TEMON_TYPE AND PORT_NO=A.PORT_NO) AS alarmCnt
+		  FROM TH_GCM_AS_RESULT A
+		       INNER JOIN TH_STR_INFO_MST B         ON A.STR_CD = B.STR_CD
+		       LEFT OUTER JOIN TH_STR_REMS_DEVICE_MST E ON A.STR_CD = E.STR_CD AND A.TEMON_ID = E.TEMON_ID AND A.TEMON_TYPE = E.TEMON_TYPE AND A.PORT_NO = E.PORT_NO 
+		       LEFT OUTER JOIN TH_STR_INV_HUB_MST F     ON A.STR_CD = F.STR_CD AND A.TEMON_ID = F.HUB_ID AND A.PORT_NO = F.PORT_NO                                   
+		 WHERE 1=1
+		   AND A.YYYYMMDD BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')
+		   AND B.COMPANY_CD = #{companyCd}
+    ]]>	 
+    	<if test="deviceType != null and deviceType != ''">
+		   AND (E.DEVICE_TYPE = #{deviceType} OR F.DEVICE_TYPE = #{deviceType})
+		</if> 	
+    	<if test="temonType != null and temonType != ''">
+		   AND A.TEMON_TYPE = #{temonType} 
+		</if> 	    
+    	<if test="asVendorNm != null and asVendorNm != ''">
+		   AND A.AS_VENDOR_NM = #{asVendorNm} 
+		</if> 	    
+    	<if test="asResult != null and asResult != ''">
+		   AND A.AS_RESULT = #{asResult} 
+		</if> 
+    	<if test="strNm != null and strNm != ''">
+ 		  AND (A.STR_CD LIKE CONCAT('%', #{strNm}, '%')) 
+		</if>   	    
+    <![CDATA[
+      ORDER BY A.YYYYMMDD DESC, A.HHMIN DESC
+    ]]>	    
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+</mapper>

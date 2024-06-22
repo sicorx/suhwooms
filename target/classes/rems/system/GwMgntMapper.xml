@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.GwMgntMapper">
+
+	<!-- 게이트웨이 목록 -->
+	<select id="retrieveGwListMgnt" parameterType="Map" resultType="GwVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+    	SELECT 
+    		IM.COMPANY_CD			AS companyCd, 
+			OM.ORG_NM 				AS orgNm,
+			fnGetOrgFullName(IM.COMPANY_CD, IM.ORG_CD)	as orgFullNm, 
+			GM.STR_CD 				AS strCd, 
+			IM.STR_NM 				AS strNm, 
+			GM.GW_ID 				AS gwId, 
+			GM.GW_ADDR 				AS gwAddr, 
+			GM.GW_SW_VER 			AS gwSwVer, 
+			GM.AUTH_YN 				AS authYn, 
+			CASE WHEN GM.AUTH_YN = 'Y' THEN 
+				'인증' 
+			ELSE 
+				'미인증' 
+			END						AS authYnNm, 
+			GM.USE_YN 				AS useYN, 
+			CASE WHEN GM.USE_YN = 'Y' THEN 
+				'사용' 
+			ELSE 
+				'미사용' 
+			END						AS useYNNm, 
+			GM.UPDATE_TIME 			AS updateTime, 			
+			CASE WHEN GM.UPDATE_SUCCESS_YN = 'Y' THEN 
+				'성공' 
+			ELSE 
+				'미성공' 
+			END						AS updateSuccessYn  
+		FROM 
+			TH_STR_GW_MST GM, 
+ 			TH_STR_INFO_MST IM 
+ 			LEFT OUTER JOIN 
+ 			TH_COMPANY_ORG_MST OM 
+ 			ON IM.ORG_CD = OM.ORG_CD 
+ 			AND IM.COMPANY_CD = OM.COMPANY_CD 
+ 		WHERE 1 = 1 
+			AND GM.STR_CD = IM.STR_CD 
+ 			AND IM.COMPANY_CD = #{companyCd} 
+ 			AND GM.USE_YN  = #{useYn} 
+ 			AND GM.AUTH_YN like #{authYn} 
+ 	]]>
+ 	<if test='strCd != null and strCd != ""'>
+    	<![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0 
+        	)
+    	]]>
+    </if>
+	<if test='orgCd != null and orgCd != ""'>
+    	<![CDATA[
+    		AND OM.ORG_CD = #{orgCd} 
+    	]]>
+    </if>
+    <if test='gwId != null and gwId != ""'>
+    	<![CDATA[
+    		AND INSTR(GM.GW_ID, #{gwId}) > 0 
+    	]]>
+    </if>
+    <![CDATA[
+    	ORDER BY ${sidx} ${sord}
+    ]]>
+        <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+	<!-- 게이트웨이 중복 확인 -->
+	<select id="checkGwId" parameterType="Map" resultType="int">
+	<![CDATA[
+		SELECT 
+			COUNT(*) 
+		FROM 
+			TH_STR_GW_MST 
+		WHERE 1 = 1 
+			AND GW_ID = #{gwId} 
+			AND GW_ID <> #{preGwId}
+	]]>
+    </select>
+    
+    <!-- 게이트웨이 저장 -->
+    <update id="saveGWMgnt" parameterType="GwVo">
+        INSERT INTO TH_STR_GW_MST
+            (
+               STR_CD
+             , GW_ID
+             , GW_ADDR
+             , AUTH_YN
+             , USE_YN
+             , REGI_ID
+             , REGI_DTTM
+             , FINAL_MOD_ID
+             , FINAL_MOD_DTTM
+            )
+            VALUES
+            ( 
+               #{strCd}
+             , #{gwId}
+             , UPPER(#{gwAddr})
+             , #{authYn}
+             , #{useYn}
+             , #{regiId}
+             , now()
+             , #{finalModId}
+             , now()
+            )
+        ON DUPLICATE KEY UPDATE
+                                  GW_ID             = #{gwId}
+                                , GW_ADDR           = UPPER(#{gwAddr})
+                                , AUTH_YN           = #{authYn}
+                                , USE_YN            = #{useYn}
+                                , FINAL_MOD_ID      = #{finalModId}
+                                , FINAL_MOD_DTTM    = now()
+	</update>
+    
+    
+    <select id="getGwId" resultType="int">
+       SELECT 
+               IFNULL(MAX(GW_ID),0) + 1
+          FROM TH_STR_GW_MST
+                   
+    </select>
+    
+    <!-- 지우기 -->
+	<delete id="delGWMgnt" parameterType="Map">
+		delete from 
+			TH_STR_GW_MST 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+	<!-- 엑셀다운로드 -->
+	<select id="retrieveGwListExcelMgnt" parameterType="Map" resultType="HashMap">
+    <![CDATA[
+    	SELECT 
+    		IM.COMPANY_CD			AS companyCd, 
+			OM.ORG_NM 				AS orgNm,
+			fnGetOrgFullName(IM.COMPANY_CD, IM.ORG_CD)	as orgFullNm, 
+			GM.STR_CD 				AS strCd, 
+			IM.STR_NM 				AS strNm, 
+			GM.GW_ID 				AS gwId, 
+			GM.GW_ADDR 				AS gwAddr, 
+			GM.GW_SW_VER 			AS gwSwVer, 
+			GM.AUTH_YN 				AS authYn, 
+			CASE WHEN GM.AUTH_YN = 'Y' THEN 
+				'인증' 
+			ELSE 
+				'미인증' 
+			END						AS authYnNm, 
+			GM.USE_YN 				AS useYN, 
+			CASE WHEN GM.USE_YN = 'Y' THEN 
+				'사용' 
+			ELSE 
+				'미사용' 
+			END						AS useYnNm, 
+			GM.UPDATE_TIME 			AS updateTime, 			
+			CASE WHEN GM.UPDATE_SUCCESS_YN = 'Y' THEN 
+				'성공' 
+			ELSE 
+				'미성공' 
+			END						AS updateSuccessYn  
+		FROM 
+			TH_STR_GW_MST GM, 
+ 			TH_STR_INFO_MST IM 
+ 			LEFT OUTER JOIN 
+ 			TH_COMPANY_ORG_MST OM 
+ 			ON IM.ORG_CD = OM.ORG_CD 
+ 			AND IM.COMPANY_CD = OM.COMPANY_CD 
+ 		WHERE 1 = 1 
+			AND GM.STR_CD = IM.STR_CD 
+ 			AND IM.COMPANY_CD = #{companyCd} 
+ 			AND GM.USE_YN  = #{useYn} 
+ 			AND GM.AUTH_YN like #{authYn} 
+ 	]]>
+ 	<if test='strCd != null and strCd != ""'>
+    	<![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0 
+        	)
+    	]]>
+    </if>
+	<if test='orgCd != null and orgCd != ""'>
+    	<![CDATA[
+    		AND OM.ORG_CD = #{orgCd} 
+    	]]>
+    </if>
+    <if test='gwId != null and gwId != ""'>
+    	<![CDATA[
+    		AND INSTR(GM.GW_ID, #{gwId}) > 0 
+    	]]>
+    </if>
+    <![CDATA[
+    	ORDER BY IM.STR_NM
+    ]]>
+    </select>
+	
+</mapper>

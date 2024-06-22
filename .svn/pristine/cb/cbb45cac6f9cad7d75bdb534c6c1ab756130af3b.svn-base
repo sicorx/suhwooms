@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtAlarmHistoryMapper">
+
+<parameterMap type="rems.eqmt.model.GridStoreFcltyAlrmHisVo" id="pGridStoreFcltyAlrmHisVo"/>
+<resultMap type="rems.eqmt.model.GridStoreFcltyAlrmHisVo" id="rGridStoreFcltyAlrmHisVo"/>
+
+	<!-- 매장 장비 알람 이력 리스트 -->
+	<select id="retrieveStoreFcltyAlrmHis" parameterType="Map" resultMap="rGridStoreFcltyAlrmHisVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT TMS.STR_CD 				AS strCd
+			, SIM.STR_NM             	AS strNm 
+			, TMS.YYYYMMDD  			AS yyyymmdd
+			, TMS.HHMIN					AS hhmin  
+			, DATE_FORMAT(TMS.YYYYMMDD,'%Y-%m-%d') 	AS yyyymmddView
+			, CONCAT(SUBSTR(TMS.HHMIN,1,2), ':', SUBSTR(TMS.HHMIN,3,2)) AS hhminView  
+			, TMS.ALARM_YN 				AS alarmYn 		
+			, TMS.SENS_TEMP         	AS sensTemp
+			, STM.MAX_TEMP         		AS maxTemp
+			, STM.MIN_TEMP         		AS minTemp
+			, TMS.REGI_ID         		AS regiId
+			, TMS.REGI_DTTM         	AS regiDttm
+			, TMS.FINAL_MOD_ID         	AS finalModId
+			, TMS.FINAL_MOD_DTTM        AS finalModDttm
+			, STM.DEVICE_LOC 			AS deviceLoc
+		FROM TH_STR_REMS_DEVICE_BASE TMS
+		JOIN th_str_info_mst SIM
+			ON TMS.STR_CD = SIM.STR_CD
+		LEFT OUTER JOIN TH_STR_REMS_DEVICE_MST STM
+			ON STM.STR_CD = TMS.STR_CD
+			AND STM.TEMON_ID = TMS.TEMON_ID
+			AND STM.TEMON_TYPE = TMS.TEMON_TYPE
+			AND STM.PORT_NO = TMS.PORT_NO 
+      	WHERE TMS.STR_CD	= #{strCd}
+      	AND SIM.USE_YN = 'Y'
+	]]>
+	<if test="portNo != null and portNo != ''">
+	     AND TMS.PORT_NO		= #{portNo}
+	</if>
+	<if test="yyyymmdd != null and yyyymmdd != ''">
+	     AND TMS.YYYYMMDD	= #{yyyymmdd}
+	</if>
+	<![CDATA[
+	ORDER BY ${sidx} ${sord}
+  	/* rems.eqmt.persistence.EqmtAlarmHistoryMapper.retrieveStoreFcltyAlrmHis */
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>	
+	
+	
+	<!-- 매장별 포트번호 select -->
+	<select id="retrieveStrFcltyAlrmPortNo" parameterType="Map" resultType="SelectVo">
+	<![CDATA[
+	    SELECT DISTINCT PORT_NO     AS value
+	    	  ,DEVICE_LOC			AS name	      
+	    FROM th_str_temp_module
+	    WHERE STR_CD = #{strCd}
+	    ORDER BY CAST(PORT_NO AS UNSIGNED)
+	]]>	  
+	<![CDATA[
+  	/* rems.eqmt.persistence.EqmtAlarmHistoryMapper.retrieveStrFcltyAlrmPortNo */
+	]]>
+	</select>	
+	
+</mapper>

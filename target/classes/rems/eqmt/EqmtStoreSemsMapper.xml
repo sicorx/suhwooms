@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtStoreSemsMapper">
+
+
+	<select id="retrieveExcelStoreSemsList" parameterType="Map" resultType="HashMap">
+		    <![CDATA[
+				SELECT 	A.STR_CD as strCd, 
+				VIEW_STR_CD AS viewStrCd, 
+				STR_NM as strNm, 
+				A.ORG_CD as orgCd,
+				fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD) AS orgNm,
+				REMS_START_DT as remsStartDt, 
+				(SELECT COUNT(*) FROM TH_STR_GW_MST WHERE STR_CD=A.STR_CD AND GW_ADDR IS NOT NULL AND GW_ADDR!='' AND GW_ADDR!='000000000000') AS gwCnt, 
+				IFNULL(TEMON, 0) AS temonCnt, 
+				(SELECT COUNT(*) FROM TH_STR_REMS_DEVICE_MST WHERE STR_CD=A.STR_CD AND TEMON_TYPE='T' AND USE_YN='Y') AS lineSensorCnt, 
+				IFNULL(HACON, 0) AS haconCnt, 
+				IFNULL(T_SENSOR, 0) AS tSensorCnt, 
+				(SELECT COUNT(*) FROM TH_STR_GW_MST WHERE STR_CD=A.STR_CD AND GW_ADDR IS NOT NULL AND GW_ADDR!='' AND GW_ADDR!='000000000000') AS meterCnt, 
+				IFNULL((SELECT SUM(IFNULL(METER_CH1_RST, 0)
+		                         + IFNULL(METER_CH2_RST, 0)
+		                         + IFNULL(METER_CH3_RST, 0)
+		                         + IFNULL(METER_CH4_RST, 0)
+		                         + IFNULL(METER_CH5_RST, 0)
+		                         + IFNULL(METER_CH6_RST, 0)
+		                         + IFNULL(METER_CH7_R, 0)
+		                         + IFNULL(METER_CH7_S, 0)
+		                         + IFNULL(METER_CH7_T, 0)
+		                         + IFNULL(METER_CH8_R, 0)
+		                         + IFNULL(METER_CH8_S, 0)
+		                         + IFNULL(METER_CH8_T, 0)
+		                         )
+		                 FROM th_str_rems_device_cnt_mnt
+		                WHERE STR_CD = A.STR_CD), 0) AS ctCnt, 
+		        IFNULL(ZIGBEE, 0) AS zigbeeCnt, 
+		        IFNULL(ALMON, 0) AS almonCnt, 
+		        IFNULL(INV, 0) AS invCnt, 
+		        IFNULL(SIGN, 0) AS signCnt,
+		        '1' as emsBox,
+		        '1' as remsDt
+		  FROM  TH_STR_INFO_MST A LEFT OUTER JOIN TH_COMPANY_ORG_MST B ON A.COMPANY_CD = B.COMPANY_CD AND A.ORG_CD = B.ORG_CD
+		  						  LEFT JOIN TH_STR_REMS_DEVICE_CNT_MNT C ON A.STR_CD = C.STR_CD
+		 WHERE  1=1
+		   AND  REMS_START_DT BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')  
+   	 ]]>	 
+		<if test="scrStrNm != null and scrStrNm != ''">
+		   AND  (A.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%') OR VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+		</if> 	
+		<if test="scrOrgCd != null and scrOrgCd != ''">
+		   AND  A.ORG_CD = #{scrOrgCd} 
+		</if> 
+    <![CDATA[
+      ORDER BY remsStartDt desc
+    ]]>	    
+		
+    </select>
+    
+    
+	<select id="retrieveStoreSemsList" parameterType="Map" resultType="SystemVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+		SELECT 	A.STR_CD as strCd, 
+				VIEW_STR_CD AS viewStrCd, 
+				STR_NM as strNm, 
+				A.ORG_CD as orgCd,
+				fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD) AS orgNm,
+				REMS_START_DT as remsStartDt, 
+				(SELECT COUNT(*) FROM TH_STR_GW_MST WHERE STR_CD=A.STR_CD AND GW_ADDR IS NOT NULL AND GW_ADDR!='' AND GW_ADDR!='000000000000') AS gwCnt, 
+				IFNULL(TEMON, 0) AS temonCnt, 
+				(SELECT COUNT(*) FROM TH_STR_REMS_DEVICE_MST WHERE STR_CD=A.STR_CD AND TEMON_TYPE='T' AND USE_YN='Y') AS lineSensorCnt, 
+				IFNULL(HACON, 0) AS haconCnt, 
+				IFNULL(T_SENSOR, 0) AS tSensorCnt, 
+				(SELECT COUNT(*) FROM TH_STR_GW_MST WHERE STR_CD=A.STR_CD AND GW_ADDR IS NOT NULL AND GW_ADDR!='' AND GW_ADDR!='000000000000') AS meterCnt, 
+				IFNULL((SELECT SUM(IFNULL(METER_CH1_RST, 0)
+		                         + IFNULL(METER_CH2_RST, 0)
+		                         + IFNULL(METER_CH3_RST, 0)
+		                         + IFNULL(METER_CH4_RST, 0)
+		                         + IFNULL(METER_CH5_RST, 0)
+		                         + IFNULL(METER_CH6_RST, 0)
+		                         + IFNULL(METER_CH7_R, 0)
+		                         + IFNULL(METER_CH7_S, 0)
+		                         + IFNULL(METER_CH7_T, 0)
+		                         + IFNULL(METER_CH8_R, 0)
+		                         + IFNULL(METER_CH8_S, 0)
+		                         + IFNULL(METER_CH8_T, 0)
+		                         )
+		                 FROM th_str_rems_device_cnt_mnt
+		                WHERE STR_CD = A.STR_CD), 0) AS ctCnt, 
+		        IFNULL(ZIGBEE, 0) AS zigbeeCnt, 
+		        IFNULL(ALMON, 0) AS almonCnt, 
+		        IFNULL(INV, 0) AS invCnt, 
+		        IFNULL(SIGN, 0) AS signCnt,
+		        '1' as emsBox,
+		        '1' as remsDt
+		  FROM  TH_STR_INFO_MST A LEFT OUTER JOIN TH_COMPANY_ORG_MST B ON A.COMPANY_CD = B.COMPANY_CD AND A.ORG_CD = B.ORG_CD
+		  						  LEFT JOIN TH_STR_REMS_DEVICE_CNT_MNT C ON A.STR_CD = C.STR_CD
+		 WHERE  1=1
+		   AND  REMS_START_DT BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')  
+		   AND  A.COMPANY_CD = #{companyCd}
+    ]]>	 
+		<if test="scrStrNm != null and scrStrNm != ''">
+		   AND  (A.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%') OR VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+		</if> 	
+		<if test="scrOrgCd != null and scrOrgCd != ''">
+		   AND  A.ORG_CD = #{scrOrgCd} 
+		</if> 
+    <![CDATA[
+      ORDER BY  ${sidx} ${sord}
+    ]]>	    
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+</mapper>

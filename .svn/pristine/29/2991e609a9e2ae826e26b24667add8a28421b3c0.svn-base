@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.EngineerMapMapper">
+	
+	<!-- 매장할당현황조회 목록 -->
+	<select id="retrieveEngineerStrList" parameterType="Map" resultType="GridMaintainEngineerMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT 
+  			IFNULL(OM.ORG_NM, '') 		AS orgNm, 
+  			IM.VIEW_STR_CD 				AS viewStrCd, 
+  			IM.STR_NM 					AS strNm, 
+  			IFNULL(VS.VENDOR_NM, '') 	AS vendorNm, 
+  			U.USER_ID 					AS userId, 
+  			U.USER_NM 					AS userNm, 
+  			IFNULL(IM.ADDR, '') 		AS addr, 
+  			IFNULL(IM.TEL_NO, '') 		AS telNo, 
+  			EM.FINAL_MOD_DTTM 			AS finalModDttm 
+		FROM 
+  			TH_STR_INFO_MST IM 
+  			LEFT OUTER JOIN 
+ 			TH_COMPANY_ORG_MST OM 
+ 			ON IM.ORG_CD = OM.ORG_CD 
+  			LEFT OUTER JOIN 
+			(
+				SELECT 
+					A.STR_CD 	AS STR_CD, 
+					B.VENDOR_CD AS VENDOR_CD, 
+      				B.VENDOR_NM AS VENDOR_NM 
+				FROM 
+       				TH_VENDOR_STR_MAP A, 
+       				TH_VENDOR_MST B 
+       			WHERE 1 = 1 
+       				AND A.VENDOR_CD = B.VENDOR_CD 
+       				AND B.COMPANY_CD = #{companyCd} 
+       				AND B.USE_YN = 'Y'
+			) VS 
+  			ON IM.STR_CD = VS.STR_CD, 
+  			TH_ENGINEER_STR_MAP EM, 
+  			TH_USER_MST U,
+            TH_USER_AUTH UA,
+            TH_AUTH AU
+		WHERE 1 = 1 
+  			AND IM.STR_CD = EM.STR_CD 
+            AND U.USER_ID = UA.USER_ID
+            AND UA.COMPANY_CD = AU.COMPANY_CD
+            AND UA.AUTH_ID = AU.AUTH_ID
+  			AND IM.USE_YN = 'Y' 
+			AND IM.COMPANY_CD = #{companyCd} 
+  			AND EM.USER_ID = U.USER_ID 
+  			AND U.COMPANY_CD = #{companyCd} 
+  			AND AU.AUTH_SP IN ('E', 'M') 
+  			AND U.USE_YN = 'Y' 
+ 	]]>
+ 	<if test='orgCd != null and orgCd != ""'>
+    	<![CDATA[
+    		AND IM.ORG_CD = #{orgCd} 
+    	]]>
+    </if>
+    <if test='strCd != null and strCd != ""'>
+    	<![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0 
+        	)
+    	]]>
+    </if>
+    <if test='vendorCd != null and vendorCd != ""'>
+    	<![CDATA[		
+			 AND VS.VENDOR_CD = #{vendorCd} 
+        ]]>
+    </if>
+	<if test='userNm != null and userNm != ""'>
+    	<![CDATA[
+   			AND (
+    			INSTR(U.USER_NM, #{userNm}) > 0 
+    			OR 
+    			INSTR(U.USER_ID, #{userNm}) > 0
+   			)
+        ]]>
+    </if>
+    <![CDATA[
+		ORDER BY ${sidx} ${sord}, orgNm, strNm, vendorNm, userNm
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />		
+	</select>
+	
+	<!-- 매장할당현황조회 목록 -->
+	<select id="retrieveExcelEngineerStrList" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+		SELECT 
+  			IFNULL(OM.ORG_NM, '') 		AS orgNm, 
+  			IM.VIEW_STR_CD 				AS viewStrCd, 
+  			IM.STR_NM 					AS strNm, 
+  			IFNULL(VS.VENDOR_NM, '') 	AS vendorNm, 
+  			U.USER_ID 					AS userId, 
+  			U.USER_NM 					AS userNm, 
+  			IFNULL(IM.ADDR, '') 		AS addr, 
+  			IFNULL(IM.TEL_NO, '') 		AS telNo, 
+  			EM.FINAL_MOD_DTTM 			AS finalModDttm 
+		FROM 
+  			TH_STR_INFO_MST IM 
+  			LEFT OUTER JOIN 
+ 			TH_COMPANY_ORG_MST OM 
+ 			ON IM.ORG_CD = OM.ORG_CD 
+  			LEFT OUTER JOIN 
+			(
+				SELECT 
+					A.STR_CD 	AS STR_CD, 
+					B.VENDOR_CD AS VENDOR_CD, 
+      				B.VENDOR_NM AS VENDOR_NM 
+				FROM 
+       				TH_VENDOR_STR_MAP A, 
+       				TH_VENDOR_MST B 
+       			WHERE 1 = 1 
+       				AND A.VENDOR_CD = B.VENDOR_CD 
+       				AND B.COMPANY_CD = #{companyCd} 
+       				AND B.USE_YN = 'Y'
+			) VS 
+  			ON IM.STR_CD = VS.STR_CD, 
+  			TH_ENGINEER_STR_MAP EM, 
+  			TH_USER_MST U,
+            TH_USER_AUTH UA,
+            TH_AUTH AU
+		WHERE 1 = 1 
+  			AND IM.STR_CD = EM.STR_CD 
+            AND U.USER_ID = UA.USER_ID
+            AND UA.COMPANY_CD = AU.COMPANY_CD
+            AND UA.AUTH_ID = AU.AUTH_ID
+  			AND IM.USE_YN = 'Y' 
+			AND IM.COMPANY_CD = #{companyCd} 
+  			AND EM.USER_ID = U.USER_ID 
+  			AND U.COMPANY_CD = #{companyCd} 
+  			AND AU.AUTH_SP IN ('E', 'M') 
+  			AND U.USE_YN = 'Y' 
+ 	]]>
+ 	<if test='orgCd != null and orgCd != ""'>
+    	<![CDATA[
+    		AND IM.ORG_CD = #{orgCd} 
+    	]]>
+    </if>
+    <if test='strCd != null and strCd != ""'>
+    	<![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0 
+        	)
+    	]]>
+    </if>
+    <if test='vendorCd != null and vendorCd != ""'>
+    	<![CDATA[		
+			 AND VS.VENDOR_CD = #{vendorCd} 
+        ]]>
+    </if>
+	<if test='userNm != null and userNm != ""'>
+    	<![CDATA[
+   			AND (
+    			INSTR(U.USER_NM, #{userNm}) > 0 
+    			OR 
+    			INSTR(U.USER_ID, #{userNm}) > 0
+   			)
+        ]]>
+    </if>
+    <![CDATA[
+		ORDER BY  orgNm, strNm, vendorNm, userNm
+	]]>
+	</select>
+	
+</mapper>

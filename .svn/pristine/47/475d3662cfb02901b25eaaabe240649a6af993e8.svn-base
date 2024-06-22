@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.energy.persistence.EnergyAnhElecMapper">
+	<select id="retrieveComCodeList" parameterType="ComCodeVo" resultType="ComCodeVo">
+	SELECT COMM_CD      AS code
+	     , COMM_CD_NM   AS commCdNm
+	  FROM th_comm_cd
+	 WHERE COMM_GRP_CD = #{commGrpCd}
+	 ORDER BY ORDER_SEQ
+	 
+	/* rems.energy.persistence.EnergyAnhElecMapper.retrieveComCodeList */	 
+	</select>
+
+	<!-- 냉난방전력현황(1) 주영 -->
+	<select id="retrieveAnhStatus" parameterType="UserVo" resultType="AnhStatusVo">
+	<![CDATA[
+	select sum(c.hacon)                                        as hacCount
+         , round( sum(ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / 1000 / cast(date_format(#{now}, '%d') as unsigned), 1)             as tempUse
+         , round( sum(ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / 1000 / cast(date_format(#{now}, '%d') as unsigned) / count(*), 1)  as avgUse
+         , round( avg((ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / ifnull(b.str_area_spec, 0) )  / 1000  / cast(date_format(#{now}, '%d') as unsigned)
+                , 2)                                          as avgUsePerArea        
+      from TH_STR_CHN_ELEC_USE_MM_SUM a
+		LEFT JOIN th_str_info_mst b
+        ON
+		a.str_cd = b.str_cd
+        LEFT JOIN TH_STR_REMS_DEVICE_CNT_MNT c
+        ON
+        a.str_cd = c.str_cd        
+     where        
+		b.use_yn = 'Y'
+        AND
+        b.company_cd = #{companyCd}
+        AND
+        a.yyyymm     = date_format(#{now}, '%Y%m')
+        AND
+        (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) >= 0
+     group by b.company_cd, a.yyyymm
+    
+    
+    /* rems.energy.persistence.EnergyAnhElecMapper.retrieveAnhStatus */
+	]]>
+	</select>
+
+
+
+	<!-- 월전력사용량(1) -->
+	<select id="retrieveEnergyUsePerMonth" parameterType="UserVo" resultType="AnhStatusVo">
+	<![CDATA[
+    select b.company_cd                             as companyCd
+         , a.yyyymm                                 as yyyymm
+         , round(sum((ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0))) / 1000, 1)  as temp
+      from TH_STR_CHN_ELEC_USE_MM_SUM a
+         , th_str_info_mst b
+     where a.str_cd     = b.str_cd
+       and (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) >= 0
+       and b.company_cd = #{companyCd}
+       and a.yyyymm between date_format(date_add(#{now}, interval -12 month), '%Y%m') and date_format(#{now}, '%Y%m')
+     group by b.company_cd, a.yyyymm
+     
+    /* rems.energy.persistence.EnergyAnhElecMapper.retrieveEnergyUsePerMonth */
+	]]>
+	</select>
+	
+	<!-- 온도현황(1) 주영 -->
+	<select id="retrieveAnhTemp" parameterType="UserVo" resultType="AnhTempVo">
+	<![CDATA[
+	
+    select ifnull(aa.outdoorTemp, 0) as outTmTemp
+         , ifnull(bb.outdoorTemp, 0) as outOmTemp
+         , ifnull(aa.indoorTemp, 0)   as inTmTemp
+         , ifnull(bb.indoorTemp, 0)   as inOmTemp
+      from (			
+              select 
+					round(avg(a.forecast_temp), 1)  as outdoorTemp,
+					round(avg(c.sense_temp), 1)     as indoorTemp
+				from 
+					th_forecast_latest a,
+					th_str_info_mst b,
+					(select 
+						aa.str_cd,
+						DATE_FORMAT( #{now}, '%Y%m%d') as yyyymmdd,
+						avg( ifnull( aa.T_SENSOR_TEMP_AVG, aa.HACON_TEMP_AVG ) ) as sense_temp
+					from 
+						TH_STR_SENSOR_MM_SUM aa
+						LEFT JOIN th_str_info_mst      bb
+						ON
+						aa.STR_CD = bb.STR_CD
+						AND
+						bb.company_Cd = #{companyCd}
+					where 
+						aa.str_cd        = bb.str_cd
+						and aa.yyyymm like concat(date_format(#{now}, '%Y%m'), '%')        
+						group by aa.str_cd, aa.yyyymm
+					) c 
+				where 
+					a.local_area_cd = b.local_area_cd
+					and b.str_cd        = c.str_cd
+					and a.yyyymmdd      = c.yyyymmdd
+					and a.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})
+					and a.yyyymmdd like concat(date_format(#{now}, '%Y%m'), '%')
+					and b.company_cd    = #{companyCd}			
+           ) aa
+         , (
+            select 
+				round(avg(a.forecast_temp), 1)  as outdoorTemp,
+				round(avg(c.sense_temp), 1)     as indoorTemp
+			from 
+				th_forecast_latest a,
+				th_str_info_mst b,
+				(select 
+					aa.str_cd,
+					DATE_FORMAT(date_add(#{now}, interval -12 month), '%Y%m') as yyyymmdd,
+					avg( ifnull( aa.T_SENSOR_TEMP_AVG, aa.HACON_TEMP_AVG ) ) as sense_temp
+				from 
+					TH_STR_SENSOR_MM_SUM aa
+					LEFT JOIN th_str_info_mst bb
+					ON
+					aa.STR_CD = bb.STR_CD
+					AND
+					bb.company_Cd = #{companyCd}
+				where 
+					aa.str_cd        = bb.str_cd
+					and aa.yyyymm like concat(date_format(date_add(#{now}, interval -12 month), '%Y%m'), '%')		
+					group by aa.str_cd, aa.yyyymm
+				) c
+			where 
+				a.local_area_cd = b.local_area_cd
+				and b.str_cd        = c.str_cd
+				and a.yyyymmdd      = c.yyyymmdd
+				and a.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})                       
+				and a.yyyymmdd like concat(date_format(date_add(#{now}, interval -12 month), '%Y%m'), '%')
+				and b.company_cd    = #{companyCd}
+           ) bb
+         
+	]]>
+	</select>
+	
+	<!-- 면적당 사용전력 분포 요약(2) 주영 -->
+	<select id="retrieveAnhAreaDist" parameterType="UserVo" resultType="AnhAreaDistVo">
+	<![CDATA[			
+		select 
+			#{companyCd}	as companyCd,
+		    #{yyyymm}	as yyyymm,	
+			round(avg( (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0))    / ifnull(aa.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)   as average,
+		    round(max( (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0))    / ifnull(aa.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)   as max,
+		    round(min( (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0))    / ifnull(aa.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)   as min,
+		    round(stddev( (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0)) / ifnull(aa.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)   as stdev,
+		    round(avg(cc.forecast_temp),1) as avgForecastTemp,
+		    round(avg( ifnull( dd.T_SENSOR_TEMP_AVG, dd.HACON_TEMP_AVG ) ),1) as avgSenseTemp
+		from 
+			th_str_info_mst aa    
+		    
+		    LEFT JOIN	TH_STR_CHN_ELEC_USE_MM_SUM bb
+		    ON
+		    aa.STR_CD = bb.STR_CD
+		    AND
+             (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0)) >= 0
+		    
+		    LEFT JOIN	th_forecast_latest cc
+		    ON
+		    aa.LOCAL_AREA_CD = cc.LOCAL_AREA_CD
+		    
+		    LEFT JOIN	TH_STR_SENSOR_MM_SUM dd
+		    ON
+		    aa.STR_CD = dd.STR_CD
+		where 
+			aa.COMPANY_CD = #{companyCd}
+		    AND
+		    aa.USE_YN = 'Y'
+		    AND
+		    ifnull( aa.REMS_START_DT, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+		    
+		    AND
+		    bb.YYYYMM = #{yyyymm}
+		    
+		    AND
+		    cc.COUNTRY_CD   = (select country_cd from th_company_mst where company_cd = #{companyCd})
+		    AND
+		    cc.yyyymmdd like concat(#{yyyymm}, '%')
+		    
+		    AND
+			dd.yyyymm like #{yyyymm}
+		    
+		    group by aa.company_cd, yyyymm
+     
+    /* rems.energy.persistence.EnergyAnhElecMapper.retrieveAnhAreaDist */			
+	]]>
+	</select>
+	
+	
+	<!-- 면적당 사용전력 분포 차트(2) -->
+	<select id="retrieveUsedAreaChrt" parameterType="UserVo" resultType="AnhUsedAreaChrtVo">
+
+    select b.company_cd                                                 as companyCd
+         , a.yyyymm                                                     as yyyymm
+    <foreach collection="separator" item="item" index="index">
+	<if test="index &gt;= '29'">
+    <![CDATA[
+         , sum(if((ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) > ${separator[index]}, 1, 0))     as data${index}
+	]]>        		
+	</if>
+	<if test="index &lt; '29'">
+    <![CDATA[
+         , sum(if((ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) > ${separator[index]}
+              and (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) <= ${separator[index+1]}, 1, 0))     as data${index}
+	]]>        	
+	</if>	    
+	</foreach>
+	<![CDATA[
+      from TH_STR_CHN_ELEC_USE_MM_SUM a
+         , th_str_info_mst b
+     where a.str_cd = b.str_cd
+       and b.company_cd = #{companyCd}
+       and a.yyyymm       = #{yyyymm}
+       and ifnull( b.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+     group by b.company_cd, a.yyyymm
+     ]]>
+    /* rems.energy.persistence.EnergyAnhElecMapper.retrieveUsedAreaChrt */
+	</select>
+	
+	<!-- 면적당 냉난방 전력사용 분포 리스트(3) 주영 -->
+	<select id="retrieveAnhAreaDistList" parameterType="Map" resultType="AnhAreaDistListVo">
+	<![CDATA[
+    	select 
+			aa.VIEW_STR_CD                                          as viewStrCd,
+			aa.STR_CD                                               as strCd,
+			aa.STR_NM												as strNm,
+			round((ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0)) / ifnull(aa.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)   as temp,
+			round( (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0)) / ifnull(aa.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)   as tempGap,
+			avg( cc.forecast_temp )                                        as forecastTemp,
+			avg( cc.forecast_temp )                                        as forecastGap,
+			ifnull( dd.T_SENSOR_TEMP_AVG, dd.HACON_TEMP_AVG )              as senseTemp,
+			ifnull( dd.T_SENSOR_TEMP_AVG, dd.HACON_TEMP_AVG )              as senseGap,
+		    ee.HACON													   as hacCount
+		    
+		from 
+			th_str_info_mst aa    
+		    
+		    LEFT JOIN	TH_STR_CHN_ELEC_USE_MM_SUM bb
+		    ON
+		    aa.STR_CD = bb.STR_CD
+		    AND
+		    (ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0)) / aa.str_area_spec / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) > #{startVal}
+		    AND
+			(ifnull(bb.EP_2CH_EFT_WATAGE, 0)+ifnull(bb.EP_3CH_EFT_WATAGE, 0)) / aa.str_area_spec / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) <= #{endVal}
+		    
+		    LEFT JOIN	th_forecast_latest cc
+		    ON
+		    aa.LOCAL_AREA_CD = cc.LOCAL_AREA_CD
+		    
+		    LEFT JOIN	TH_STR_SENSOR_MM_SUM dd
+		    ON
+		    aa.STR_CD = dd.STR_CD
+		    
+		    LEFT JOIN	TH_STR_REMS_DEVICE_CNT_MNT ee
+		    ON
+		    aa.STR_CD = ee.STR_CD
+		where 
+			aa.COMPANY_CD = #{companyCd}
+		    AND
+		    aa.USE_YN = 'Y'
+		    AND
+		    ifnull( aa.REMS_START_DT, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+		    
+		    AND
+		    bb.YYYYMM = #{yyyymm}    
+		    
+		    
+		    AND
+		    cc.COUNTRY_CD   = (select country_cd from th_company_mst where company_cd = #{companyCd})
+		    AND
+		    cc.yyyymmdd like concat(#{yyyymm}, '%')
+		    
+		    AND
+			dd.yyyymm like #{yyyymm}
+		    
+		    GROUP BY aa.STR_CD
+		    ORDER BY aa.VIEW_STR_CD
+	 
+	/* rems.energy.persistence.EnergyAnhElecMapper.retrieveAnhAreaDistList */
+	]]>
+	</select>
+	
+	
+	<select id="retrieveAnhDistList" parameterType="UserVo" resultType="AnhAreaListVo">
+	<![CDATA[
+    select concat(concat(substring(a.yyyymm, 1,4),'-'),substring(a.yyyymm, 5,2)) as yyyymm
+	     , a.str_cd                              as strCd
+	     , round(  (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / 1000, 1)    as temp
+	     , round((ifnull(a.EP_1CH_EFT_WATAGE, 0)
+	             -(ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0))
+	             -ifnull(a.EP_4CH_EFT_WATAGE, 0)) / 1000, 1)     as etc
+	     , c.forecast_temp                       as forecastTemp
+	     , d.sense_temp                          as senseTemp
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	     , th_str_info_mst b
+	     , (select bb.str_cd
+	             , substr(aa.yyyymmdd, 1, 6)       as yyyymm
+	             , round(avg(aa.forecast_temp), 1) as forecast_temp
+	          from th_forecast_latest aa
+	             , th_str_info_mst bb
+	         where aa.local7_area_cd = bb.local_area_cd
+                     and aa.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})			         
+	           and bb.str_cd        = #{strCd}
+	           and ifnull( bb.rems_start_dt, '20000101' ) < date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	           and aa.yyyymmdd between date_format(date_add(concat(#{yyyymm}, '01'), interval -12 month), '%Y%m') and date_format(last_day(concat(#{yyyymm}, '01')), '%Y%m%d')
+	         group by bb.str_cd, substr(aa.yyyymmdd, 1, 6)
+	       ) c
+	     , (select bb.str_cd
+	             , substr(aa.yyyymmdd, 1, 6)    as yyyymm
+	             , round(avg(ifnull(aa.t_sensor_temp, aa.sense_temp)), 1) as sense_temp
+	          from TH_STR_SENSOR_BRIEF aa
+	             , th_str_info_mst bb
+	         where aa.str_cd = bb.str_cd
+	           and aa.t_sensor_stat_cd = '1'
+	           and bb.str_cd = #{strCd}
+	           and ifnull( bb.rems_start_dt, '20000101' ) < date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	           and aa.yyyymmdd between date_format(date_add(concat(#{yyyymm}, '01'), interval -12 month), '%Y%m') and date_format(last_day(concat(#{yyyymm}, '01')), '%Y%m%d')
+	         group by bb.str_cd, substr(aa.yyyymmdd, 1, 6)
+	       ) d       
+	 where a.str_cd = b.str_cd
+	   and a.str_cd = c.str_cd
+	   and a.yyyymm = c.yyyymm
+	   and a.str_cd = d.str_cd
+	   and a.yyyymm = d.yyyymm
+	   and ifnull( b.rems_start_dt, '20000101' ) < date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	   and b.str_cd = #{strCd}
+	   and a.yyyymm between date_format(date_add(concat(#{yyyymm}, '01'), interval -12 month), '%Y%m') and #{yyyymm}
+	 order by a.yyyymm desc
+	 
+	/* rems.energy.persistence.EnergyAnhElecMapper.retrieveAnhDistList */
+	]]>
+	</select>
+	
+	<select id="retrieveUsedHourlyChrt" parameterType="UserVo" resultType="Map">
+	<![CDATA[
+    select a.hh                                             as hh
+	     , a.str_cd                                         as strCd
+	     , round( ( ifnull(a.EP_2CH_EFT_WATAGE , 0) + ifnull(a.EP_3CH_EFT_WATAGE , 0)) /1000, 1)   as temp
+	     , round((ifnull(a.EP_1CH_EFT_WATAGE, 0)
+	             -( ifnull(a.EP_2CH_EFT_WATAGE , 0) + ifnull(a.EP_3CH_EFT_WATAGE , 0))
+	             -ifnull(a.EP_4CH_EFT_WATAGE, 0))/1000, 1)   as etc
+	     , round(c.sense_temp, 1)                           as senseTemp
+	     , round(b.forecast_temp, 1)                        as forecastTemp
+	  from th_str_chn_elec_use_hh_sum a
+	  left
+	 outer
+	  join (select bb.str_cd
+	             , if(aa.hh = '24', date_format(date_add(aa.yyyymmdd, interval 1 day), '%Y%m%d') , aa.yyyymmdd) as yyyymmdd
+	             , if(aa.hh = '24', '00', aa.hh) as hh
+	             , aa.forecast_temp
+	          from th_forecast_latest aa
+	             , th_str_info_mst bb
+	         where aa.local_area_cd = bb.local_area_cd
+	           and aa.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})
+	           and bb.str_cd        = #{strCd}
+	           and aa.yyyymmdd between date_format(date_add(concat(#{yyyymm}, #{yyyymmdd}), interval -1 day), '%Y%m%d') and concat(#{yyyymm}, #{yyyymmdd})
+	       ) b
+	    on a.str_cd   = b.str_cd
+	   and a.yyyymmdd = b.yyyymmdd
+	   and b.hh       = lpad((a.hh div 3) * 3, 2, '0')
+	  left
+	 outer
+	  join (select aa.str_cd
+	             , aa.yyyymmdd
+	             , substring(aa.hhmin, 1, 2) as hh
+	             , avg(ifnull(aa.t_sensor_temp, aa.sense_temp)) as sense_temp
+	          from TH_STR_SENSOR_BRIEF aa
+	         where aa.str_cd   = #{strCd}
+	           and aa.t_sensor_stat_cd = '1'
+	           and aa.yyyymmdd = concat(#{yyyymm}, #{yyyymmdd})
+	         group by aa.str_cd, aa.yyyymmdd, substring(aa.hhmin, 1, 2)
+	       ) c
+	    on a.str_cd   = c.str_cd
+	   and a.yyyymmdd = c.yyyymmdd
+	   and a.hh       = c.hh
+	 where a.str_cd   = #{strCd}
+	   and a.yyyymmdd = concat(#{yyyymm}, #{yyyymmdd})	 
+	 order by a.hh desc	
+	
+	/* rems.energy.persistence.EnergyAnhElecMapper.retrieveUsedHourlyChrt */
+	]]>
+	</select>
+</mapper>

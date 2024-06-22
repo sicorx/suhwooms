@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Instruction</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Instruction</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Instruction</a></div>
+    
+    
+    <div class="r_inputTbl r_horizonTbl">
+    <table>
+      <tr>
+        <th width="30%">EC ID<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <input type="text" class="r_Input r_error" value="abcabc" style="width:184px;" />
+        <span class="innerBtn">
+          <button>중복확인</button>
+        </span>
+        <span class="r_errorTxt"><img src="../images/ico_error.png" />중복된 ID 입니다.</span>
+        </td>
+      </tr>
+      <tr>
+        <th width="30%">MAC ADDR<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <input type="text" class="r_Input" value="" style="width:184px;" />
+        <span class="r_infoTxt"><img src="../images/ico_info.png" />MAC ADDRESS를 적어주세요.</span>
+        </td>
+      </tr>
+      <tr class="r_last">
+        <th width="30%">사용 여부<span class="r_required">*</span></th>
+        <td width="70%" class="r_gridInput r_last">
+        <span class="r_radio">
+          <input type="radio" name="system" id="mobile" checked="checked" />
+          <label for="mobile">사용</label>
+          <input type="radio"  name="system" id="web"/>
+          <label class="r_last" for="web">미사용</label>
+        </span>
+        </td>
+      </tr>
+    </table>
+    </div>
+    
+    <span class="r_infoTxt r_bottom"><img src="../images/ico_info.png" />테이블 아래 한줄 지시문을 적어주세요.</span>
+    
+    <div class="r_infoGroup">
+    <span class="r_infoTxt r_title"><img src="../images/ico_info.png" />지시문 그룹 타이틀</span>
+    <p>- 지시문 내용을 적어주세요.</p>
+    <p>- 한 그룹 타이틀 내에 여러 지시문 내용을 적을 수 있습니다.</p>
+    </div>
+    
+    <div class="r_infoGroup">
+    <span class="r_infoTxt"><img src="../images/ico_info.png" />지시문 그룹에 타이틀 없이 설명을 넣을 수 있습니다.</span>
+    <span class="r_infoTxt"><img src="../images/ico_info.png" />지시문 내용 중 일부를 <strong>강조</strong>할 수 있습니다.</span>
+    <span class="r_infoTxt r_last"><img src="../images/ico_info.png" />마지막 지시문 내용에는 클래스명 r_last를 추가해 주세요.</span>
+    </div>
+    
+    
+  </div>
+</div>
+</body>
+</html>

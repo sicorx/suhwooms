@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.RemsDeviceMgntMapper">
+
+	<!-- 렘스장비 목록 -->
+	<select id="retrieveStoreRemsMgnt" parameterType="Map" resultType="GridRemsDeviceMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT 
+			IM.COMPANY_CD						AS companyCd, 
+			OM.ORG_NM 							AS orgNm,
+			fnGetOrgFullName(IM.COMPANY_CD, IM.ORG_CD)	as orgFullNm,  
+			RP.STR_CD 							AS strCd, 
+			IM.STR_NM 							AS strNm, 
+			RP.METER_CH1_RST					AS mainMeter, 
+			RP.METER_CH2_RST+RP.METER_CH3_RST	AS subMeterTemp, 
+			RP.HACON							AS hacon, 
+			RP.T_SENSOR							AS tSensor, 
+			RP.TEMON							As temon, 
+			RP.ZIGBEE							AS zigbee, 
+			RP.ALMON							AS almon, 
+			RP.INV								AS inv, 
+			RP.SIGN								AS sign
+		FROM 
+			TH_STR_REMS_DEVICE_CNT_MNT RP, 
+ 			TH_STR_INFO_MST IM 
+ 			LEFT OUTER JOIN 
+ 			TH_COMPANY_ORG_MST OM 
+ 			ON IM.ORG_CD = OM.ORG_CD 
+ 			AND IM.COMPANY_CD = OM.COMPANY_CD 
+		WHERE 1 = 1 
+			AND RP.STR_CD = IM.STR_CD 
+ 			AND IM.COMPANY_CD = #{companyCd}
+ 			AND IM.USE_YN = 'Y' 			
+	]]>
+	<if test='strCd != null and strCd != ""'>
+    	<![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0 
+        	)
+    	]]>
+    </if>
+	<if test='orgCd != null and orgCd != ""'>
+    	<![CDATA[
+    		AND OM.ORG_CD = #{orgCd} 
+    	]]>
+    </if>
+	<![CDATA[
+    	ORDER BY ${sidx} ${sord}
+    ]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<!-- 렘스장비 저장 -->
+	<update id="saveStoreRemsMgnt" parameterType="GridRemsDeviceMgntVo">
+		INSERT INTO TH_STR_REMS_DEVICE_CNT_MNT
+		     ( STR_CD
+		     <if test="mainMeter != null and mainMeter != ''">     
+		     , METER_CH1_RST
+		     </if>
+		     <if test="subMeterTemp != null and subMeterTemp != ''">     
+		     , METER_CH2_RST
+		     , METER_CH3_RST		     
+		     </if>
+		     <if test="hacon != null and hacon != ''">      
+		     , HACON
+		     </if>
+		     <if test="tSensor != null and tSensor != ''">     
+		     , T_SENSOR
+		     </if>
+		     <if test="temon != null and temon != ''">    
+		     , TEMON
+		     </if>
+		     <if test="zigbee != null and zigbee != ''">    
+		     , ZIGBEE
+		     </if>
+		     <if test="almon != null and almon != ''">    
+		     , ALMON
+		     </if>
+		     <if test="inv != null and inv != ''">
+		     , INV
+		     </if>
+		     <if test="sign != null and sign != ''">    
+		     , SIGN
+		     </if>
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES( #{strCd}
+		 	  <if test="mainMeter != null and mainMeter != ''">
+		      , #{mainMeter}
+		      </if>
+		      <if test="subMeterTemp != null and subMeterTemp != '' and subMeterTemp == 0">     
+		      , '0'		      
+		      , '0'
+		      </if>
+		      <if test="subMeterTemp != null and subMeterTemp != '' and subMeterTemp == 1">     
+		      , '1'		      
+		      , '0'
+		      </if>
+		      <if test="subMeterTemp != null and subMeterTemp != '' and subMeterTemp == 2">     
+		      , '1'
+		      , '1'
+		      </if>
+		      <if test="hacon != null and hacon != ''">   	
+		      , #{hacon}
+		      </if>
+		      <if test="tSensor != null and tSensor != ''">     
+		      , #{tSensor}
+		      </if>
+		      <if test="temon != null and temon != ''">     
+		      , #{temon}
+		      </if>
+		      <if test="zigbee != null and zigbee != ''">     
+		      , #{zigbee}
+		      </if>
+		      <if test="almon != null and almon != ''">     
+		      , #{almon}
+		      </if>
+		      <if test="inv != null and inv != ''">     
+		      , #{inv}
+		      </if>
+		      <if test="sign != null and sign != ''">     
+		      , #{sign}
+		      </if>
+		      , #{regiId}
+		      , NOW()
+		      , #{finalModId}
+		      , NOW()
+		      )
+		ON DUPLICATE KEY
+		      UPDATE FINAL_MOD_ID       = #{finalModId}
+		      <if test="mainMeter != null and mainMeter != ''">
+		           , METER_CH1_RST         = #{mainMeter}
+		      </if>
+		      <if test="subMeterTemp != null and subMeterTemp != '' and subMeterTemp == 0">     
+		      		, METER_CH2_RST 			= '0'
+		      		, METER_CH3_RST 			= '0'
+		      </if>
+		      <if test="subMeterTemp != null and subMeterTemp != '' and subMeterTemp == 1">     
+		      		, METER_CH2_RST 			= '1'		      
+		      		, METER_CH3_RST 			= '0'
+		      </if>
+		      <if test="subMeterTemp != null and subMeterTemp != '' and subMeterTemp == 2">     
+		      		, METER_CH2_RST 			= '1'
+		      		, METER_CH3_RST 			= '1'
+		      </if>     
+		      <if test="hacon != null and hacon != ''">     
+		           , HACON  			= #{hacon}
+		      </if>     
+			  <if test="tSensor != null and tSensor != ''">			           
+		           , T_SENSOR      		= #{tSensor}
+		      </if>
+			  <if test="temon != null and temon != ''">			           
+		           , TEMON      		= #{temon}
+		      </if>
+			  <if test="zigbee != null and zigbee != ''">			           
+		           , ZIGBEE      		= #{zigbee}
+		      </if>
+			  <if test="almon != null and almon != ''">			           
+		           , ALMON      		= #{almon}
+		      </if>
+			  <if test="inv != null and inv != ''">			           
+		           , INV      		= #{inv}
+		      </if>
+			  <if test="sign != null and sign != ''">			           
+		           , SIGN      		= #{sign}
+		      </if>
+		           , FINAL_MOD_DTTM     = now()
+	</update>
+	
+	
+	 <!-- 지우기 -->
+	<delete id="delStoreRemsMgnt" parameterType="Map">
+		delete from 
+			TH_STR_REMS_DEVICE_CNT_MNT 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+	
+	<!-- 엑셀다운로드 -->
+	<select id="downloadstoreRemsMgntExcel" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+		SELECT 
+			IM.COMPANY_CD						AS companyCd, 
+			OM.ORG_NM 							AS orgNm,
+			fnGetOrgFullName(IM.COMPANY_CD, IM.ORG_CD)	as orgFullNm,  
+			RP.STR_CD 							AS strCd, 
+			IM.STR_NM 							AS strNm, 
+			RP.METER_CH1_RST					AS mainMeter, 
+			RP.METER_CH2_RST+RP.METER_CH3_RST	AS subMeterTemp, 
+			RP.HACON							AS hacon, 
+			RP.T_SENSOR							AS tSensor, 
+			RP.TEMON							As temon, 
+			RP.ZIGBEE							AS zigbee, 
+			RP.ALMON							AS almon, 
+			RP.INV								AS inv, 
+			RP.SIGN								AS sign
+		FROM 
+			TH_STR_REMS_DEVICE_CNT_MNT RP, 
+ 			TH_STR_INFO_MST IM 
+ 			LEFT OUTER JOIN 
+ 			TH_COMPANY_ORG_MST OM 
+ 			ON IM.ORG_CD = OM.ORG_CD 
+ 			AND IM.COMPANY_CD = OM.COMPANY_CD 
+		WHERE 1 = 1 
+			AND RP.STR_CD = IM.STR_CD 
+ 			AND IM.COMPANY_CD = #{companyCd}
+ 			AND IM.USE_YN = 'Y' 			
+	]]>
+	<if test='strCd != null and strCd != ""'>
+    	<![CDATA[
+        	AND (
+	        	INSTR(IM.STR_NM, #{strCd}) > 0 
+	        	OR 
+	        	INSTR(IM.VIEW_STR_CD, #{strCd}) > 0 
+        	)
+    	]]>
+    </if>
+	<if test='orgCd != null and orgCd != ""'>
+    	<![CDATA[
+    		AND OM.ORG_CD = #{orgCd} 
+    	]]>
+    </if>
+	<![CDATA[
+    	ORDER BY IM.STR_NM
+    ]]>
+	</select>
+	
+</mapper>

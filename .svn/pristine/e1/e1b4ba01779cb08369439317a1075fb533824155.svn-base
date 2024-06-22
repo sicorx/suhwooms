@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Title</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Page Title</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Page Title</a></div>
+    
+    <div class="r_inputTbl">
+      <div class="r_inputTblTitle">
+          <h3>Sub Title</h3>
+      </div>
+    </div>
+    
+    <div class="r_accordion r_open r_secondTbl">
+      <div class="r_accordionTitle">
+      	<span class="r_accordionIcon"></span>
+        <h3>Accordion Title Open</h3>
+      </div>
+      <div class="r_accordionCont">
+		<span style="margin:20px; display:inline-block;">아코디언 컨텐츠</span>
+      </div>
+    </div>
+    
+    <div class="r_accordion r_close r_secondTbl">
+      <div class="r_accordionTitle">
+      	<span class="r_accordionIcon"></span>
+        <h3>Accordion Title Close</h3>
+      </div>
+    </div>
+    
+  </div>
+</div>
+</body>
+</html>

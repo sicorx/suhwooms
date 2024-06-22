@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.energy.persistence.EnergyElecAllMapper">
+	<select id="retrieveComCodeList" parameterType="ComCodeVo" resultType="ComCodeVo">
+	SELECT COMM_CD      AS code
+	     , COMM_CD_NM   AS commCdNm
+	  FROM th_comm_cd
+	 WHERE COMM_GRP_CD = #{commGrpCd}
+	 ORDER BY ORDER_SEQ
+	 
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveComCodeList */
+	</select>
+
+	<!-- 전체전력현황(1) -->
+	<select id="retrieveEpStatus" parameterType="UserVo" resultType="EpStatusVo">
+	<![CDATA[
+	select count(*)                                             as storeCount
+	     , round(sum(a.EP_1CH_EFT_WATAGE) / 1000 / cast(date_format(#{now}, '%d') as unsigned), 1)             as totalUse
+	     , round(sum(a.EP_1CH_EFT_WATAGE) / 1000 / cast(date_format(#{now}, '%d') as unsigned) / count(*), 1)  as avgUse
+	     , round( avg(a.EP_1CH_EFT_WATAGE / b.str_area_spec ) 
+	            / 1000 
+	            / cast(date_format(#{now}, '%d') as unsigned) 
+	            , 1)                                            as avgUsePerArea
+	from TH_STR_CHN_ELEC_USE_MM_SUM a
+	   , th_str_info_mst b
+	where a.str_cd     = b.str_cd
+	  and b.company_cd = #{companyCd}
+	  and a.yyyymm     = date_format(#{now}, '%Y%m')
+	  and b.use_yn     = 'y'
+	group by b.company_cd, a.yyyymm
+	
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveEpStatus */	
+	]]>
+	</select>
+	
+	
+	
+	<!-- 전체 매장 전력사용현황 -->
+	<select id="retrieveEpTotalStatus" parameterType="Map" resultType="EpStatusVo">
+	
+	<![CDATA[
+		select
+		(SELECT COUNT(A.STR_CD)
+				FROM 
+				TH_STR_INFO_MST A
+				LEFT JOIN TH_STR_GW_MST B
+				ON
+				A.STR_CD = B.STR_CD
+				WHERE 
+				A.USE_YN = 'Y'
+				AND						
+                B.GW_ADDR != '000000000000'
+				AND 
+				A.REMS_START_DT <= DATE_FORMAT(NOW(), '%Y%m%d') 
+				AND
+				B.USE_YN = 'Y'
+				AND
+				B.GW_IP is not null
+				AND 
+				COMPANY_CD = #{companyCd}
+			     )      			as storeCount
+	     , round(sum(a.EP_1CH_EFT_WATAGE) / 1000 / cast(date_format(now(), '%d') as unsigned), 1)             	as totalUse
+	     , round(sum(a.EP_1CH_EFT_WATAGE) / 1000 / cast(date_format(now(), '%d') as unsigned) / count(*), 1)  	as avgUse
+	     , round( avg(a.EP_1CH_EFT_WATAGE / b.str_area_spec ) 
+	            / 1000 
+	            / cast(date_format(now(), '%d') as unsigned) 
+	            , 1)                                            												as avgUsePerArea               
+		from TH_STR_CHN_ELEC_USE_MM_SUM a
+		   , th_str_info_mst b
+		where a.str_cd     = b.str_cd		 
+			and b.company_cd = #{companyCd}	 
+			AND B.REMS_START_DT <= DATE_FORMAT(NOW(), '%Y%m%d')
+			and a.yyyymm     = date_format(now(), '%Y%m')
+			and b.use_yn     = 'y'
+	]]>
+	
+	</select>
+	
+	<!-- 전체 월별 전력량 -->
+	<select id="retrieveEpMonthStatus" parameterType="Map" resultType="EpStatusVo">
+	
+	<![CDATA[
+		SELECT 
+			CONCAT(SUBSTRING(A.YYYYMM, 1, 4), '-', SUBSTRING(A.YYYYMM, 5, 2)) 														AS yyyymm
+	      	,ROUND(SUM(IFNULL(A.EP_1CH_EFT_WATAGE, 0)) / 1000, 1)               														AS total
+	      	,ROUND(SUM( (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) ) / 1000, 1)               														AS temp
+	      	,ROUND(SUM(IFNULL(A.EP_1CH_EFT_WATAGE, 0) - (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) - IFNULL(A.EP_4CH_EFT_WATAGE , 0)) / 1000, 1) 	AS etc
+		FROM 
+			TH_STR_CHN_ELEC_USE_MM_SUM A,
+			TH_STR_INFO_MST B
+		WHERE
+			A.STR_CD = B.STR_CD
+			AND
+			B.COMPANY_CD = #{companyCd}
+			AND
+			B.USE_YN = 'Y'
+			AND
+			A.YYYYMM BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '')
+		GROUP BY A.YYYYMM
+		/* rems.energy.persistence.EnergyElecAllMapper.retrieveEpMonthStatus */	
+	]]>
+	<![CDATA[
+		ORDER BY ${sidx} ${sord}		
+	]]>
+	
+	</select>
+	
+	
+	<!-- 전체 일별 전력량 -->
+	<select id="retrieveEpDayStatus" parameterType="Map" resultType="EpStatusVo">	
+	<![CDATA[
+		SELECT 
+			A.YYYYMMDD											  																	AS yyyymmdd 
+			,SUBSTRING(A.YYYYMMDD, 7, 2)              																				AS dd
+      		,ROUND(SUM(IFNULL(A.EP_1CH_EFT_WATAGE, 0)) / 1000, 1)  																	AS total
+      		,ROUND(SUM(IFNULL(A.EP_2CH_EFT_WATAGE , 0)+IFNULL(A.EP_3CH_EFT_WATAGE , 0)) / 1000, 1)  								AS temp
+      		,ROUND(SUM(IFNULL(A.EP_1CH_EFT_WATAGE, 0) - IFNULL(A.EP_2CH_EFT_WATAGE , 0) - IFNULL(A.EP_3CH_EFT_WATAGE, 0)) / 1000, 1) 	AS etc
+  		FROM 
+  			TH_STR_CHN_ELEC_USE_DD_SUM A,
+      		Th_STR_INFO_MST B
+ 		WHERE 
+   			A.STR_CD = B.STR_CD
+   			AND
+   			B.COMPANY_CD = #{companyCd}
+   			AND
+   			B.USE_YN = 'Y'
+   			AND
+ 			SUBSTR(A.YYYYMMDD,1,6) = #{srcYyyymm}
+ 		GROUP BY A.YYYYMMDD 
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveEpDayStatus */	
+	]]>
+	<![CDATA[
+		ORDER BY ${sidx} ${sord}
+	]]>	
+	</select>
+	
+	
+	<select id="retrievePredictUse" parameterType="UserVo" resultType="EpPredictVo">
+	<![CDATA[
+	select c.company_cd                            as companyCd
+	    , a.yyyymm                                 as yyyymm
+	    , round(sum(a.EP_1CH_EFT_WATAGE) / 1000, 0) as totalUse
+	    , round(sum(b.predict_watage) / 1000, 0)   as predict
+	 from TH_STR_CHN_ELEC_USE_MM_SUM a
+	    , (select aa.str_cd
+	            , aa.yyyymm
+	            , aa.predict_watage
+	         from TH_STR_ENER_USE_MM_PREDICT aa
+	            , th_str_info_mst bb
+	        where aa.str_cd     = bb.str_cd
+	          and bb.company_cd = #{companyCd}
+	          and aa.yyyymm     = date_format(#{now}, '%Y%m')
+	          and aa.yyyymmdd   = (select max(aaa.yyyymmdd)
+	                                 from TH_STR_ENER_USE_MM_PREDICT aaa
+	                                where aaa.str_cd = aa.str_cd
+	                                  and aaa.yyyymm = aa.yyyymm
+	                              )
+	      ) b
+	    , th_str_info_mst c
+	where a.str_cd     = b.str_cd
+	  and a.yyyymm     = b.yyyymm
+	  and a.str_cd     = c.str_cd
+	  and c.company_cd = #{companyCd}
+	  and a.yyyymm     = date_format(#{now}, '%Y%m')
+	group by c.company_cd, a.yyyymm
+	
+	/* rems.energy.persistence.EnergyElecAllMapper.retrievePredictUse */
+	]]>
+	</select>
+	
+		
+	<select id="retrieveGhouseGasMonth" parameterType="UserVo" resultType="EpStatusVo">
+	<![CDATA[
+		SELECT 
+			A.YYYYMM                                             AS yyyymm
+      		,ROUND(SUM(IFNULL(A.EP_1CH_EFT_WATAGE, 0)) / 1000, 1) AS total
+		FROM 
+			TH_STR_CHN_ELEC_USE_MM_SUM A
+       		INNER JOIN 
+       		TH_STR_INFO_MST B 
+       		ON 
+       		A.STR_CD = B.STR_CD
+ 		WHERE 
+ 			B.COMPANY_CD = #{companyCd}
+   			AND 
+   			A.YYYYMM BETWEEN DATE_FORMAT(DATE_ADD(NOW(), interval -12 month), '%Y%m') 
+   			AND 
+   			DATE_FORMAT(NOW(), '%Y%m')
+ 		GROUP BY A.YYYYMM
+ 		
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveGhouseGasMonth */
+	]]>
+	</select>
+	
+	
+	<select id="retrieveUseMonth" parameterType="UserVo" resultType="EpStatusVo">
+	<![CDATA[
+	select b.company_cd                              as companyCd
+	     , a.yyyymm                                  as yyyymm
+	     , round(sum( (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) ) / 1000, 1)   as temp
+	     , round(sum(ifnull(a.EP_4CH_EFT_WATAGE, 0)) / 1000, 1)  as light
+	     , round(sum(ifnull(a.EP_1CH_EFT_WATAGE, 0)
+	                -(ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0))
+	                -ifnull(a.EP_4CH_EFT_WATAGE, 0)
+	                ) / 1000, 1)                     as etc
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd     = b.str_cd
+	   and b.company_cd = #{companyCd}
+	   and a.yyyymm between date_format(date_add(#{now}, interval -12 month), '%Y%m') and date_format(#{now}, '%Y%m')
+	 group by b.company_cd, a.yyyymm
+	
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveUseMonth */
+	]]>
+	</select>
+	
+	<select id="retrieveUsedArea" parameterType="UserVo" resultType="EpUsedAreaVo">
+	<![CDATA[
+	select b.company_cd                                                  as companyCd
+	     , a.yyyymm                                                      as yyyymm
+	     , round(avg(ifnull(a.EP_1CH_EFT_WATAGE, 0)    / ifnull(b.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as average
+	     , round(avg( (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0))     / ifnull(b.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as tempAvg
+	     , round(avg(ifnull(a.EP_4CH_EFT_WATAGE, 0)    / ifnull(b.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as lightAvg
+	     , round(max(ifnull(a.EP_1CH_EFT_WATAGE, 0)    / ifnull(b.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as max
+	     , round(min(ifnull(a.EP_1CH_EFT_WATAGE, 0)    / ifnull(b.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as min
+	     , round(stddev(ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1)) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as stdev
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd = b.str_cd
+	   and ifnull( b.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	   and b.company_cd = #{companyCd}
+	   and a.yyyymm     = #{yyyymm}
+	group by b.company_cd, a.yyyymm
+	
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveUsedArea */
+	]]>
+	</select>
+	
+	<select id="retrieveUsedAreaChrt" parameterType="UserVo" resultType="EpUsedAreaChrtVo">
+	
+	select b.company_cd                                                  as companyCd
+	     , a.yyyymm                                                      as yyyymm
+	<foreach collection="separator" item="item" index="index">
+	<if test="index &gt;= '29'">
+    <![CDATA[
+         , sum(if(ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) > ${separator[index]}, 1, 0))     as data${index}
+	]]>        		
+	</if>
+	<if test="index &lt; '29'">
+    <![CDATA[
+         , sum(if(ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) > ${separator[index]}
+              and ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) <= ${separator[index+1]}, 1, 0))  as data${index}
+	]]>        	
+	</if>	    
+	</foreach>
+	<![CDATA[
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd = b.str_cd
+	   and ifnull( b.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	   and b.company_cd = #{companyCd}
+	   and a.yyyymm     = #{yyyymm}
+	 group by b.company_cd, a.yyyymm
+	]]>
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveUsedAreaChrt */	 
+	</select>
+	
+	<select id="retrieveUsedAreaList" parameterType="Map" resultType="EpUsedAreaListVo">
+	<![CDATA[
+	 select b.view_str_cd                                         as viewStrCd
+	     , a.str_cd                                               as strCd
+	     , b.str_nm                                               as strNm
+	     , round(ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as total
+	     , round(ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as totalGap
+	     , round( (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as temp
+	     , round( (ifnull(a.EP_2CH_EFT_WATAGE, 0)+ifnull(a.EP_3CH_EFT_WATAGE, 0)) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as tempGap
+	     , round(ifnull(a.EP_4CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as light
+	     , round(ifnull(a.EP_4CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})), 1)  as lightGap
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a                                                                                                                                             
+	     , th_str_info_mst b                                                                                                                                                
+	 where a.str_cd     = b.str_cd                                                                                                                                          
+	   and b.company_cd = #{companyCd}
+	   and a.yyyymm     = #{yyyymm}
+	   and ifnull( b.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )                                                                                                                             
+	   and ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) > #{startVal}
+	   and ifnull(a.EP_1CH_EFT_WATAGE, 0) / ifnull(b.str_area_spec, 1) / if(#{yyyymm} < date_format(#{now}, '%Y%m'), dayofmonth(last_day(concat(#{yyyymm}, '01'))), dayofmonth(#{now})) <= #{endVal}
+	 order by b.view_str_cd
+	 
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveUsedAreaList */
+	]]>
+	</select>
+	
+	<select id="retrieveUsedList" parameterType="UserVo" resultType="EpUsedListVo">
+	<![CDATA[
+	select concat(concat(substring(a.yyyymm, 1,4),'-'),substring(a.yyyymm, 5,2)) as yyyymm
+	     , a.str_cd                          as strCd
+	     , round(ifnull(a.EP_1CH_EFT_WATAGE, 0)/1000, 1) as total
+	     , round((ifnull(a.EP_2CH_EFT_WATAGE , 0)+ifnull(a.EP_3CH_EFT_WATAGE , 0))/1000, 1) as temp
+	     , round(ifnull(a.EP_4CH_EFT_WATAGE, 0)/1000, 1) as light
+	     , round(b.forecast_temp, 1)         as forecastTemp
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	  left
+	 outer
+	  join (select bb.str_cd
+	             , substr(aa.yyyymmdd, 1, 6) as yyyymm
+	             , avg(aa.forecast_temp)     as forecast_temp
+	          from th_forecast_latest aa
+	             , th_str_info_mst bb
+	         where aa.local_area_cd = bb.local_area_cd
+	           and aa.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})
+	           and bb.str_cd        = #{strCd}
+	           and substr(aa.yyyymmdd, 1, 6) between date_format(date_add(concat(#{yyyymm}, '01'), interval -12 month), '%Y%m') and #{yyyymm}
+	         group by bb.str_cd, substr(aa.yyyymmdd, 1, 6)
+	       ) b
+	    on a.str_cd = b.str_cd and a.yyyymm = b.yyyymm  
+	 where a.str_cd = #{strCd}
+	   and a.yyyymm between date_format(date_add(concat(#{yyyymm}, '01'), interval -12 month), '%Y%m') and #{yyyymm}
+	 order by a.yyyymm desc
+	 
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveUsedList */	 
+	]]>
+	</select>
+	
+	<select id="retrieveUsedDailyList" parameterType="UserVo" resultType="EpUsedListVo">
+	<![CDATA[
+	select substring(a.yyyymmdd, 7,2)          as yyyymmdd
+	     , a.str_cd                           as strCd
+	     , round(ifnull(a.ep_1ch_eft_watage, 0)/1000, 1)  as total
+	     , round((ifnull(a.ep_2ch_eft_watage , 0)+ifnull(a.ep_3ch_eft_watage , 0))/1000, 1)   as temp
+	     , round(ifnull(a.ep_4ch_eft_watage, 0)/1000, 1)  as light
+	     , round((ifnull(a.ep_1ch_eft_watage, 0)
+	            - (ifnull(a.ep_2ch_eft_watage , 0)+ifnull(a.ep_3ch_eft_watage , 0))
+	            - ifnull(a.ep_4ch_eft_watage, 0))/1000, 1) as etc
+	     , round(c.sense_temp, 1)             as senseTemp
+	     , round(b.forecast_temp, 1)          as forecastTemp
+	  from th_str_chn_elec_use_dd_sum a
+	     , (select bb.str_cd
+	             , aa.yyyymmdd
+	             , avg(aa.forecast_temp) as forecast_temp
+	          from th_forecast_latest aa
+	             , th_str_info_mst bb
+	         where aa.local_area_cd = bb.local_area_cd
+	           and aa.country_cd    = (select country_cd from th_company_mst where company_cd = #{companyCd})
+	           and bb.str_cd = #{strCd}
+	           and substr(aa.yyyymmdd,1,6) = #{yyyymm}
+	         group by bb.str_cd, aa.yyyymmdd
+	       ) b
+	     , (select aa.str_cd
+	             , aa.yyyymmdd
+	             , avg(ifnull(aa.t_sensor_temp, aa.sense_temp)) as sense_temp
+	          from TH_STR_SENSOR_BRIEF aa
+	         where aa.str_cd = #{strCd}
+	           and substr(aa.yyyymmdd,1,6) = #{yyyymm}
+	         group by aa.str_cd, aa.yyyymmdd
+	       ) c
+	 where a.str_cd   = b.str_cd
+	   and a.yyyymmdd = b.yyyymmdd
+	   and a.str_cd   = c.str_cd
+	   and a.yyyymmdd = c.yyyymmdd
+	   and a.str_cd   = #{strCd}
+	   and substr(a.yyyymmdd,1,6) = #{yyyymm}
+	 order by a.yyyymmdd desc
+	 
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveUsedDailyList */
+	]]>
+	</select>
+	
+	<select id="retrieveMainUseHourlyChrt" parameterType="UserVo" resultType="Map">
+	<![CDATA[
+    select a.hh                                              as hh
+	     , a.str_cd                                          as strCd   
+	     , round( (ifnull(a.EP_2CH_EFT_WATAGE , 0) + ifnull(a.EP_3CH_EFT_WATAGE , 0)) / 1000, 1)   as hac
+	     , round( ifnull(a.EP_4CH_EFT_WATAGE, 0) / 1000, 1)   as light
+	     , round((ifnull(a.EP_1CH_EFT_WATAGE, 0)
+	             -(ifnull(a.EP_2CH_EFT_WATAGE , 0) + ifnull(a.EP_3CH_EFT_WATAGE , 0))
+	             -ifnull(a.EP_4CH_EFT_WATAGE, 0))/1000, 1)    as etc
+	  from th_str_chn_elec_use_hh_sum a
+	 where a.str_cd   = #{strCd}
+	   and a.yyyymmdd = concat(#{yyyymm}, #{yyyymmdd})	 
+	 order by a.hh desc	
+	
+	/* rems.energy.persistence.EnergyElecAllMapper.retrieveMainUseHourlyChrt */
+	]]>
+	</select>	
+	
+	
+	<select	id="retrieveAlarmResultList" parameterType="Map" resultType="EpAlarmResultListVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+		<if test="asResultFlag == 0" >
+			<![CDATA[
+					SELECT 						 
+						YYYYMMDD		as yyyymmdd,
+						HHMIN			as hhmin,
+						STR_CD			as strCd,
+						STR_NM			as strNm,
+						TEMON_ID		as temonId,
+						TEMON_TYPE		as temonType,
+						PORT_NO			as portNo,
+						DEVICE_LOC		as deviceLoc,
+						DATE_FORMAT(ALARM_DATE_S, '%Y-%m-%d %H:%i')	as alarmDateS,
+						DATE_FORMAT(ALARM_DATE_E, '%Y-%m-%d %H:%i')	as alarmDateE,
+						CASE WHEN ALARM_TYPE = 'H' THEN '고온'
+								WHEN ALARM_TYPE = 'L' THEN '저온' 
+                                WHEN ALARM_TYPE = 'Y' THEN '오류' 
+							ELSE '오류' END as alarmType,
+						ALARM_TEMP		as alarmTemp,
+						ALARM_COUNT		as alarmCount,
+						CONCAT( 
+							(CASE WHEN ALARM_TYPE = 'H' THEN '고온 이상'
+								WHEN ALARM_TYPE = 'L' THEN '저온 이상' 
+                                WHEN ALARM_TYPE = 'Y' THEN '장비 이상' 
+							ELSE '장비 이상' END ), 
+                            '( ', ALARM_TEMP, '℃ )')	as alarmMessage,
+						AS_RESULT		as asResult,
+						AS_VENDOR_NM	as asVendorNm,
+						AS_ENGINEER		as asEngineer,
+						AS_METHOD		as asMethod,
+						AS_TYPE			as asType,
+						AS_NOTE			as asNote,
+						AS_DATE			as asDate
+					FROM th_gcm_as_result
+					WHERE
+						STR_CD in ( 
+							SELECT STR_CD FROM TH_STR_USER_MAP
+							WHERE
+								USER_ID = #{userId}
+							UNION
+							SELECT STR_CD FROM th_engineer_str_map
+							WHERE
+								USER_ID = #{userId} 
+							)
+						AND
+						AS_RESULT = 'N'
+						
+				]]>
+				<if test="range == 1" >
+				<![CDATA[	
+						AND
+						DATE_FORMAT(ALARM_DATE_E, '%Y%m%d') = DATE_FORMAT( now(), '%Y%m%d')
+				]]>
+				</if>
+				<if test="range == 2" >
+				<![CDATA[	
+						AND
+						DATE_FORMAT(ALARM_DATE_E, '%Y%m%d%H%i') >= DATE_FORMAT(DATE_ADD( now(), interval - 3 hour), '%Y%m%d%H%i')
+				]]>
+				</if>
+				
+		</if>
+		<if test="asResultFlag == 1" >
+			<![CDATA[
+					SELECT 						   
+						A.YYYYMMDD		as yyyymmdd,
+						A.HHMIN			as hhmin,
+						A.STR_CD			as strCd,
+						A.STR_NM			as strNm,
+						A.TEMON_ID		as temonId,
+						A.TEMON_TYPE		as temonType,
+						A.PORT_NO			as portNo,
+						A.DEVICE_LOC		as deviceLoc,
+						DATE_FORMAT(A.ALARM_DATE_S, '%Y-%m-%d %H:%i')	as alarmDateS,
+						DATE_FORMAT(A.ALARM_DATE_E, '%Y-%m-%d %H:%i')	as alarmDateE,
+						CASE WHEN ALARM_TYPE = 'H' THEN '고온'
+								WHEN ALARM_TYPE = 'L' THEN '저온' 
+                                WHEN ALARM_TYPE = 'Y' THEN '오류' 
+							ELSE '오류' END as alarmType,
+						A.ALARM_TEMP		as alarmTemp,
+						A.ALARM_COUNT		as alarmCount,
+						CONCAT( 
+							(CASE WHEN ALARM_TYPE = 'H' THEN '고온 이상'
+								WHEN ALARM_TYPE = 'L' THEN '저온 이상' 
+                                WHEN ALARM_TYPE = 'Y' THEN '장비 이상' 
+							ELSE '장비 이상' END ), 
+                            '( ', ALARM_TEMP, '℃ )')	as alarmMessage,
+						A.AS_RESULT		as asResult,
+						A.AS_VENDOR_NM	as asVendorNm,
+						A.AS_ENGINEER		as asEngineer,
+						C.COMM_CD_NM		as asMethod,
+						A.AS_TYPE			as asType,
+						A.AS_NOTE			as asNote,
+                        ifnull( C.COMM_CD_NM, '-')	as asContents,
+						DATE_FORMAT(A.AS_DATE, '%Y-%m-%d %H:%i')	as asDate
+					FROM th_gcm_as_result A
+						LEFT JOIN  (SELECT COMM_CD, COMM_CD_NM
+                                     FROM TH_COMM_CD
+									WHERE COMM_GRP_CD = 'MAST10'
+                                   ) C
+                      ON
+                         A.AS_METHOD = C.COMM_CD
+					WHERE
+						A.STR_CD in ( 
+							SELECT STR_CD FROM TH_STR_USER_MAP
+							WHERE
+								USER_ID = #{userId} 
+							UNION
+							SELECT STR_CD FROM th_engineer_str_map
+							WHERE
+								USER_ID = #{userId} 
+							)
+						AND
+						A.AS_RESULT = 'Y'	
+			]]>
+				<if test="range == 1" >
+				<![CDATA[	
+						AND
+						DATE_FORMAT(A.ALARM_DATE_E, '%Y%m%d') = DATE_FORMAT( now(), '%Y%m%d')
+				]]>
+				</if>
+		</if>		
+		<![CDATA[
+		ORDER BY ${sidx} ${sord}
+		]]>
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+		
+	</select>
+	
+	
+	
+	<!-- 전체전력현황(1) -->
+	<select id="retrieveAlarmResultCntList" parameterType="Map" resultType="EpAlarmResultListVo">
+	<![CDATA[
+		SELECT 						 
+			SUM( if(  AS_RESULT = 'N' ,  1, 0) ) as asNoAllCnt,    
+		    SUM( if(  AS_RESULT = 'N' AND  DATE_FORMAT(ALARM_DATE_E, '%Y%m%d') = DATE_FORMAT(now(), '%Y%m%d') , 1, 0) ) as asNoDayCnt,
+		    SUM( if(  AS_RESULT = 'N' AND  DATE_FORMAT(ALARM_DATE_E, '%Y%m%d%H%i') >= DATE_FORMAT(DATE_ADD( now(), interval - 3 hour), '%Y%m%d%H%i') ,1, 0) ) as asNoHourCnt,
+		    
+		    SUM( if(  AS_RESULT = 'Y' ,  1, 0) ) as asYesAllCnt,    
+		    SUM( if(  AS_RESULT = 'Y' AND  DATE_FORMAT(ALARM_DATE_E, '%Y%m%d') = DATE_FORMAT(now(), '%Y%m%d') , 1, 0) ) as asYesDayCnt
+		    
+		    
+		FROM th_gcm_as_result
+		WHERE
+			STR_CD in ( 
+				SELECT STR_CD FROM TH_STR_USER_MAP
+				WHERE
+					USER_ID = #{userId}
+				UNION
+				SELECT STR_CD FROM th_engineer_str_map
+				WHERE
+					USER_ID = #{userId}
+				)	
+		    ORDER BY ALARM_DATE_E desc
+		
+	]]>
+	</select>
+	
+	<!-- 대시보드 어제/오늘 전력사용량 -->
+	<select id="retrieveDashBoardWatageStatus" parameterType="Map" resultType="EpDashBoardVo">
+	<![CDATA[
+			SELECT 
+				SUM( if( A.YYYYMMDD = DATE_FORMAT( DATE_ADD(now(), interval -2 day ), '%Y%m%d'), EP_1CH_EFT_WATAGE,0 ) ) as bYesterDayWatage,
+				SUM( if( A.YYYYMMDD = DATE_FORMAT( DATE_ADD(now(), interval -1 day ), '%Y%m%d'), EP_1CH_EFT_WATAGE,0 ) ) as yesterDayWatage,
+				SUM( if( A.YYYYMMDD = DATE_FORMAT( DATE_ADD(now(), interval 0 day ), '%Y%m%d'), EP_1CH_EFT_WATAGE,0 ) )  as toDayWatage
+			FROM
+				TH_STR_CHN_ELEC_USE_DD_SUM A
+				LEFT JOIN th_str_info_mst B
+				ON
+				A.STR_CD = B.STR_CD
+			WHERE
+				B.USE_YN = 'Y'
+				AND
+				B.COMPANY_CD = #{companyCd}
+				AND
+				A.YYYYMMDD >= DATE_FORMAT( DATE_ADD(now(), interval -2 day), '%Y%m%d')
+	]]>
+	</select>
+	
+	
+	
+	
+	<select id="retrievePeakMonthStatus" parameterType="Map" resultType="EpPeakStatusVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT 
+			   A.STR_CD										AS strCd
+		     , B.VIEW_STR_CD                            	AS viewStrCd
+		     , B.STR_NM                                     AS strNm
+		     , fnGetOrgFullName(B.COMPANY_CD, B.ORG_CD)     AS orgFullNm
+		     , A.CNT										AS peakCnt
+		     , ROUND(B.CONT_DEMAND_POWER/1000, 1)           AS contPower
+		     , ROUND(C.MAX_TOTAL_USE_WATAGE, 1)				AS mainTotal
+		     , ROUND(B.CONT_DEMAND_POWER / 1000, 1) - ROUND(C.MAX_TOTAL_USE_WATAGE, 1)    AS freePower
+		     , ROUND(C.MAX_TEMP_USE_WATAGE, 1) AS temp
+		     , IFNULL(B.ADDR, '')                           AS addr
+		     , IFNULL(B.TEL_NO, '')                         AS telNo     
+		FROM (SELECT *, COUNT(*) AS CNT FROM TH_STR_PEAK_ALARM A WHERE SUBSTRING(A.YYYYMMDD, 1, 6) = #{yyyymm} AND A.PEAK_CONTROL_YN = 'Y' AND A.SEND_SP = '2' GROUP BY A.STR_CD) A
+		INNER JOIN (SELECT * FROM TH_STR_INFO_MST B WHERE B.COMPANY_CD = #{companyCd} AND B.USE_YN = 'Y') B
+		ON A.STR_CD = B.STR_CD
+		LEFT OUTER JOIN TH_STR_CHN_ELEC_USE_MM_SUM C
+		ON B.STR_CD = C.STR_CD
+		AND C.YYYYMM = #{yyyymm}
+		WHERE ROUND(B.CONT_DEMAND_POWER/1000, 1) < ROUND(C.MAX_TOTAL_USE_WATAGE, 1)
+	]]>
+	<![CDATA[
+	ORDER BY ${sidx} ${sord}
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<select id="retrieveExcelPeakMonthStatusList" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+		SELECT 
+			   B.STR_NM                                     AS strNm
+		     , B.VIEW_STR_CD                            	AS viewStrCd
+		     , fnGetOrgFullName(B.COMPANY_CD, B.ORG_CD)     AS orgFullNm
+		     , A.CNT										AS peakCnt
+		     , ROUND(B.CONT_DEMAND_POWER/1000, 1)           AS contPower
+		     , ROUND(C.MAX_TOTAL_USE_WATAGE, 1)				AS mainTotal
+		     , ROUND(B.CONT_DEMAND_POWER / 1000, 1) - ROUND(C.MAX_TOTAL_USE_WATAGE, 1)    AS freePower
+		     , ROUND(C.MAX_TEMP_USE_WATAGE, 1) AS temp
+		     , IFNULL(B.ADDR, '')                           AS addr
+		     , IFNULL(B.TEL_NO, '')                         AS telNo     
+		FROM (SELECT *, COUNT(*) AS CNT FROM TH_STR_PEAK_ALARM A WHERE SUBSTRING(A.YYYYMMDD, 1, 6) = #{yyyymm} AND A.PEAK_CONTROL_YN = 'Y' AND A.SEND_SP = '2' GROUP BY A.STR_CD) A
+		INNER JOIN (SELECT * FROM TH_STR_INFO_MST B WHERE B.COMPANY_CD = #{companyCd} AND B.USE_YN = 'Y') B
+		ON A.STR_CD = B.STR_CD
+		LEFT OUTER JOIN TH_STR_CHN_ELEC_USE_MM_SUM C
+		ON B.STR_CD = C.STR_CD
+		AND C.YYYYMM = #{yyyymm}
+		WHERE ROUND(B.CONT_DEMAND_POWER/1000, 1) < ROUND(C.MAX_TOTAL_USE_WATAGE, 1)
+	]]>
+	<![CDATA[
+	ORDER BY strNm
+	]]>
+	</select>	
+	
+	<select id="retrievePeakMonth" parameterType="Map" resultType="EpPeakStatusVo">
+		<![CDATA[
+		SELECT 
+			CONCAT(SUBSTRING(A.YYYYMMDD, 1, 4),'년 ', SUBSTRING(A.YYYYMMDD, 5, 2), '월') 	AS yymm
+		    ,IFNULL( count( distinct(a.STR_CD)), 0)                                         AS peakCnt
+		FROM (SELECT *, COUNT(*) AS CNT FROM TH_STR_PEAK_ALARM A WHERE A.PEAK_CONTROL_YN = 'Y' AND A.SEND_SP = '2' GROUP BY A.STR_CD, SUBSTRING(a.YYYYMMDD, 1, 6)) A
+		INNER JOIN (SELECT * FROM TH_STR_INFO_MST B WHERE B.COMPANY_CD = #{companyCd} AND B.USE_YN = 'Y') B
+		ON A.STR_CD = B.STR_CD
+		LEFT OUTER JOIN TH_STR_CHN_ELEC_USE_MM_SUM C
+		ON B.STR_CD = C.STR_CD
+		WHERE A.YYYYMMDD BETWEEN DATE_FORMAT(DATE_ADD(STR_TO_DATE(CONCAT(#{yyyymm}, '01'), '%Y%m%d'), INTERVAL -11 MONTH), '%Y%m%d') AND CONCAT(REPLACE(#{yyyymm}, '-', ''), '31')
+		AND ROUND(B.CONT_DEMAND_POWER/1000, 1) < ROUND(C.MAX_TOTAL_USE_WATAGE, 1)
+		AND C.YYYYMM = SUBSTRING(A.YYYYMMDD, 1, 6)
+		GROUP BY SUBSTRING(a.YYYYMMDD, 1, 6)
+		ORDER BY a.YYYYMMDD DESC
+	]]>	
+	</select>
+</mapper>

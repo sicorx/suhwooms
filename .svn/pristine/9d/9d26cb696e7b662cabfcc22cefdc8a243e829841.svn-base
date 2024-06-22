@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtCurrentAlarmMapper">
+
+	<select id="retrieveQueryDate" parameterType="Map" resultType="Map">
+	<![CDATA[
+	SELECT DATE_FORMAT(#{now}, '%Y%m%d')                              AS yyyymmdd
+	     , SUBSTRING(_UTF8'일월화수목금토', DAYOFWEEK(#{now}), 1)     AS dayOfWeek
+	     , DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -6 DAY), '%Y%m%d')   AS weekBefore
+	     , DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -1 MONTH), '%Y%m%d') AS monthBefore
+	     
+	/* rems.eqmt.persistence.EqmtCurrentAlarmMapper.retrieveQueryDate */	     
+	]]>
+	</select>
+	
+	<select id="retrieveEquipmentFailureDay" parameterType="Map" resultType="Map">
+	<![CDATA[
+    SELECT A.STR_CD   AS strCd
+         , A.PORT_NO  AS portNo
+         , COUNT(*)   AS cnt
+      FROM TH_STR_REMS_DEVICE_BASE A
+         , TH_STR_INFO_MST B
+         , TH_STR_REMS_DEVICE_MST C
+     WHERE A.STR_CD     = B.STR_CD
+       AND A.STR_CD     = C.STR_CD
+       AND A.PORT_NO    = C.PORT_NO
+       AND B.COMPANY_CD = #{companyCd}
+       AND A.YYYYMMDD   = DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -1 DAY), '%Y%m%d')
+       AND A.ALARM_YN IN ('Y', 'H', 'L')
+       AND C.USE_YN     = 'Y'
+     GROUP BY A.STR_CD, A.PORT_NO
+     ORDER BY A.STR_CD, A.PORT_NO
+	
+	/* rems.eqmt.persistence.EqmtCurrentAlarmMapper.retrieveEquipmentFailureDay */
+	]]>
+	</select>
+
+	<select id="retrieveEquipmentFailureWeek" parameterType="Map" resultType="Map">
+	<![CDATA[
+    SELECT A.STR_CD   AS strCd
+         , A.PORT_NO  AS portNo
+         , COUNT(*)   AS cnt
+      FROM TH_STR_REMS_DEVICE_BASE A
+         , TH_STR_INFO_MST B
+         , TH_STR_REMS_DEVICE_MST C
+     WHERE A.STR_CD     = B.STR_CD
+       AND A.STR_CD     = C.STR_CD
+       AND A.PORT_NO    = C.PORT_NO
+       AND B.COMPANY_CD = #{companyCd}
+       AND A.YYYYMMDD BETWEEN DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -7 DAY), '%Y%m%d') AND DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -1 DAY), '%Y%m%d')
+       AND A.ALARM_YN IN ('Y', 'H', 'L')
+       AND C.USE_YN     = 'Y'
+     GROUP BY A.STR_CD, A.PORT_NO
+     ORDER BY A.STR_CD, A.PORT_NO
+	
+	/* rems.eqmt.persistence.EqmtCurrentAlarmMapper.retrieveEquipmentFailureWeek */
+	]]>
+	</select>
+
+	<select id="retrieveEquipmentFailureMonth" parameterType="Map" resultType="Map">
+	<![CDATA[
+    SELECT A.STR_CD   AS strCd
+         , A.PORT_NO  AS portNo
+         , COUNT(*)   AS cnt
+      FROM TH_STR_REMS_DEVICE_BASE A
+         , TH_STR_INFO_MST B
+         , TH_STR_REMS_DEVICE_MST C
+     WHERE A.STR_CD     = B.STR_CD
+       AND A.STR_CD     = C.STR_CD
+       AND A.PORT_NO    = C.PORT_NO
+       AND B.COMPANY_CD = #{companyCd}
+       AND A.YYYYMMDD BETWEEN DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -1 MONTH), '%Y%m%d') AND DATE_FORMAT(DATE_ADD(#{now}, INTERVAL -1 DAY), '%Y%m%d')
+       AND A.ALARM_YN IN ('Y', 'H', 'L')
+       AND C.USE_YN     = 'Y'
+     GROUP BY A.STR_CD, A.PORT_NO
+     ORDER BY A.STR_CD, A.PORT_NO
+	
+	/* rems.eqmt.persistence.EqmtCurrentAlarmMapper.retrieveEquipmentFailureMonth */
+	]]>
+	</select>
+
+	<select id="retrieveEquipmentFailureList" parameterType="Map" resultType="Map">
+	<![CDATA[
+    SELECT CONCAT( FUNCTION_STRING_TO_DTTM(AA.YYYYMMDD, AA.HHMIN)
+                 , ' '
+                 , CASE WHEN AA.ALARM_YN = 'H' THEN '고온 알람'
+                        WHEN AA.ALARM_YN = 'L' THEN '저온 알람'
+                        ELSE '알람'
+                    END
+                 , ' ('
+                 , IFNULL(AA.SENS_TEMP, '-')
+                 , ' ℃)' 
+                 )                AS alarm
+         , AA.STR_CD              AS strCd 
+         , BB.VIEW_STR_CD         AS viewStrCd
+         , BB.STR_NM              AS strNm
+         , AA.PORT_NO             AS portNo
+         , AA.TEMON_ID            AS temonId
+         , AA.TEMON_TYPE          AS temonType
+         , (SELECT CONCAT(AAA.COMM_CD_NM, ' ', CC.DEVICE_LOC)
+              FROM TH_COMM_CD AAA
+             WHERE AAA.COMM_GRP_CD = 'MAST02'
+               AND AAA.COMM_CD     = CC.DEVICE_TYPE
+           )                      AS device
+      FROM TH_STR_REMS_DEVICE_BASE AA
+         , TH_STR_INFO_MST BB
+         , TH_STR_REMS_DEVICE_MST CC
+     WHERE AA.STR_CD     = BB.STR_CD
+       AND BB.COMPANY_CD = #{companyCd}
+       AND AA.STR_CD     = CC.STR_CD
+       AND AA.PORT_NO    = CC.PORT_NO
+       AND AA.TEMON_ID   = CC.TEMON_ID
+       AND AA.TEMON_TYPE = CC.TEMON_TYPE
+       AND AA.ALARM_YN IN ('Y', 'H', 'L')
+       AND CC.USE_YN     = 'Y'
+       AND CONCAT(AA.YYYYMMDD, AA.HHMIN) > DATE_FORMAT(DATE_ADD(#{now}, INTERVAL '-240:0' MINUTE_SECOND), '%Y%m%d%H%i')
+     GROUP BY AA.STR_CD, CC.TEMON_ID, CC.TEMON_TYPE, CC.PORT_NO
+     ORDER BY AA.YYYYMMDD DESC, AA.HHMIN DESC
+       
+    /* rems.eqmt.persistence.EqmtCurrentAlarmMapper.retrieveEquipmentFailureList */
+	]]>
+	</select>			
+	
+	<select id="retrieveLatestTemp" parameterType="Map" resultType="Map">
+	<![CDATA[
+	SELECT CONCAT( SUBSTR(A.YYYYMMDD, 7, 2)
+	             , '일'
+	             , SUBSTR(A.HHMIN, 1, 2)
+	             , ':'
+	             , SUBSTR(A.HHMIN, 3, 2)
+	             )                            AS period
+	     , A.SENS_TEMP                        AS sensTemp
+	  FROM TH_STR_REMS_DEVICE_BASE A
+	 WHERE A.STR_CD     = #{strCd}	
+	   AND A.PORT_NO    = #{portNo}
+	   AND A.TEMON_ID   = #{temonId}
+	   AND A.TEMON_TYPE = #{temonType}
+       AND CONCAT(A.YYYYMMDD, A.HHMIN) > DATE_FORMAT(DATE_ADD(#{now}, INTERVAL '-4:0' HOUR_MINUTE), '%Y%m%d%H%i')       
+     ORDER BY A.YYYYMMDD, A.HHMIN 
+
+    /* rems.eqmt.persistence.EqmtCurrentAlarmMapper.retrieveLatestTemp */
+	]]>
+	</select>			
+</mapper>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.NoticeMapper">
+
+	<select id="retrieveNotice" parameterType="Map"  resultType="NoticeVo">
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+		    <![CDATA[
+				SELECT  A.NOTICE_ID as noticeId
+						,A.TITLE AS title
+	      				,CASE WHEN A.PUB_YN = 'Y' THEN '게시' ELSE '미게시' END AS pubYn
+	      				,B.USER_NM AS userNm
+	      				,DATE_FORMAT(A.PUB_DTTM,'%Y-%m-%d') AS pubDttm
+	      				,CONCAT(SUBSTRING(A.PUB_START_DT, 1, 4), '-', SUBSTRING(A.PUB_START_DT, 5, 2), '-', SUBSTRING(A.PUB_START_DT, 7, 2))  AS pubStartDt
+	      				,CONCAT(SUBSTRING(A.PUB_END_DT, 1, 4), '-', SUBSTRING(A.PUB_END_DT, 5, 2), '-', SUBSTRING(A.PUB_END_DT, 7, 2))        AS pubEndDt
+	      				,C.COMM_CD_NM AS noticeTypeNm
+	      				,(SELECT GROUP_CONCAT(BBB.AUTH_NM SEPARATOR ',') FROM TH_NOTICE_TARGET AAA INNER JOIN TH_AUTH BBB ON AAA.COMPANY_CD = BBB.COMPANY_CD AND AAA.AUTH_ID = BBB.AUTH_ID WHERE AAA.COMPANY_CD = A.COMPANY_CD AND AAA.NOTICE_ID = A.NOTICE_ID) AS targetNames
+	      				,A.VIEW_CNT AS viewCnt
+	  			  FROM  TH_NOTICE A LEFT OUTER JOIN TH_USER_MST B ON A.PUB_ID = B.USER_ID
+	       							LEFT OUTER JOIN TH_COMM_CD C ON C.COMM_GRP_CD = 'VIEW12' AND C.COMM_CD = A.NOTICE_TYPE_CD
+	 			 WHERE  A.COMPANY_CD = #{companyCd}
+	   			   AND  (A.PUB_YN = 'Y' OR #{authId} = 1)	   			   
+	   			   AND  ( A.PUB_START_DT >= REPLACE(#{pubStartDt}, '-', '')     
+	   			   AND  A.PUB_END_DT >= REPLACE(#{pubEndDt}, '-', '') ) 
+	   			   	]]>
+				<if test="title != null and title != ''">
+				   AND  A.TITLE LIKE CONCAT('%',#{title},'%') 
+				</if>	
+	   			<if test="noticeTypeCd != null and noticeTypeCd != ''">             
+	   			   AND  A.NOTICE_TYPE_CD = #{noticeTypeCd} 
+	   			</if>
+	   			<![CDATA[                
+	   			   AND  EXISTS (SELECT 1 FROM TH_NOTICE_TARGET WHERE COMPANY_CD = A.COMPANY_CD AND NOTICE_ID = A.NOTICE_ID AND AUTH_ID = #{authId})        
+	   			   AND  (#{authId} = 1 OR #{authId} IN (SELECT AA.AUTH_ID 
+	   			   										  FROM TH_AUTH AA INNER JOIN TH_NOTICE_TARGET BB ON AA.COMPANY_CD = BB.COMPANY_CD AND AA.AUTH_ID = BB.AUTH_ID
+	                               						 WHERE AA.COMPANY_CD = A.COMPANY_CD
+	                                 					   AND AA.AUTH_SP <> 'S'
+	                                 					   AND BB.NOTICE_ID = A.NOTICE_ID)
+	        		OR  #{authId} IN (SELECT AA.AUTH_ID
+	                                    FROM TH_AUTH AA INNER JOIN TH_NOTICE_TARGET BB ON AA.COMPANY_CD = BB.COMPANY_CD AND AA.AUTH_ID = BB.AUTH_ID
+	                                     			    INNER JOIN TH_NOTICE_TARGET_ORG CC ON AA.COMPANY_CD = CC.COMPANY_CD AND BB.NOTICE_ID = CC.NOTICE_ID AND BB.AUTH_ID = CC.AUTH_ID
+	                                     				INNER JOIN TH_STR_INFO_MST DD      ON CC.COMPANY_CD = DD.COMPANY_CD AND CC.ORG_CD = DD.ORG_CD
+	                                     				LEFT OUTER JOIN TH_USER_MST FF     ON FF.USER_ID = #{userId} AND DD.COMPANY_CD = FF.COMPANY_CD AND DD.STR_CD = FF.STR_CD
+	                                     				LEFT OUTER JOIN TH_STR_USER_MAP GG  ON GG.USER_ID = #{userId} AND GG.STR_CD = FF.STR_CD
+	                               		WHERE AA.COMPANY_CD = A.COMPANY_CD
+	                                	  AND AA.AUTH_SP = 'S'
+	                                	  AND BB.NOTICE_ID = A.NOTICE_ID
+	                                	  AND (DD.STR_CD IS NOT NULL OR FF.STR_CD IS NOT NULL)))
+		    ]]>
+		<![CDATA[
+		ORDER BY noticeTypeNm desc, ${sidx} ${sord}
+		]]>
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+
+	<select id="retrieveNoticeDtl" parameterType="Map" resultType="NoticeVo">
+		SELECT A.NOTICE_ID as noticeId
+			  ,A.TITLE as title
+			  ,A.CONTENTS	as contents
+			  ,B.AUTH_ID as pubId
+			  ,(SELECT C.AUTH_NM FROM TH_AUTH C WHERE B.AUTH_ID = C.AUTH_ID AND C.COMPANY_CD = #{companyCd}) AS pubAuthNm
+			  ,A.PUB_YN as pubYn
+			  ,A.NOTICE_TYPE_CD as noticeTypeCd
+			  ,(SELECT COMM_CD_NM AS commCdNm FROM TH_COMM_CD WHERE COMM_GRP_CD='VIEW12' AND USE_YN='Y' and COMM_CD = A.NOTICE_TYPE_CD) as noticeTypeNm
+			  ,CONCAT(SUBSTRING(A.PUB_DTTM, 1, 4), '-', SUBSTRING(A.PUB_DTTM, 6, 2), '-', SUBSTRING(A.PUB_DTTM, 9, 2)) AS pubDttm
+			  ,CONCAT(SUBSTRING(A.PUB_START_DT, 1, 4), '-', SUBSTRING(A.PUB_START_DT, 5, 2), '-', SUBSTRING(A.PUB_START_DT, 7, 2)) as pubStartDt
+			  ,CONCAT(SUBSTRING(A.PUB_END_DT, 1, 4), '-', SUBSTRING(A.PUB_END_DT, 5, 2), '-', SUBSTRING(A.PUB_END_DT, 7, 2))  as pubEndDt
+		  	  ,A.view_cnt as viewCnt
+		  FROM TH_NOTICE A INNER JOIN TH_USER_AUTH B ON A.PUB_ID = B.USER_ID AND A.COMPANY_CD = B.COMPANY_CD
+		 WHERE A.COMPANY_CD = #{companyCd}
+		   AND A.NOTICE_ID = #{noticeId}
+	</select>
+	
+	<select id="retrieveNoticeTargetDtl" parameterType="Map" resultType="NoticeVo">
+		SELECT COMPANY_CD as companyCd
+			  ,NOTICE_ID as noticeId
+			  ,AUTH_ID	as authId
+		  FROM TH_NOTICE_TARGET
+		 WHERE COMPANY_CD = #{companyCd}
+		   AND NOTICE_ID = #{noticeId}
+	</select>
+	
+	<select id="retrieveNoticeTargetOrgDtl" parameterType="Map" resultType="NoticeVo">
+		SELECT COMPANY_CD as companyCd
+			  ,NOTICE_ID as noticeId
+			  ,AUTH_ID	as authId
+			  ,ORG_CD as orgCd
+		  FROM TH_NOTICE_TARGET_ORG
+		 WHERE COMPANY_CD = #{companyCd}
+		   AND NOTICE_ID = #{noticeId}
+		   AND AUTH_ID = #{authId}
+	</select>	
+
+
+	<insert id="saveNotice" parameterType="NoticeVo">
+	<![CDATA[
+		INSERT INTO TH_NOTICE
+		       (COMPANY_CD 
+		       ,NOTICE_ID
+		       , TITLE
+		       , CONTENTS
+		       , PUB_ID
+	]]>
+			<if test='pubYn.equals("Y")'>
+				, PUB_DTTM
+			</if>
+	<![CDATA[
+		       , PUB_START_DT
+		       , PUB_END_DT
+		       , NOTICE_TYPE_CD
+		       , PUB_YN
+		       , VIEW_CNT
+		       , REGI_ID
+		       , REGI_DTTM
+		       , FINAL_MOD_ID
+		       , FINAL_MOD_DTTM
+		       )
+		VALUES ( #{companyCd}
+			   ,(SELECT b.cnt FROM (SELECT IFNULL(max(a.NOTICE_ID),0)+1 cnt FROM TH_NOTICE a WHERE a.COMPANY_CD = #{companyCd}) b)
+			   , #{title}
+		       , #{contents}
+		       , #{pubId}
+	]]>
+			<if test='pubYn.equals("Y")'>
+			   , now()
+			</if>
+	<![CDATA[	      
+		       , #{pubStartDt}
+		       , #{pubEndDt}
+		       , #{noticeTypeCd}
+		       , #{pubYn}
+		       , 0
+		       , #{regiId}
+		       , now()
+		       , #{finalModId}
+		       , now()
+		       )
+	]]>
+	</insert>
+	
+	
+	<insert id="saveNoticeUpdate" parameterType="NoticeVo">	
+		<![CDATA[
+			UPDATE TH_NOTICE SET 
+		 ]]> 
+			<if test="title != null and title != ''">
+				TITLE = #{title},
+			</if> 
+			<if test="contents != null and contents != ''">
+				CONTENTS = #{contents},
+			</if>
+			<if test='pubYn != null and pubYn.equals("Y")'>
+				<if test="pubId != null and pubId != ''">
+					PUB_ID = #{pubId},
+				</if>
+				<if test="pubDttm != null and pubDttm != ''">
+					PUB_DTTM = now(),
+				</if>			
+			</if>
+			<if test="pubStartDt != null and pubStartDt != ''">
+				PUB_START_DT = #{pubStartDt},
+			</if>
+			<if test="pubEndDt != null and pubEndDt != ''">
+				PUB_END_DT = #{pubEndDt},
+			</if>
+			<if test="noticeTypeCd != null and noticeTypeCd != ''">
+				NOTICE_TYPE_CD = #{noticeTypeCd},
+			</if>
+			<if test="pubYn != null and pubYn != ''">
+				PUB_YN = #{pubYn},
+			</if>
+			<if test="viewCnt != null and viewCnt != ''">
+				VIEW_CNT = #{viewCnt},
+			</if>
+			 <![CDATA[
+			 	FINAL_MOD_ID = #{finalModId},
+		     	FINAL_MOD_DTTM = now()
+		   WHERE COMPANY_CD = #{companyCd}
+		     AND NOTICE_ID =  #{noticeId}
+		   ]]>  
+	</insert>	 
+	
+	<select id="retrieveNoticeViewCnt" parameterType="NoticeVo" resultType="int">
+	    <![CDATA[
+	    	SELECT view_cnt FROM TH_NOTICE WHERE COMPANY_CD = #{companyCd} and NOTICE_ID = #{noticeId}
+	    ]]>
+    </select>
+	
+	
+	<select id="selectNoticeId" resultType="String">
+	    <![CDATA[
+	    	SELECT max(NOTICE_ID) FROM TH_NOTICE WHERE COMPANY_CD = #{companyCd} 
+	    ]]>
+    </select>
+    
+	<insert id="saveNoticeTarget" parameterType="NoticeVo">
+		INSERT INTO TH_NOTICE_TARGET
+		       ( COMPANY_CD
+		       , NOTICE_ID
+		       , AUTH_ID
+		       )
+		VALUES ( #{companyCd} 
+			   , #{noticeId}
+		       , #{authId}
+		       )	
+	</insert> 
+	
+	<insert id="saveNoticeTargetOrgCd" parameterType="NoticeVo">
+		INSERT INTO TH_NOTICE_TARGET_ORG
+		       ( COMPANY_CD
+		       , NOTICE_ID
+		       , AUTH_ID
+		       , ORG_CD
+		       )
+		VALUES ( #{companyCd} 
+			   , #{noticeId}
+		       , #{authId}
+		       , #{orgCd}
+		       )	
+	</insert> 
+	
+	<delete id="deleteNoticeTarget" parameterType="NoticeVo">
+		DELETE FROM TH_NOTICE_TARGET WHERE COMPANY_CD = #{companyCd} AND NOTICE_ID = #{noticeId}
+	</delete>	
+	
+	<delete id="deleteNoticeTargetOrg" parameterType="NoticeVo">
+		DELETE FROM TH_NOTICE_TARGET_ORG WHERE COMPANY_CD = #{companyCd} AND NOTICE_ID = #{noticeId}
+	</delete>		   
+</mapper>

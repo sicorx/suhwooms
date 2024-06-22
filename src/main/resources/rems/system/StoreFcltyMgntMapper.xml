@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.StoreFcltyMgntMapper">
+
+	<select id="retrieveStoreFcltyMgnt" parameterType="Map" resultType="GridStoreFcltyMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT
+			TSIM.STR_CD          		as strCd
+			,TSIM.STR_NM          		as strNm
+		  	,TSIM.VIEW_STR_CD     		as viewStrCd
+		  	,TSIM.COMPANY_CD      		as companyCd
+		 	,TSIM.ORG_CD          		as orgCd	
+		 	,fnGetOrgFullName(TSIM.COMPANY_CD, TSIM.ORG_CD)	as orgFullNm 	  	  
+		  	,TSRPC.TEMON          		as temon
+		  	,TSRPC.ALMON           		as almon
+		  	,TSRPC.ZIGBEE          		as zigbee
+		FROM  
+			TH_STR_INFO_MST TSIM,
+		    TH_STR_REMS_DEVICE_CNT_MNT TSRPC	 	    
+		WHERE
+		    TSIM.STR_CD = TSRPC.STR_CD		        
+		    AND
+		    TSIM.USE_YN = 'Y'		      
+		    AND
+		    TSIM.COMPANY_CD = #{companyCd}
+	]]>
+	<if test="strNm != null and strNm != ''" >
+	<![CDATA[
+			AND
+			(
+				INSTR(TSIM.STR_NM, #{strNm}) > 0
+				OR 
+				INSTR(TSIM.VIEW_STR_CD, #{strNm}) > 0
+       		)
+	]]>
+	</if>
+	<if test="orgCd != null and orgCd != ''" >
+	<![CDATA[
+			AND TSIM.ORG_CD = #{orgCd}
+	]]>
+	</if>
+	<![CDATA[
+			ORDER BY ${sidx} ${sord}
+  			/* rems.system.persistence.StoreMgntMapper.retrieveStoreFcltyMgnt */
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<!-- 매장시설물(장치수량) 상세 -->
+	<select id="retrieveStoreFcltyMgntDtl" parameterType="Map" resultType="GridStoreFcltyMgntVo">
+	<![CDATA[
+		SELECT
+		         TEMON  AS temon
+	           , ZIGBEE AS zigbee
+	           , ALMON  AS almon
+		  FROM TH_STR_REMS_DEVICE_CNT_MNT
+		 WHERE STR_CD = #{strCd}
+	]]>
+	
+	</select>
+	
+	<select id="retrieveStoreFcltyMgntDtlList" parameterType="Map" resultType="GridStoreFcltyMgntVo">
+	<![CDATA[
+		SELECT 
+			   B.SENS_TEMP						 AS sensTemp,
+			   STM.STR_CD             			 AS strCd          
+		     , STM.TEMON_ID           			 AS temonId          
+		     , STM.TEMON_TYPE         			 AS temonType
+      		 , STM.PORT_NO					     AS portNo
+         	 , IFNULL(STM.DEVICE_TYPE,'')        AS deviceType   
+		     , IFNULL(STM.DEVICE_LOC,'')         AS deviceLoc
+	         , IFNULL(STM.CONTENTS,'')      	 AS content
+	         , round(IFNULL(STM.MAX_TEMP,'0'))   AS maxTemp		     
+	         , round(IFNULL(STM.MIN_TEMP,'0'))   AS minTemp		     
+	         , IFNULL(STM.DELAY_TIME,'0')        AS delayTime     
+	         , round(IFNULL(STM.TEMP_CONF,'0'))  AS tempConf		     
+	         , IFNULL(STM.PUSH_TERM,'0')         AS pushTerm
+	         , STM.USE_YN             			 AS useYn		     
+		     , STM.REGI_ID            			 AS regiId         
+		     , STM.REGI_DTTM          			 AS regiDttm       
+		     , STM.FINAL_MOD_ID       			 AS finalModId     
+		     , STM.FINAL_MOD_DTTM     			 AS finalModDttm   		    		   
+		  FROM TH_STR_REMS_DEVICE_MST STM			
+           LEFT JOIN TH_STR_REMS_DEVICE_BASE B           
+		 ON                  
+         STM.STR_CD = B.STR_CD           
+         AND         
+         STM.TEMON_ID = B.TEMON_ID
+         AND         
+         STM.TEMON_TYPE = B.TEMON_TYPE
+		 AND
+         STM.PORT_NO = B.PORT_NO
+		 AND
+         B.YYYYMMDD >= DATE_FORMAT( DATE_SUB( NOW(),INTERVAL 5 minute), '%Y%m%d')
+         AND 
+         B.HHMIN >= DATE_FORMAT( DATE_SUB( NOW(),INTERVAL 5 minute), '%H%i')
+         WHERE
+         STM.STR_CD = #{strCd}
+	]]>
+	<if test="temonId != null and temonId != ''">
+	     AND STM.TEMON_ID		= #{temonId}
+	</if>
+	<if test="temonType != null and temonType != ''">
+	     AND STM.TEMON_TYPE		= #{temonType}
+	</if>
+	<![CDATA[
+	ORDER BY CAST(STM.PORT_NO AS UNSIGNED)
+  	/* rems.system.persistence.StoreMgntMapper.retrieveStoreFcltyMgntDtlList */
+	]]>
+	</select>
+
+	<!-- 장치수량 등록 -->
+	<update id="saveStoreFcltyMgnt" parameterType="GridStoreFcltyMgntVo">
+		INSERT INTO TH_STR_REMS_DEVICE_CNT_MNT
+		     ( STR_CD
+		     , TEMON		    
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES( #{strCd}
+		      , #{temon}
+		      , #{regiId}
+		      , #{now}
+		      , #{finalModId}
+		      , #{now}
+		      )
+		ON DUPLICATE KEY
+		      UPDATE TEMON      = #{temon}		      		           
+	           , REGI_ID        = #{regiId}
+	           , REGI_DTTM      = #{now}
+	           , FINAL_MOD_ID   = #{finalModId}
+	           , FINAL_MOD_DTTM = #{now}
+	</update>
+	
+	<!-- 장치별 세부 포트 정보 등록/수정 -->
+	<update id="saveStoreFcltyMgntList" parameterType="GridStoreFcltyMgntVo">
+		INSERT INTO th_str_rems_device_mst
+		     ( STR_CD
+		     , TEMON_ID
+		     , TEMON_TYPE
+		     , PORT_NO
+		     , DEVICE_TYPE
+		     , DEVICE_LOC
+		     , CONTENTS
+		     , MAX_TEMP
+		     , MIN_TEMP
+		     , DELAY_TIME
+		     , TEMP_CONF
+		     , PUSH_TERM
+		     , USE_YN
+		     , REGI_ID
+		     , REGI_DTTM
+		     , FINAL_MOD_ID
+		     , FINAL_MOD_DTTM
+		     )
+		VALUES( #{strCd}
+		      , #{temonId}
+		      , #{temonType}
+		      , #{portNo}
+		      , #{deviceType}
+		      , #{deviceLoc}
+		      , #{content}
+		      , #{maxTemp}
+		      , #{minTemp}
+		      , #{delayTime}
+		      , #{tempConf}
+		      , #{pushTerm}
+		      , #{useYn}
+		      , #{regiId}
+		      , #{now}
+		      , #{finalModId}
+		      , #{now}
+		      )
+		ON DUPLICATE KEY UPDATE
+                     DEVICE_TYPE      = #{deviceType}
+		           , DEVICE_LOC       = #{deviceLoc}
+		           , CONTENTS         = #{content}
+		           , MAX_TEMP         = #{maxTemp}
+		           , MIN_TEMP         = #{minTemp}
+		           , DELAY_TIME       = #{delayTime}
+		           , TEMP_CONF        = #{tempConf}
+		           , PUSH_TERM        = #{pushTerm}
+		           , USE_YN			  = #{useYn}	
+		           , FINAL_MOD_ID     = #{finalModId}
+		           , FINAL_MOD_DTTM   = #{now}
+	</update>
+		
+	<update id="saveStoreFcltyMgnt_init" parameterType="Map" >	
+		INSERT INTO 
+				th_str_rems_device_mst
+				( 
+				STR_CD,
+				TEMON_ID,
+			    TEMON_TYPE,
+			    PORT_NO,
+				DEVICE_TYPE,
+			   	DEVICE_LOC,
+			    CONTENTS,
+			    MAX_TEMP,
+			    MIN_TEMP,
+			    DELAY_TIME,
+			    TEMP_CONF,
+			    PUSH_TERM,
+			    USE_YN,
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="InfoTemonDataListVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.temonStrCd},
+					#{item.temonId},
+					#{item.temonType},
+					#{item.temonPortNo},
+					#{item.temonDeviceType},
+					#{item.temonDeviceLoc},
+					#{item.temonContents},
+					#{item.temonMaxTemp},
+					#{item.temonMinTemp},
+					#{item.temonDelayTime},
+					#{item.temonTempConf},
+					#{item.temonPushTerm},
+					#{item.temonPortUseYn},
+					#{item.temonRegiId},
+					now(),
+					#{item.temonFinalModId},
+					now()
+				)			    
+		   		</foreach>			
+			    
+	</update>
+	
+	
+	<!-- 지우기 -->
+	<delete id="delStoreFcltyMgnt" parameterType="Map">
+		delete from 
+			th_str_rems_device_mst 
+		WHERE 
+			STR_CD = #{strCd}
+	</delete>
+</mapper>

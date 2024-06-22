@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.ExcelUtilMapper">
+	
+	<select id="getStrCdValue" parameterType="Map" resultType="String">
+			SELECT 
+			IFNULL( 
+				CONCAT( 
+							( 
+								SELECT COMPANY_STR_CD 
+								FROM TH_COMPANY_MST 
+								WHERE COMPANY_CD = #{companyCd}
+							),
+							LPAD(MAX(CAST(SUBSTR(STR_CD,4,6) AS UNSIGNED)+1),6,'0') 
+						), 
+				CONCAT(
+							( 
+								SELECT COMPANY_STR_CD 
+								FROM TH_COMPANY_MST 
+								WHERE COMPANY_CD = #{companyCd}
+							), 
+							LPAD(0+1,6,'0') 
+						) 
+					) as strCd 
+			FROM TH_STR_INFO_MST WHERE COMPANY_CD = #{companyCd}
+	</select>
+	
+	<select id="getGwIdValue" parameterType="Map" resultType="String">
+			SELECT IFNULL(MAX(GW_ID),0) + 1 FROM TH_STR_GW_MST;
+	</select>
+	
+	
+	<update id="insertStrInfoDB" parameterType="Map">
+		INSERT INTO th_str_info_mst
+		SET
+			STR_CD = 				#{strCd},
+			STR_NM = 				#{strNm},
+			VIEW_STR_CD = 			#{viewStrCd},
+			LOCAL_AREA_CD = 		#{localAreaCd},
+			ADDR = 					#{addr},
+			COMPANY_CD = 			#{companyCd},
+			ORG_CD = 				#{orgCd},
+			CONT_DEMAND_POWER = 	#{contDemandPower},
+			STR_AREA_SPEC = 		#{strAreaSpec},
+			STR_DIREC_CD = 			#{strDirecCd},
+			TEL_NO = 				#{telNo},
+			REMS_START_DT = 		#{remsStartDt},
+			REMS_END_DT =			#{remsEndDt},
+			USE_YN =				#{strUseYn},
+			TIME_DIFF = 			#{timeDiff},
+			STR_AREA_TYPE_CD = 		#{strAreaTypeCd},
+			REGI_ID =				#{regiId},
+			REGI_DTTM = 			now(),
+			FINAL_MOD_ID =			#{finalModId},
+			FINAL_MOD_DTTM =		now()			
+	</update>
+	
+	<update id="insertGwInfoDB" parameterType="Map">	
+		INSERT INTO TH_STR_GW_MST
+		SET
+			STR_CD = 				#{strCd},
+			GW_ID =					#{gwId},
+			GW_ADDR = 				#{gwAddr},
+			GW_IP =					#{gwIp},
+			GW_SW_VER = 			#{gwSwVer},
+			AUTH_YN =				#{authYn},
+			DIAGNOSIS_MODULE_TYPE = #{diagnosisModuleType},
+			USE_YN = 				#{gwUseYn},
+			UPDATE_TIME = 			#{updateTime},
+			UPDATE_SUCCESS_YN = 	#{updateSuccessYn},			
+			REGI_ID =				#{regiId},
+			REGI_DTTM = 			now(),
+			FINAL_MOD_ID =			#{finalModId},
+			FINAL_MOD_DTTM =		now()	
+	</update>
+	
+	<update id="insertRemsPartCntDB" parameterType="Map">	
+		INSERT INTO TH_STR_REMS_DEVICE_CNT_MNT
+		SET
+			STR_CD = 				#{strCd},
+			METER_CH1_RST =			#{mainMeter},
+			METER_CH4_RST = 		#{subMeterLight},
+			METER_CH2_RST = 		#{subMeterTemp},
+			HACON = 				#{hacon},
+			T_SENSOR = 				#{tSensor},
+			TEMON = 				#{temon},
+			ZIGBEE = 				#{zigbee},
+			ALMON = 				#{almon},
+			INV = 					#{inv},
+			SIGN = 					#{sign},
+			REGI_ID =				#{regiId},
+			REGI_DTTM = 			now(),
+			FINAL_MOD_ID =			#{finalModId},
+			FINAL_MOD_DTTM =		now()
+	</update>
+	
+	<update id="insertStrConfDB" parameterType="Map">	
+		INSERT INTO 
+				TH_STR_ENV_CONF_MST 
+				( 
+				STR_CD,
+				CONF_SP,
+			    CONF_VAL,
+			    STR_CONF_VAL,
+				STR_CONF_VAL_OLD,
+			   	APPDT_DT,	    
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="excelStrConfDataListVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.strCd},
+					#{item.confSp},
+					#{item.confVal},
+					#{item.strConfVal},
+					#{item.strConfValOld},
+					#{item.appdtDt},					
+					#{item.regiId},
+					now(),
+					#{item.finalModId},
+					now()
+				)			    
+		   		</foreach>		
+	</update>
+	
+	<update id="insertTemonInfoDB" parameterType="Map" >	
+		INSERT INTO 
+				TH_STR_REMS_DEVICE_MST 
+				( 
+				STR_CD,
+				TEMON_ID,
+			    TEMON_TYPE,
+			    PORT_NO,
+				DEVICE_TYPE,
+			   	DEVICE_LOC,
+			    CONTENTS,
+			    MAX_TEMP,
+			    MIN_TEMP,
+			    DELAY_TIME,
+			    TEMP_CONF,
+			    PUSH_TERM,
+			    USE_YN,
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="excelTemonDataListVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.temonStrCd},
+					#{item.temonId},
+					#{item.temonType},
+					#{item.temonPortNo},
+					#{item.temonDeviceType},
+					#{item.temonDeviceLoc},
+					#{item.temonContents},
+					#{item.temonMaxTemp},
+					#{item.temonMinTemp},
+					#{item.temonDelayTime},
+					#{item.temonTempConf},
+					#{item.temonPushTerm},
+					#{item.temonPortUseYn},
+					#{item.temonRegiId},
+					now(),
+					#{item.temonFinalModId},
+					now()
+				)			    
+		   		</foreach>			
+			    
+	</update>
+	
+	<update id="insertInvInfoDB" parameterType="Map">
+		INSERT INTO 
+				TH_STR_INV_HUB_MST
+				( 
+				STR_CD,
+				HUB_ID,			    
+			    PORT_NO,			    
+				DEVICE_TYPE,
+			   	DEVICE_LOC,
+			    CONTENTS,			    
+			    PUSH_TERM,
+			    USE_YN,
+			    REGI_ID,
+			    REGI_DTTM,
+			    FINAL_MOD_ID,
+			    FINAL_MOD_DTTM			   
+			   )
+			   values
+			   	<foreach collection="excelInvDataListVo" index="index" item="item" separator=",">			   			   			   		   
+				(
+					#{item.invStrCd},
+					#{item.invId},					
+					#{item.invPortNo},
+					#{item.invDeviceType},
+					#{item.invDeviceLoc},
+					#{item.invDeviceContents},					
+					#{item.invPushTerm},
+					#{item.invPortUseYn},
+					#{item.invRegiId},
+					now(),
+					#{item.invFinalModId},
+					now()
+				)			    
+		   		</foreach>		
+	</update>
+	
+	
+	<update id="insertElectricEntDB" parameterType="Map">
+		INSERT INTO th_electricent_str_map SET				 
+				ELECTRICENT_CD = 		#{electricEnt},
+				STR_CD = 				#{strCd},
+				CALCULATE_YN = 			'N',				
+			    REGI_ID =				#{regiId},
+				REGI_DTTM = 			now(),
+				FINAL_MOD_ID =			#{finalModId},
+				FINAL_MOD_DTTM =		now()
+	</update>
+	
+	
+	
+	<delete id="deleteInfoDB" parameterType="Map">
+		<![CDATA[
+	 		DELETE FROM 
+	 	]]>
+		
+		<if test='tableFlag == "1"'>	<![CDATA[	th_str_info_mst			]]>	</if>
+		<if test='tableFlag == "2"'>	<![CDATA[	TH_STR_GW_MST   		]]> </if>
+		<if test='tableFlag == "3"'>	<![CDATA[	TH_STR_REMS_DEVICE_CNT_MNT	]]> </if>
+		<if test='tableFlag == "4"'>	<![CDATA[	TH_STR_ENV_CONF_MST				]]> </if>
+		<if test='tableFlag == "5"'>	<![CDATA[	th_str_temp_module		]]> </if>
+		<if test='tableFlag == "6"'>	<![CDATA[	th_str_inv_hub			]]> </if>
+		
+		<![CDATA[
+	 			WHERE STR_CD = #{strCd}
+	 	]]>					
+	</delete>
+		
+</mapper>

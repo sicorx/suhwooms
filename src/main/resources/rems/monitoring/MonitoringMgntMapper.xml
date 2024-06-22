@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.monitoring.persistence.MonitoringMgntMapper">
+
+	<!-- 모니터링 매장정보 -->
+	<select id="monitoringStoreMstData" parameterType="Map" resultType="MonitoringStoreDataVo">		
+	<![CDATA[
+		SELECT B.STR_NM                               AS strNm
+			,ROUND(B.CONT_DEMAND_POWER/1000, 1)     AS contPower
+			,ROUND(MAX(A.TOTAL_USE_WATAGE), 1) AS totalMain
+			,ROUND(B.CONT_DEMAND_POWER/1000, 1) - ROUND(MAX(A.TOTAL_USE_WATAGE), 1)  AS freePower
+			,B.STR_CD								  AS strCd
+		FROM TH_STR_ENER_USE_QTR A
+		INNER JOIN TH_STR_INFO_MST B ON A.STR_CD = B.STR_CD,
+			TH_STR_GW_MST GM
+		WHERE B.COMPANY_CD = #{companyCd}
+		AND A.STR_CD = GM.STR_CD
+		AND GM.GW_ADDR != '000000000000'
+		AND GM.GW_IP IS NOT NULL
+		AND B.USE_YN = 'Y'
+		AND A.YYYYMMDD BETWEEN CONCAT(DATE_FORMAT(NOW(), '%Y%m'), '01') AND CONCAT(DATE_FORMAT(NOW(), '%Y%m'), '31')
+		AND A.STR_CD = #{strCd}
+		GROUP BY B.STR_NM 
+	]]>
+	</select>
+	
+	<!-- 경영주 매장 개수 -->
+	<select id="monitoringStoreCount" parameterType="Map" resultType="String">		
+	<![CDATA[
+		SELECT COUNT(*) AS CNT
+		FROM TH_STR_USER_MAP A
+		LEFT OUTER JOIN TH_STR_INFO_MST B
+		ON A.STR_CD = B.STR_CD
+		WHERE B.USE_YN = 'Y'
+		AND USER_ID = #{userId}
+	]]>
+	</select>
+	
+	<!-- 매장 시설물 현황 -->
+	<select id="monitoringStoreEqmtData" parameterType="Map" resultType="DashBoardStoreDataVo">	
+	<![CDATA[
+		SELECT TEMP.*
+			, @n := @n+1 AS records
+		FROM (
+			SELECT 
+				AA.DEVICE_LOC AS deviceLoc
+	      		,AA.SENS_TEMP  AS sensTemp
+	      		,AA.NORMAL_YN  AS normalYn
+	      		,AA.ALARM_CNT  AS alarmCnt
+		  FROM (
+		        SELECT B.DEVICE_LOC
+		              ,A.SENS_TEMP
+		              ,IF(ALARM_YN = 'H' OR ALARM_YN = 'L' OR ALARM_YN = 'Y' OR ALARM_YN = 'E', '이상', '정상') AS NORMAL_YN
+		              ,(SELECT COUNT(NO)
+		                  FROM TH_GCM_AS_RESULT
+		                 WHERE YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')
+		                   AND STR_CD = A.STR_CD
+		                   AND TEMON_ID = A.TEMON_ID
+		                   AND TEMON_TYPE = A.TEMON_TYPE
+		                   AND PORT_NO = A.PORT_NO) AS ALARM_CNT
+		          FROM TH_STR_REMS_DEVICE_BASE A
+		               INNER JOIN TH_STR_REMS_DEVICE_MST B ON A.STR_CD = B.STR_CD AND A.TEMON_ID = B.TEMON_ID AND A.TEMON_TYPE = B.TEMON_TYPE AND A.PORT_NO = B.PORT_NO
+		         WHERE A.STR_CD = #{strCd}
+		           AND A.DEVICE_TYPE NOT IN ('X','')
+		           AND A.YYYYMMDD = (SELECT MAX(YYYYMMDD)
+		                               FROM TH_STR_REMS_DEVICE_BASE
+		                              WHERE STR_CD = #{strCd}
+		                                AND DEVICE_TYPE NOT IN ('X','')
+		                            )
+		           AND A.HHMIN = (SELECT MAX(HHMIN)
+		                            FROM TH_STR_REMS_DEVICE_BASE
+		                           WHERE STR_CD = #{strCd}
+		                             AND DEVICE_TYPE NOT IN ('X','')
+		                             AND YYYYMMDD = (SELECT MAX(YYYYMMDD)
+		                                               FROM TH_STR_REMS_DEVICE_BASE
+		                                              WHERE STR_CD = #{strCd}
+		                                                AND DEVICE_TYPE NOT IN ('X','')
+		                                          )
+		                         )
+		        UNION ALL
+		        SELECT B.DEVICE_LOC
+		              ,A.SENS_TEMP
+		              ,IF(ALARM_SP != '0000000000000000' OR (ALARM_SP = '0000000000000000' AND OPER_MODE = '0'), '이상', '정상') AS NORMAL_YN
+		              ,(SELECT COUNT(NO)
+		                  FROM TH_GCM_AS_RESULT
+		                 WHERE YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')
+		                   AND STR_CD = A.STR_CD
+		                   AND TEMON_ID = A.HUB_ID
+		                   AND TEMON_TYPE = 'I'
+		                   AND PORT_NO = A.PORT_NO) AS ALARM_CNT
+		          FROM TH_STR_INV_HUB_STATUS A
+		               INNER JOIN TH_STR_INV_HUB_MST B ON A.STR_CD = B.STR_CD AND A.HUB_ID = B.HUB_ID AND A.PORT_NO = B.PORT_NO
+		         WHERE A.STR_CD = #{strCd}
+		           AND A.DEVICE_TYPE NOT IN ('X','')
+		           AND A.YYYYMMDD = (SELECT MAX(YYYYMMDD)
+		                               FROM TH_STR_INV_HUB_STATUS
+		                              WHERE STR_CD = #{strCd}
+		                                AND DEVICE_TYPE NOT IN ('X','')
+		                            )
+		           AND A.HHMIN = (SELECT MAX(HHMIN)
+		                            FROM TH_STR_INV_HUB_STATUS
+		                           WHERE STR_CD = #{strCd}
+		                             AND DEVICE_TYPE NOT IN ('X','')
+		                             AND YYYYMMDD = (SELECT MAX(YYYYMMDD)
+		                                               FROM TH_STR_INV_HUB_STATUS
+		                                              WHERE STR_CD = #{strCd}
+		                                                AND DEVICE_TYPE NOT IN ('X','')
+		                                          )
+		                         )
+		    ) AA
+			ORDER BY deviceLoc ASC
+		) TEMP
+		, (SELECT @n:=0) r
+	]]>
+	</select>
+	
+	<!-- 매장 조회 목록(팝업) -->
+    <select id="monitoringRetrieveStrCd" parameterType="Map" resultType="GridStoreMgntVo">
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+    <![CDATA[
+    	SELECT 
+    		A.STR_CD        		AS strCd, 
+         	A.STR_NM        		AS strNm, 
+         	A.COMPANY_CD    		AS companyCd, 
+         	A.VIEW_STR_CD			AS viewStrCd, 
+         	IFNULL(A.ADDR, '')		AS addr, 
+         	IFNULL(A.TEL_NO, '')	AS telNo, 
+         	B.ORG_CD        		AS orgCd, 
+         	B.ORG_NM        		AS orgNm,
+         	fnGetOrgFullName(A.COMPANY_CD, A.ORG_CD)	as orgFullNm         	 
+      	FROM 
+      		TH_STR_INFO_MST A 
+      		LEFT OUTER JOIN 
+      		TH_COMPANY_ORG_MST B 
+        	ON A.ORG_CD = B.ORG_CD 
+       		AND A.COMPANY_CD = B.COMPANY_CD 
+       		INNER JOIN TH_STR_GW_MST C
+			ON A.STR_CD = C.STR_CD
+			LEFT OUTER JOIN TH_STR_USER_MAP D
+			ON A.STR_CD = D.STR_CD
+			AND C.STR_CD = D.STR_CD
+			AND D.MAP_YN='Y'
+     	WHERE A.COMPANY_CD = #{companyCd} 
+       		AND A.USE_YN = 'Y' 
+       		AND A.VIEW_STR_CD <> '00000'
+       		AND C.GW_ADDR <> '000000000000'
+          AND C.GW_IP IS NOT NULL
+    ]]>
+    <if test='userId != null and userId != ""'>
+   		<![CDATA[
+   			AND INSTR(D.USER_ID, #{userId}) > 0
+   		]]>
+	</if>
+	<if test='searchType == "org"'>
+		<![CDATA[
+			AND A.ORG_CD <> #{orgCd} 
+		]]>
+	</if>
+    <![CDATA[
+     	ORDER BY ${sidx} ${sord}
+    ]]>
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+</mapper>

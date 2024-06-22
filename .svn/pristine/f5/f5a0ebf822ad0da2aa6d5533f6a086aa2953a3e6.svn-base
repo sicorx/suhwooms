@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.VendorMgntMapper">
+	
+	<!-- 유지보수업체(냉장비) 목록 -->
+	<select id="retrieveRemsVendorList" parameterType="Map" resultType="GridVendorMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+    	SELECT 
+				  VM.VENDOR_CD 			AS vendorCd
+				, VM.VENDOR_NM			AS vendorNm
+				, VM.COMPANY_CD			AS companyCd
+				, VM.USE_YN				AS useYn
+				, CASE WHEN VM.USE_YN = 'Y' THEN 
+					'사용' 
+				  ELSE 
+				  	'미사용' 
+				  END 					AS useYnNm
+				, VM.REGI_ID			AS regiId
+				, VM.REGI_DTTM 			AS regiIdDttm
+				, VM.FINAL_MOD_ID		AS finalModId
+				, VM.FINAL_MOD_DTTM		AS finalModDttm
+				, U.USER_NM				AS finalUserNm
+           FROM TH_VENDOR_MST VM
+           LEFT OUTER JOIN TH_USER_MST U
+           	 ON VM.FINAL_MOD_ID = U.USER_ID
+          WHERE VM.COMPANY_CD = #{companyCd}
+     ]]>
+    <if test='useYn != null and useYn != ""'>
+        <![CDATA[
+        	AND VM.USE_YN = #{useYn}
+        ]]>
+    </if>
+    <if test='vendorNm != null and vendorNm != ""'>
+        <![CDATA[
+        	AND (
+	        		INSTR(VM.VENDOR_NM, #{vendorNm}) > 0 
+	        		OR 
+	        		INSTR(VM.VENDOR_CD, #{vendorNm}) > 0
+        		)
+        ]]>
+    </if>
+    <![CDATA[
+    	ORDER BY ${sidx} ${sord}
+    ]]>	
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+    
+	<!-- 유지보수업체(전기) 목록 -->
+	<select id="retrieveElecMgntList" parameterType="Map" resultType="GridVendorMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+    	SELECT 
+				  VM.VENDOR_CD 			AS vendorCd
+				, VM.VENDOR_NM			AS vendorNm
+				, VM.COMPANY_CD			AS companyCd
+				, VM.USE_YN				AS useYn
+				, CASE WHEN VM.USE_YN = 'Y' THEN 
+					'사용' 
+				  ELSE 
+				  	'미사용' 
+				  END 					AS useYnNm
+				, VM.REGI_ID			AS regiId
+				, VM.REGI_DTTM 			AS regiIdDttm
+				, VM.FINAL_MOD_ID		AS finalModId
+				, VM.FINAL_MOD_DTTM		AS finalModDttm
+				, U.USER_NM				AS finalUserNm
+           FROM TH_VENDOR_MST VM
+           LEFT OUTER JOIN TH_USER_MST U
+           	 ON VM.FINAL_MOD_ID = U.USER_ID
+          WHERE VM.COMPANY_CD = #{companyCd}
+     ]]>
+    <if test='useYn != null and useYn != ""'>
+        <![CDATA[
+        	AND VM.USE_YN = #{useYn}
+        ]]>
+    </if>
+    <if test='vendorNm != null and vendorNm != ""'>
+        <![CDATA[
+        	AND (
+	        		INSTR(VM.VENDOR_NM, #{vendorNm}) > 0 
+	        		OR 
+	        		INSTR(VM.VENDOR_CD, #{vendorNm}) > 0
+        		)
+        ]]>
+    </if>
+    <![CDATA[
+    	ORDER BY ${sidx} ${sord}
+    ]]>	
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+    
+    <!-- 업체코드 중복 확인 -->
+	<select id="checkVendorCd" parameterType="String" resultType="int">
+       SELECT COUNT(*)
+         FROM TH_VENDOR_MST
+        WHERE VENDOR_CD = #{vendorCd}
+          AND COMPANY_CD = #{companyCd}
+    </select>
+    
+    <!-- 유지보수업체 저장 -->
+	<update id="saveRemsVendorMgnt" parameterType="GridVendorMgntVo">   
+ 	INSERT INTO TH_VENDOR_MST
+		(
+		   COMPANY_CD
+		 , VENDOR_CD
+		 , VENDOR_NM
+		 , USE_YN  
+		 , REGI_ID
+		 , REGI_DTTM
+		 , FINAL_MOD_ID
+		 , FINAL_MOD_DTTM
+		)
+		VALUES
+		(
+		   #{companyCd}
+		 , upper(#{vendorCd})
+		 , #{vendorNm}
+		 , #{useYn}
+		 , #{regiId}
+		 , now()
+		 , #{finalModId}
+		 , now()
+		)
+	ON DUPLICATE KEY UPDATE
+		  VENDOR_NM			= #{vendorNm}
+		, USE_YN			= #{useYn}
+		, FINAL_MOD_ID   	= #{finalModId}
+		, FINAL_MOD_DTTM	= now()
+		, COMPANY_CD 		= #{companyCd}
+	</update>
+    
+    <!-- 엔지니어 등록 유무 체크 -->
+	<select id="checkEngineerTF" parameterType="GridVendorMgntVo" resultType="int">
+	SELECT 
+		COUNT(*) 
+	FROM 
+		TH_ENGINEER_STR_MAP 
+	WHERE 1 = 1 
+		AND USER_ID IN (
+ 			SELECT 
+ 				USER_ID 
+ 			FROM 
+ 				TH_USER
+ 			WHERE 1 = 1 
+ 				AND COMPANY_CD = #{companyCd} 
+ 				AND VENDOR_CD = #{vendorCd} 
+ 				AND USE_YN = 'Y'
+		)
+    </select>
+    
+	
+</mapper>

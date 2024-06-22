@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtInverterControlMapper">
+
+	<!-- 매장별 포트번호 select -->
+	<select id="retrieveInverterList" parameterType="Map" resultType="SelectVo">
+	<![CDATA[
+	    SELECT PORT_NO              AS value
+	    	      ,DEVICE_LOC			AS name	      
+	      FROM TH_STR_INV_HUB_MST
+	    WHERE STR_CD = #{strCd}
+	       AND USE_YN = 'Y'
+	     ORDER BY CAST(PORT_NO AS UNSIGNED)
+	]]>	  
+	</select>
+	
+	<select id="retrieveInverterControlList" parameterType="Map" resultType="GridInverterStatusVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+	<![CDATA[
+		SELECT
+				   A.STR_CD AS strCd
+				 , A.STR_NM AS strNm
+				 , A.ORG_NM AS orgNm
+				 , A.HUB_ID AS hubId
+				 , A.PORT_NO AS portNo
+				 , A.DEVICE_TYPE AS deviceType
+				 , A.DEVICE_LOC AS deviceLoc
+				 , A.ALARM_SP AS alarmSp
+				 , SUBSTRING(A.ALARM_SP,1,1) AS temp8
+				 , SUBSTRING(A.ALARM_SP,2,1) AS temp7
+				 , SUBSTRING(A.ALARM_SP,3,1) AS temp6
+				 , SUBSTRING(A.ALARM_SP,4,1) AS temp5
+				 , SUBSTRING(A.ALARM_SP,5,1) AS temp4
+				 , SUBSTRING(A.ALARM_SP,6,1) AS temp3
+				 , SUBSTRING(A.ALARM_SP,7,1) AS temp2
+				 , SUBSTRING(A.ALARM_SP,8,1) AS temp1
+				 , SUBSTRING(A.ALARM_SP,9,1) AS link
+				 , SUBSTRING(A.ALARM_SP,10,1) AS comp
+				 , SUBSTRING(A.ALARM_SP,11,1) AS lowPressure
+				 , SUBSTRING(A.ALARM_SP,12,1) AS highPressure
+				 , SUBSTRING(A.ALARM_SP,13,1) AS deSensor
+				 , SUBSTRING(A.ALARM_SP,14,1) AS inSensor
+				 , SUBSTRING(A.ALARM_SP,15,1) AS lowTemp
+				 , SUBSTRING(A.ALARM_SP,16,1) AS highTemp
+				 , A.SENS_TEMP AS sensTemp
+		FROM
+				(
+					SELECT
+							   A.STR_CD
+							 , A.STR_NM
+							 , C.ORG_NM
+							 , A.HUB_ID
+							 , A.PORT_NO
+							 , A.DEVICE_TYPE
+							 , A.DEVICE_LOC    
+							 , A.SENS_TEMP
+                             , A.ALARM_SP        
+					   FROM (
+							 SELECT 
+							          A.STR_CD
+                                    , B.ORG_CD
+							        , B.STR_NM
+							        , A.HUB_ID
+							        , A.PORT_NO
+							        , A.DEVICE_TYPE
+							        , A.DEVICE_LOC
+							        , C.SENS_TEMP
+                             		, C.ALARM_SP
+            				    FROM TH_STR_INV_HUB_MST A, TH_STR_INFO_MST B, TH_STR_INV_HUB_STATUS C
+					           WHERE A.STR_CD = B.STR_CD
+					             AND A.STR_CD = C.STR_CD
+		                         AND A.HUB_ID = C.HUB_ID
+		                         AND A.PORT_NO = C.PORT_NO
+		                         AND ( C.STR_CD, C.YYYYMMDD, C.HHMIN ) IN ( SELECT STR_CD, YYYYMMDD, MAX(HHMIN)
+															    			  FROM TH_STR_INV_HUB_STATUS
+															                 WHERE ( STR_CD, YYYYMMDD) IN ( SELECT STR_CD, MAX(YYYYMMDD)
+					                                                                                          FROM TH_STR_INV_HUB_STATUS
+                                                                                                             GROUP BY STR_CD )
+                                                                             GROUP BY STR_CD, YYYYMMDD )
+					             AND A.USE_YN = 'Y'
+					             AND B.USE_YN = 'Y'
+					             ]]>
+								<if test="strCd != null and strCd != ''">
+	     						AND B.STR_CD	= #{strCd}
+								</if>
+								<![CDATA[
+					             AND B.COMPANY_CD = #{companyCd}
+						     ) A LEFT OUTER JOIN TH_COMPANY_ORG_MST C
+					     ON A.ORG_CD = C.ORG_CD
+					    AND C.COMPANY_CD = #{companyCd}
+					    ]]>
+					    <if test="orgCd != null and orgCd != ''">
+	     				AND B.ORG_CD	= #{orgCd}
+						</if>
+						<![CDATA[
+					) A
+		]]>
+		<if test='alarmYn != null and alarmYn == "Y"'>
+		    AND A.ALARM_SP != '0000000000000000'
+		</if>
+	<![CDATA[
+	ORDER BY strCd desc , portNo asc
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<select id="retrieveInverterControlDtl" parameterType="Map" resultType="GridInverterStatusVo">
+		SELECT
+				  A.STR_CD 				AS strCd
+				, B.STR_NM             	AS strNm    
+				, A.YYYYMMDD             	AS yyyyMmDd
+				, A.HHMIN             	AS hhMin    
+				, DATE_FORMAT(A.YYYYMMDD,'%Y-%m-%d') 	AS yyyyMmDdView
+				, CONCAT(SUBSTR(A.HHMIN,1,2), ':', SUBSTR(A.HHMIN,3,2)) AS hhMinView   		
+				, A.HUB_ID         		AS hubId
+				, A.PORT_NO         		AS portNo
+				, A.DEVICE_TYPE         	AS deviceType
+				, C.DEVICE_LOC         	AS deviceLoc
+				, A.FW_VER         		AS fwVer
+				, A.MODEL         		AS model
+				, SUBSTRING(A.ALARM_MASK,9,16)     	AS alarmMask
+				, SUBSTRING(A.ALARM_SP,9,16)  		AS alarmSp
+				, A.ERR_CD         		AS errCd
+				, A.OPER_MODE         	AS operMode
+				, A.SENS_TEMP         	AS sensTemp
+				, A.SENS_TEMP_CONF        AS sensTempConf
+				, A.SENS_TEMP_OUT         AS sensTempOut
+				, A.MAX_TEMP_ALARM_YN     AS maxTempAlarmYn
+				, ROUND(A.MAX_TEMP)         		AS maxTemp
+				, A.MIN_TEMP_ALARM_YN     AS minTempAlarmYn
+				, ROUND(A.MIN_TEMP)         		AS minTemp
+				, A.DEFROST_SENS_TEMP     AS defrostSensTemp
+				, A.DEFW_OWNER         	AS defwOwner
+				, ROUND(A.DEFROST_TEMP_CONF)     AS defrostTempConf
+				, A.DEFROST_TERM          AS defrostTerm
+				, A.DEFROST_DELAY         AS defrostDelay
+				, A.DEWATER_DELAY         AS dewaterDelay
+				, A.SEND_SP         		AS sendSp
+				, A.REGI_ID         		AS regiId
+				, A.REGI_DTTM         	AS regiDttm
+				, A.FINAL_MOD_ID         	AS finalModId
+				, A.FINAL_MOD_DTTM        AS finalModDttm
+		  FROM TH_STR_INV_HUB_STATUS A, TH_STR_INFO_MST B, TH_STR_INV_HUB_MST C
+		WHERE A.STR_CD = B.STR_CD
+		    AND A.STR_CD = C.STR_CD
+		    AND A.HUB_ID = C.HUB_ID
+		    AND A.PORT_NO = C.PORT_NO 
+			AND A.STR_CD	= #{strCd}
+		    AND A.HUB_ID = #{hubId}
+			AND A.PORT_NO = #{portNo}	
+		    AND B.USE_YN = 'Y'
+			AND ( A.STR_CD, YYYYMMDD, HHMIN ) IN ( SELECT STR_CD, YYYYMMDD, MAX(HHMIN)
+									               FROM TH_STR_INV_HUB_STATUS
+												  WHERE ( STR_CD, YYYYMMDD) IN ( SELECT STR_CD, MAX(YYYYMMDD)
+												 							   	   FROM TH_STR_INV_HUB_STATUS
+		                                                                          WHERE STR_CD	= #{strCd}
+																			      GROUP BY STR_CD )
+												    AND STR_CD	= #{strCd}
+												  GROUP BY STR_CD, YYYYMMDD )
+	</select>
+	
+	<select id="retrieveGwId" parameterType="String" resultType="int">
+		SELECT GW_ID
+		  FROM TH_STR_GW_MST
+		WHERE STR_CD = #{strCd}
+	</select>
+	
+</mapper>

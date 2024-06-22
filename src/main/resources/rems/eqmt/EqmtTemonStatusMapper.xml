@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtTemonStatusMapper">
+
+	<!-- 매장별 포트번호 select -->
+	<select id="retrieveTemonList" parameterType="Map" resultType="SelectVo">
+	<![CDATA[
+	    SELECT
+	            CONCAT(TEMON_ID,":",TEMON_TYPE,":",PORT_NO) AS value
+	    	  , DEVICE_LOC			AS name	      
+	      FROM TH_STR_TEMP_MODULE
+	    WHERE STR_CD = #{strCd}
+	       AND USE_YN = 'Y'
+	     ORDER BY CAST(PORT_NO AS UNSIGNED)
+	]]>
+	</select>	
+
+	<select id="retrieveTemonStatusList" parameterType="Map" resultType="GridTemonStatusVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+	<![CDATA[
+		SELECT 
+	              A.STR_CD AS strCd
+				, B.STR_NM AS strNm 
+				, A.YYYYMMDD AS yyyyMmDd
+				, A.HHMIN AS hhMin
+				, DATE_FORMAT(A.YYYYMMDD,'%Y-%m-%d') AS yyyyMmDdView
+				, CONCAT(SUBSTR(A.HHMIN,1,2), ':', SUBSTR(A.HHMIN,3,2)) AS hhMinView   		
+				, A.TEMON_ID AS temonId
+				, A.TEMON_TYPE AS temonType
+                , A.PORT_NO AS portNo
+				, A.DEVICE_TYPE AS deviceType
+				, C.DEVICE_LOC AS deviceLoc
+				, A.SENS_TEMP AS sensTemp
+				, C.MAX_TEMP AS maxTemp
+				, C.MIN_TEMP AS minTemp
+				, CASE WHEN A.ALARM_YN = 'Y' THEN '1' ELSE 0 END AS alarm
+				, CASE WHEN A.ALARM_YN = 'H' THEN '1' ELSE 0 END AS highTemp
+				, CASE WHEN A.ALARM_YN = 'L' THEN '1' ELSE 0 END AS lowTemp
+				, CASE WHEN A.ALARM_YN = 'E' THEN '1' ELSE 0 END AS commErr
+			FROM TH_STR_REMS_DEVICE_BASE A, TH_STR_INFO_MST B, TH_STR_REMS_DEVICE_MST C
+		 WHERE A.STR_CD = B.STR_CD
+			 AND A.STR_CD = C.STR_CD
+			 AND A.TEMON_ID = C.TEMON_ID
+             AND A.TEMON_TYPE = C.TEMON_TYPE
+			 AND A.PORT_NO = C.PORT_NO 
+		     AND A.STR_CD	= #{strCd}
+		     AND B.USE_YN = 'Y'
+		     AND C.USE_YN = 'Y'
+	]]>
+	<if test="temonId != null and temonId != ''">
+	     AND A.TEMON_ID		= #{temonId}
+	</if>
+	<if test="temonType != null and temonType != ''">
+	     AND A.TEMON_TYPE		= #{temonType}
+	</if>
+	<if test="portNo != null and portNo != ''">
+	     AND A.PORT_NO		= #{portNo}
+	</if>
+	<if test="yyyyMmDd != null and yyyyMmDd != ''">
+	     AND A.YYYYMMDD	= #{yyyyMmDd}
+	</if>
+	<if test='alarmYn != null and alarmYn == "Y"'>
+	     AND A.ALARM_YN != 'N'
+	</if>
+	<![CDATA[
+	ORDER BY yyyymmdd desc, hhmin desc , portNo asc
+	]]>
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<select	id="retrieveTemonTempChartData" parameterType="Map" resultType="Map">
+	<![CDATA[			
+		SELECT
+		          SUBSTRING(A.YYYYMMDD,1,4)   AS yyyy
+			    , SUBSTRING(A.YYYYMMDD,5,2)   AS mm
+			    , SUBSTRING(A.YYYYMMDD,7,2)   AS dd
+			    , SUBSTRING(A.HHMIN,1,2)      AS hh
+			    , SUBSTRING(A.HHMIN,3,2)      AS min
+			    , A.SENS_TEMP                 AS sens_temp
+			    , A.ALARM_YN                  AS alarm_yn
+			    , B.MIN_TEMP                  AS min_temp
+			    , B.MAX_TEMP                  AS max_temp
+  		    FROM TH_STR_REMS_DEVICE_BASE A, TH_STR_REMS_DEVICE_MST B
+		   WHERE A.STR_CD     = B.STR_CD
+		     AND A.TEMON_ID   = B.TEMON_ID
+		     AND A.TEMON_TYPE = B.TEMON_TYPE
+		     AND A.PORT_NO   = B.PORT_NO
+		     AND A.STR_CD      = #{strCd}
+			 AND YYYYMMDD    = #{yyyyMmDd}
+			 AND A.TEMON_ID    = #{temonId}
+			 AND A.TEMON_TYPE  = #{temonType}
+			 AND A.PORT_NO     = #{portNo}
+		 ORDER BY HHMIN ASC
+	]]>	
+	</select>
+	
+</mapper>

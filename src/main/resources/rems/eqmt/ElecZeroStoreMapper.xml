@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.ElecZeroStoreMapper">
+
+	<select id="retrieveAuthList" parameterType="Map" resultType="SystemVo">
+		SELECT AUTH_ID as authId, 
+		   	   AUTH_NM as authNm 
+		  FROM TH_AUTH
+		 WHERE COMPANY_CD = #{companyCd}
+	</select>
+
+
+	<select id="retrieveElecStoreExcel" parameterType="Map" resultType="HashMap">
+		<![CDATA[
+		SELECT
+			  viewStrCd
+			, strNm
+			, orgCd
+			, orgFullName
+			, remsStartDt
+			, vendorNm
+			, electricentNm
+			, lastYmdh
+			, lapseDay
+			, CASE WHEN contents = '1' THEN '데이터미송신'
+				   WHEN contents = '2' THEN '전력값확인필요(전력값<냉난방)'
+				   WHEN contents = '3' THEN '비정상(전력데이터:0)'
+				   WHEN contents = '4' THEN '비정상(메인전력전력확인필요)'
+			   END contents
+		FROM
+		(
+			SELECT
+				  A.VIEW_STR_CD		AS viewStrCd
+			    , A.STR_NM			AS strNm
+			    , A.ORG_CD			AS orgCd
+			    , fnGetOrgFullName(#{companyCd}, A.ORG_CD) AS orgFullName
+			    , DATE_FORMAT(A.REMS_START_DT, '%Y-%m-%d') 	AS remsStartDt        
+			    , H.VENDOR_NM       AS vendorNm
+			    , F.ELECTRICENT_NM	AS electricentNm
+			    , DATE_FORMAT(IFNULL(C.YYYYMMDD, A.REMS_START_DT), '%Y-%m-%d')	AS lastYmdh
+			    , DATEDIFF(NOW(), IFNULL(C.YYYYMMDD, A.REMS_START_DT)) AS lapseDay
+			    , CASE WHEN B.EP_1CH_EFT_WATAGE IS NULL THEN '1'
+					   WHEN ((B.EP_1CH_EFT_WATAGE >= 100 AND B.EP_1CH_EFT_WATAGE < 10000) AND B.EP_1CH_EFT_WATAGE < (B.EP_2CH_EFT_WATAGE + B.EP_3CH_EFT_WATAGE)) THEN '2'
+					   WHEN B.EP_1CH_EFT_WATAGE < 100 THEN '3'	   
+					   ELSE '4'
+					END AS contents
+			FROM TH_STR_INFO_MST A
+			LEFT OUTER JOIN (SELECT * FROM TH_STR_CHN_ELEC_USE_DD_SUM  WHERE YYYYMMDD = DATE_FORMAT(NOW(), '%Y%m%d')) B
+			ON A.STR_CD = B.STR_CD
+			LEFT OUTER JOIN
+			(
+				SELECT AA.STR_CD, MAX(YYYYMMDD) AS YYYYMMDD
+				FROM TH_STR_INFO_MST AA
+				LEFT OUTER JOIN TH_STR_CHN_ELEC_USE_DD_SUM CC
+				ON AA.STR_CD = CC.STR_CD
+				WHERE AA.REMS_START_DT < DATE_FORMAT(NOW(), '%Y%m%d')
+				AND (CC.EP_1CH_EFT_WATAGE >= '0' AND CC.EP_1CH_EFT_WATAGE IS NOT NULL)
+				GROUP BY AA.STR_CD
+			) C
+			ON A.STR_CD = C.STR_CD
+			, TH_STR_GW_MST D
+			LEFT JOIN TH_ELECTRICENT_STR_MAP E
+			ON D.STR_CD = E.STR_CD
+			LEFT JOIN TH_ELECTRICENT_MST F
+			ON E.ELECTRICENT_CD = F.ELECTRICENT_CD
+			LEFT JOIN TH_VENDOR_STR_MAP G
+			ON D.STR_CD = G.STR_CD
+			LEFT JOIN TH_VENDOR_MST H
+			ON G.VENDOR_CD = H.VENDOR_CD
+			WHERE A.STR_CD = D.STR_CD
+			AND A.USE_YN = 'Y'
+			AND A.COMPANY_CD = #{companyCd}
+			AND D.GW_ADDR != '000000000000'
+			AND D.GW_IP IS NOT NULL
+			AND ((A.REMS_START_DT < REPLACE(DATE_SUB(DATE_FORMAT(NOW(), '%Y%m%d'), INTERVAL 1 MONTH),'-','') AND (B.EP_1CH_EFT_WATAGE < '10000' OR B.EP_1CH_EFT_WATAGE IS NULL))
+			OR (A.REMS_START_DT BETWEEN REPLACE(DATE_SUB(DATE_FORMAT(NOW(), '%Y%m%d'), INTERVAL 1 MONTH),'-','') AND DATE_FORMAT(NOW(), '%Y%m%d') AND (B.EP_1CH_EFT_WATAGE < '10' OR B.EP_1CH_EFT_WATAGE IS NULL)))
+			
+			]]>
+			<if test="scrDayChk != 1">
+			<![CDATA[
+				
+			]]>
+			</if>
+			<if test="scrDayChk == 1">
+			<![CDATA[
+				AND DATEDIFF(NOW(), IFNULL(C.YYYYMMDD, A.REMS_START_DT)) >= 3
+			]]>
+			</if>
+			<if test="scrStrNm != null and scrStrNm != ''">
+				AND (A.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%') OR A.VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+			</if>
+			<if test="scrOrgCd != null and scrOrgCd != ''">
+				AND A.ORG_CD = #{scrOrgCd}
+			</if>
+		) T
+		WHERE 1=1
+		<if test="scrContentCd != null and scrContentCd != ''">
+			AND contents = #{scrContentCd}
+		</if>
+    </select>
+
+	<select id="retrieveElecStore" parameterType="Map"  resultType="SystemVo">
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />
+		<![CDATA[
+		SELECT
+			  viewStrCd
+			, strCd
+			, strNm
+			, orgCd
+			, orgFullName
+			, remsStartDt
+			, vendorNm
+			, electricentNm
+			, lastYmdh
+			, lapseDay
+			, CASE WHEN contents = '1' THEN '데이터미송신'
+				   WHEN contents = '2' THEN '전력값확인필요(전력값<냉난방)'
+				   WHEN contents = '3' THEN '비정상(전력데이터:0)'
+				   WHEN contents = '4' THEN '비정상(메인전력전력확인필요)'
+			   END contents
+		FROM
+		(
+			SELECT
+				  A.VIEW_STR_CD		AS viewStrCd
+			    , A.STR_CD			as strCd
+			    , A.STR_NM			AS strNm
+			    , A.ORG_CD			AS orgCd
+			    , fnGetOrgFullName(#{companyCd}, A.ORG_CD) AS orgFullName
+			    , DATE_FORMAT(A.REMS_START_DT, '%Y-%m-%d') 	AS remsStartDt        
+			    , H.VENDOR_NM       AS vendorNm
+			    , F.ELECTRICENT_NM	AS electricentNm
+			    , DATE_FORMAT(IFNULL(C.YYYYMMDD, A.REMS_START_DT), '%Y-%m-%d')	AS lastYmdh
+			    , DATEDIFF(NOW(), IFNULL(C.YYYYMMDD, A.REMS_START_DT)) AS lapseDay
+			    , CASE WHEN B.EP_1CH_EFT_WATAGE IS NULL THEN '1'
+					   WHEN ((B.EP_1CH_EFT_WATAGE >= 100 AND B.EP_1CH_EFT_WATAGE < 10000) AND B.EP_1CH_EFT_WATAGE < (B.EP_2CH_EFT_WATAGE + B.EP_3CH_EFT_WATAGE)) THEN '2'
+					   WHEN B.EP_1CH_EFT_WATAGE < 100 THEN '3'	   
+					   ELSE '4'
+					END AS contents
+			FROM TH_STR_INFO_MST A
+			LEFT OUTER JOIN (SELECT * FROM TH_STR_CHN_ELEC_USE_DD_SUM  WHERE YYYYMMDD = DATE_FORMAT(NOW(), '%Y%m%d')) B
+			ON A.STR_CD = B.STR_CD
+			LEFT OUTER JOIN
+			(
+				SELECT AA.STR_CD, MAX(YYYYMMDD) AS YYYYMMDD
+				FROM TH_STR_INFO_MST AA
+				LEFT OUTER JOIN TH_STR_CHN_ELEC_USE_DD_SUM CC
+				ON AA.STR_CD = CC.STR_CD
+				WHERE AA.REMS_START_DT < DATE_FORMAT(NOW(), '%Y%m%d')
+				AND (CC.EP_1CH_EFT_WATAGE >= '0' AND CC.EP_1CH_EFT_WATAGE IS NOT NULL)
+				GROUP BY AA.STR_CD
+			) C
+			ON A.STR_CD = C.STR_CD
+			, TH_STR_GW_MST D
+			LEFT JOIN TH_ELECTRICENT_STR_MAP E
+			ON D.STR_CD = E.STR_CD
+			LEFT JOIN TH_ELECTRICENT_MST F
+			ON E.ELECTRICENT_CD = F.ELECTRICENT_CD
+			LEFT JOIN TH_VENDOR_STR_MAP G
+			ON D.STR_CD = G.STR_CD
+			LEFT JOIN TH_VENDOR_MST H
+			ON G.VENDOR_CD = H.VENDOR_CD
+			WHERE A.STR_CD = D.STR_CD
+			AND A.USE_YN = 'Y'
+			AND A.COMPANY_CD = #{companyCd}
+			AND D.GW_ADDR != '000000000000'
+			AND D.GW_IP IS NOT NULL
+			AND ((A.REMS_START_DT < REPLACE(DATE_SUB(DATE_FORMAT(NOW(), '%Y%m%d'), INTERVAL 1 MONTH),'-','') AND (B.EP_1CH_EFT_WATAGE < '10000' OR B.EP_1CH_EFT_WATAGE IS NULL))
+			OR (A.REMS_START_DT BETWEEN REPLACE(DATE_SUB(DATE_FORMAT(NOW(), '%Y%m%d'), INTERVAL 1 MONTH),'-','') AND DATE_FORMAT(NOW(), '%Y%m%d') AND (B.EP_1CH_EFT_WATAGE < '10' OR B.EP_1CH_EFT_WATAGE IS NULL)))
+			]]>
+			<if test="scrDayChk != 1">
+			</if>
+			<if test="scrDayChk == 1">
+			<![CDATA[
+				AND DATEDIFF(NOW(), IFNULL(C.YYYYMMDD, A.REMS_START_DT)) >= 3
+			]]>
+			</if>
+			<if test="scrStrNm != null and scrStrNm != ''">
+				AND (A.STR_NM LIKE CONCAT('%', #{scrStrNm}, '%') OR A.VIEW_STR_CD LIKE CONCAT('%', #{scrStrNm}, '%')) 
+			</if> 	
+			<if test="scrOrgCd != null and scrOrgCd != ''">
+				AND A.ORG_CD = #{scrOrgCd}
+			</if>
+		) T
+		WHERE 1=1
+		<if test="scrContentCd != null and scrContentCd != ''">
+			AND contents = #{scrContentCd}
+		</if>
+		ORDER BY ${sidx} ${sord}
+		
+		<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>		
+    
+</mapper>

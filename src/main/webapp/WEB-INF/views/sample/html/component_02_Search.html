@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Search</title>
+<link href="../css/rems_global.css" rel="stylesheet" type="text/css" />
+<link href="../css/rems_page.css" rel="stylesheet" type="text/css" />
+<style>
+@import url('http://fonts.googleapis.com/earlyaccess/nanumgothic.css');
+</style>
+</head>
+
+<body class="mainBody">
+<div class="r_wrapper">
+  <div class="r_compWrapper">
+    <h1 class="r_pageTitle">Search</h1>
+    <div class="pageNav"><a href="#">1depth Menu</a><span>></span><a href="#">2depth Menu</a><span>></span><a class="r_select" href="#">Search</a></div>
+    
+    
+    <span style="margin-bottom:15px; font-size:14px; display:inline-block;">One Line Search</span>
+    
+    <div class="r_search oneLine">
+      <table>
+      <tr>
+        <th>회사</th>
+        <td>
+          <select name="select" class="searchSelect" style="width:160px;">
+            <option>Select</option>
+            <option>LG CNS</option>
+            <option>GS Retail</option>
+          </select>
+        </td>
+        <th class="r_second">조직</th>
+        <td>
+          <div class="r_innerSearch">
+          <input class="r_Input" type="text" style="width:150px;" />
+          <a href="#">
+          <img src="../images/ico_innerSearch.png" alt="inner search" />
+          </a>
+          </div>
+        </td>
+        <th class="r_second">매장</th>
+        <td>
+          <input class="r_Input r_disable" type="text" style="width:100px;" />
+          <div class="r_innerSearch">
+          <input class="r_Input" type="text" style="width:150px;" />
+          <a href="#">
+          <img src="../images/ico_innerSearch.png" alt="inner search" />
+          </a>
+          </div>
+        </td>
+        <td class="r_searchBtn">
+          <span class="search">
+            <button>조회</button>
+          </span>
+        </td>
+      </tr>
+      </table>
+    </div>
+    
+    <span style="margin-bottom:15px; font-size:14px; display:inline-block;">Multi Line Search</span>
+
+    <div class="r_search multiLine">
+      <table>
+      <tr>
+        <th width="7%">회사</th>
+        <td width="40%">
+          <select name="select" class="searchSelect" style="width:160px;">
+            <option>Select</option>
+            <option>LG CNS</option>
+            <option>GS Retail</option>
+          </select>
+        </td>
+        <th width="7%">조직</th>
+        <td width="40%">
+          <div class="r_innerSearch">
+          <input class="r_Input" type="text" style="width:150px;" />
+          <a href="#">
+          <img src="../images/ico_innerSearch.png" alt="inner search" />
+          </a>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th>매장</th>
+        <td>
+          <input class="r_Input r_disable" type="text" style="width:100px;" />
+          <div class="r_innerSearch">
+          <input class="r_Input" type="text" style="width:150px;" />
+          <a href="#">
+          <img src="../images/ico_innerSearch.png" alt="inner search" />
+          </a>
+          </div>
+        </td>
+        <th>사용여부</th>
+        <td>
+          <span class="r_radio">
+            <input type="radio" name="system" id="mobile" checked="checked" />
+            <label for="mobile">사용</label>
+            <input type="radio"  name="system" id="web"/>
+            <label class="r_last" for="web">미사용</label>
+          </span>
+        </td>
+      </tr>
+      </table>
+      <span class="search">
+        <button>조회</button>
+      </span>
+    </div>
+    
+    <span style="margin-bottom:15px; font-size:14px; display:inline-block;">Inner Search</span>
+
+    <div class="r_inputTbl">
+  	<div class="r_inputTblTitle">
+      <h3>Inner Search</h3>
+    </div>
+
+    <div class="r_search oneLine">
+      <table>
+      <tr>
+        <th width="30">장치</th>
+        <td>
+        <select name="select" class="searchSelect" style="width:160px;">
+          <option>Select</option>
+          <option>장치1</option>
+          <option>장치2</option>
+        </select>
+        </td>
+        <th class="r_second" width="40">장치 ID</th>
+        <td>
+        <select name="select" class="searchSelect" style="width:160px;">
+          <option>Select</option>
+          <option>장치1</option>
+          <option>장치2</option>
+        </select>
+        </td>
+        <td class="r_searchBtn">
+        <span class="search">
+          <button>조회</button>
+        </span>
+        </td>
+      </tr>
+      </table>
+    </div>
+    </div>
+
+    <span style="margin:15px 0; font-size:14px; display:block;">Inline Search</span>
+
+    <div class="r_innerSearch">
+    <input class="r_Input" type="text" style="width:150px;" />
+    <a href="#">
+    <img src="../images/ico_innerSearch.png" alt="inner search" />
+    </a>
+    </div>
+    
+  </div>
+</div>
+</body>
+</html>

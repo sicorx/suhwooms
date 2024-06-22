@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<settings>
+		<setting name="useGeneratedKeys" value="false" />
+	</settings>
+	
+	<typeAliases>
+		<!-- 시스템 -->
+		<typeAlias alias="UserVo" type="rems.system.model.UserVo" />
+		<typeAlias alias="SessionUserVo" type="rems.system.model.SessionUserVo" />
+		<typeAlias alias="MenuVo" type="rems.system.model.MenuVo" />	
+		<typeAlias alias="ComCodeVo" type="rems.system.model.ComCodeVo" />
+		<typeAlias alias="GridStoreMgntVo" type="rems.system.model.GridStoreMgntVo" />
+		<typeAlias alias="GridUserMgntVo" type="rems.system.model.GridUserMgntVo" />
+		<typeAlias alias="GridCompanyMgntVo" type="rems.system.model.GridCompanyMgntVo" />
+		<typeAlias alias="GridTempPolicyMgntVo" type="rems.system.model.GridTempPolicyMgntVo" />
+		<typeAlias alias="GridStoreInverterMgntVo" type="rems.system.model.GridStoreInverterMgntVo" />
+		<typeAlias alias="RemsConfigMgntVo" type="rems.system.model.RemsConfigMgntVo" />
+		<typeAlias alias="RemsConfigMstVo" type="rems.system.model.RemsConfigMstVo" />
+		<typeAlias alias="GridRemsDeviceMgntVo" type="rems.system.model.GridRemsDeviceMgntVo" />
+		<typeAlias alias="GwVo" type="rems.system.model.GwVo" />
+		<typeAlias alias="GridStoreFcltyMgntVo" type="rems.system.model.GridStoreFcltyMgntVo" />
+		<typeAlias alias="AuthVo" type="rems.system.model.AuthVo" />
+		<typeAlias alias="GridDimmTimePolicyMgntVo" type="rems.system.model.GridDimmTimePolicyMgntVo" />
+		<typeAlias alias="GridDimmWeatherPolicyMgntVo" type="rems.system.model.GridDimmWeatherPolicyMgntVo" />
+		<typeAlias alias="MenuAuthVo" type="rems.system.model.MenuAuthVo" />
+		<typeAlias alias="GridVendorMgntVo" type="rems.system.model.GridVendorMgntVo" />
+		<typeAlias alias="GridMaintainEngineerMgntVo" type="rems.system.model.GridMaintainEngineerMgntVo" />
+		<typeAlias alias="VandorStrMapVo" type="rems.system.model.VandorStrMapVo" />
+		<typeAlias alias="HVACPolicyMgntVo" type="rems.system.model.HVACPolicyMgntVo" />
+		<typeAlias alias="GridOrgMgntVo" type="rems.system.model.GridOrgMgntVo" />
+		<typeAlias alias="GridClosingVo" type="rems.system.model.GridClosingVo" />
+		
+		<typeAlias alias="NoticeVo" type="rems.system.model.NoticeVo" />
+		
+		<!-- 대시보드 -->
+		<typeAlias alias="DashBoardStoreDataVo" type="rems.system.model.DashBoardStoreDataVo" />
+		
+		
+		<!-- 공통 -->
+		<typeAlias alias="GridVo" type="rems.common.model.GridVo" />
+		<typeAlias alias="AreaVo" type="rems.common.model.AreaVo" />
+		<typeAlias alias="UserMngVo" type="rems.common.model.UserMngVo" />
+		<typeAlias alias="SelectVo" type="rems.common.model.SelectVo" />
+		
+		<!-- 전체전력 -->
+		<typeAlias alias="EpStatusVo" type="rems.energy.model.EpStatusVo" />
+		<typeAlias alias="EpPredictVo" type="rems.energy.model.EpPredictVo" />
+		<typeAlias alias="EpUsedAreaVo" type="rems.energy.model.EpUsedAreaVo" />
+		<typeAlias alias="EpUsedAreaChrtVo" type="rems.energy.model.EpUsedAreaChrtVo" />
+		<typeAlias alias="EpUsedAreaListVo" type="rems.energy.model.EpUsedAreaListVo" />
+		<typeAlias alias="EpUsedListVo" type="rems.energy.model.EpUsedListVo" />
+		
+		
+		<!-- 냉난방전력 -->
+		<typeAlias alias="AnhAreaDistListVo" type="rems.energy.model.AnhAreaDistListVo" />
+		<typeAlias alias="AnhAreaDistVo" type="rems.energy.model.AnhAreaDistVo" />
+		<typeAlias alias="AnhAreaListVo" type="rems.energy.model.AnhAreaListVo" />
+		<typeAlias alias="AnhStatusVo" type="rems.energy.model.AnhStatusVo" />
+		<typeAlias alias="AnhTempVo" type="rems.energy.model.AnhTempVo" />
+		<typeAlias alias="AnhUsedAreaChrtVo" type="rems.energy.model.AnhUsedAreaChrtVo" />
+		
+		<!-- 조명전력 -->
+		<typeAlias alias="EpLightMonthStoreCntVo" type="rems.energy.model.EpLightMonthStoreCntVo" />
+		<typeAlias alias="EpLightPredictVo" type="rems.energy.model.EpLightPredictVo" />
+		<typeAlias alias="EpLightStatusVo" type="rems.energy.model.EpLightStatusVo" />
+		<typeAlias alias="EpLightUsedListVo" type="rems.energy.model.EpLightUsedListVo" />
+		<typeAlias alias="EpWeatherStatusListVo" type="rems.energy.model.EpWeatherStatusListVo" />
+		
+		<!-- 계약전력 -->
+		<typeAlias alias="EpContDemandListVo" type="rems.energy.model.EpContDemandListVo" />
+		<typeAlias alias="EpContExcessChrtVo" type="rems.energy.model.EpContExcessChrtVo" />
+		<typeAlias alias="EpContOverStoreListVo" type="rems.energy.model.EpContOverStoreListVo" />
+		<typeAlias alias="EpContOverStoreVo" type="rems.energy.model.EpContOverStoreVo" />
+		
+		<typeAlias alias="SemsVo" type="rems.energy.model.SemsVo" />
+
+		<!-- 전체시설물 -->
+		<typeAlias alias="PlantStatusVo" type="rems.eqmt.model.PlantStatusVo" />
+		<typeAlias alias="PlantAlarmListVo" type="rems.eqmt.model.PlantAlarmListVo" />
+		<typeAlias alias="PlantStatusListVo" type="rems.eqmt.model.PlantStatusListVo" />
+		
+		<typeAlias alias="GridStoreInverterVo" type="rems.eqmt.model.GridStoreInverterVo"/>
+		<typeAlias alias="GridInverterStatusVo" type="rems.eqmt.model.GridInverterStatusVo"/>
+		<typeAlias alias="GridTemonStatusVo" type="rems.eqmt.model.GridTemonStatusVo"/>		
+		<typeAlias alias="GridEqmtAlarmListVo" type="rems.eqmt.model.GridEqmtAlarmListVo" />
+		
+		<typeAlias alias="SystemVo" type="rems.eqmt.model.SystemVo" />
+		
+		<!-- 매장 -->
+		<typeAlias alias="EMSModel" type="rems.util.model.EMSModel" />
+		
+		
+		<!-- 알람 -->
+		
+		<!-- 피크 -->		
+		<typeAlias alias="EpPeakStatusVo" type="rems.energy.model.EpPeakStatusVo" />
+		
+		<!-- 주영 -->
+		<typeAlias alias="EpAlarmResultListVo" type="rems.energy.model.EpAlarmResultListVo" />		
+		<typeAlias alias="EpDashBoardVo" type="rems.energy.model.EpDashBoardVo" />
+		
+		<typeAlias alias="ExcelDataVo" type="rems.system.model.ExcelDataVo" />
+		<typeAlias alias="ExcelTemonDataVo" type="rems.system.model.ExcelTemonDataVo" />
+		<typeAlias alias="ExcelInvDataVo" type="rems.system.model.ExcelInvDataVo" />
+		<typeAlias alias="ExcelStrConfDataVo" type="rems.system.model.ExcelStrConfDataVo" />		
+		
+		<typeAlias alias="DemandPowerExcelDataVo" type="rems.system.model.DemandPowerExcelDataVo" />
+		
+		
+		
+		<typeAlias alias="InfoTemonDataVo" type="rems.system.model.InfoTemonDataVo" />
+		<typeAlias alias="InfoStrConfDataVo" type="rems.system.model.InfoStrConfDataVo" />
+		<typeAlias alias="InfoTemonDataVo" type="rems.system.model.InfoTemonDataVo" />
+		
+		<!-- BLE -->
+		<typeAlias alias="BleAuthVo" type="rems.system.model.BleAuthVo" />	
+		<typeAlias alias="GridBleVo" type="rems.management.model.GridBleVo" />
+		<typeAlias alias="CloseDataVo" type="rems.management.model.CloseDataVo" />
+		
+				
+	</typeAliases>
+</configuration>

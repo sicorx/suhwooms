@@ -1,0 +1,816 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtStatusMapper">
+
+
+	<select id="retrievePlantStatus" parameterType="Map" resultType="PlantStatusVo">
+	<![CDATA[
+			SELECT 
+					C.DEVICE_TYPE 		AS device
+					,FORMAT(SUM(C.CNT), 0)    		AS count
+			FROM (
+					SELECT 
+							B.DEVICE_TYPE
+              				,COUNT(B.DEVICE_TYPE) AS CNT
+          			FROM 
+          				TH_STR_INFO_MST A
+               			INNER JOIN TH_STR_REMS_DEVICE_MST B 
+               			ON 
+               			A.STR_CD = B.STR_CD
+         			WHERE 
+         				A.COMPANY_CD = #{companyCd}
+           				AND 
+           				A.USE_YN = 'Y'
+           				AND DATE_FORMAT(NOW(), '%Y%m%d') BETWEEN IFNULL(A.REMS_START_DT, '20140101') 
+           				AND 
+           				IFNULL(A.REMS_END_DT, '29991231')
+           				AND 
+           				B.USE_YN = 'Y'
+           				AND B.DEVICE_TYPE NOT IN ('X','')
+         			GROUP BY B.DEVICE_TYPE
+        			UNION ALL
+        			SELECT 
+        					B.DEVICE_TYPE
+              				,COUNT(B.DEVICE_TYPE) AS CNT
+          			FROM 
+          				TH_STR_INFO_MST A
+               			INNER JOIN TH_STR_INV_HUB_MST B 
+               			ON 
+               			A.STR_CD = B.STR_CD
+         				WHERE A.COMPANY_CD = #{companyCd}
+          				AND 
+          				A.USE_YN = 'Y'
+           				AND 
+           				DATE_FORMAT(NOW(), '%Y%m%d') BETWEEN IFNULL(A.REMS_START_DT, '20140101') 
+           				AND 
+           				IFNULL(A.REMS_END_DT, '29991231')
+           				AND
+           				B.USE_YN = 'Y'
+           				AND 
+           				B.DEVICE_TYPE NOT IN ('X','')
+         				GROUP BY B.DEVICE_TYPE
+       			) C
+ 			GROUP BY C.DEVICE_TYPE
+	 
+	/* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantStatus */ 
+	]]>
+	</select>
+	
+	
+	
+	
+	<select id="retrieveEqmtStoreMgnt" parameterType="Map" resultType="PlantStatusListVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+	SELECT C.STR_CD                             AS strCd
+      ,C.VIEW_STR_CD                            AS viewStrCd
+      ,C.TEMON_ID                               AS temonId
+      ,C.TEMON_TYPE                             AS temonType
+      ,C.PORT_NO                                AS portNo
+      ,C.DEVICE_LOC                             AS deviceLoc
+      ,C.STR_NM                                 AS strNm
+      ,fnGetOrgFullName(#{companyCd}, C.ORG_CD)	AS orgFullNm
+      ,D.COMM_CD_NM                             AS temonTypeName
+      ,C.MAX_SENS_TEMP                          AS maxSensTemp
+      ,C.MIN_SENS_TEMP                          AS minSensTemp
+      ,(SELECT COUNT(NO)
+          FROM TH_GCM_AS_RESULT
+       --  WHERE YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')
+          WHERE DATE_FORMAT(YYYYMMDD,'%Y%m') = DATE_FORMAT(NOW(), '%Y%m')
+           AND STR_CD = C.STR_CD
+           AND TEMON_ID = C.TEMON_ID
+           AND TEMON_TYPE = C.TEMON_TYPE
+           AND PORT_NO = C.PORT_NO)             AS alarmCnt
+  FROM (
+        SELECT B.STR_CD
+              ,A.ORG_CD
+			  ,A.VIEW_STR_CD
+              ,A.STR_NM
+              ,B.TEMON_ID
+              ,B.TEMON_TYPE
+              ,B.PORT_NO
+              ,B.DEVICE_TYPE
+              ,B.DEVICE_LOC
+              ,MAX(B.MAX_SENS_TEMP) AS MAX_SENS_TEMP
+              ,MIN(B.MIN_SENS_TEMP) AS MIN_SENS_TEMP
+          FROM TH_STR_INFO_MST A
+               INNER JOIN TH_STR_TEMP_MODULE_MM B ON A.STR_CD = B.STR_CD
+         WHERE A.COMPANY_CD = #{companyCd}
+           AND A.USE_YN = 'Y'
+         --  AND DATE_FORMAT(now(), '%Y%m%d') BETWEEN IFNULL(A.REMS_START_DT, '20140101') AND IFNULL(A.REMS_END_DT, '29991231')
+         --  AND B.YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')
+            AND B.YYYYMM = DATE_FORMAT(NOW(), '%Y%m')
+         GROUP BY B.STR_CD, A.STR_NM, B.TEMON_ID, B.TEMON_TYPE, B.PORT_NO, B.DEVICE_TYPE, B.DEVICE_LOC
+       ) C
+       INNER JOIN TH_COMM_CD D ON D.COMM_GRP_CD = 'VIEW13' AND C.TEMON_TYPE = D.COMM_CD
+ 		WHERE 1 = 1   		
+   	]]>
+   	
+   		<if test="strNm != null and strNm != ''">
+  				AND (
+	        			INSTR(C.STR_NM, #{strNm}) > 0 
+	        			OR 
+	        			INSTR(C.VIEW_STR_CD, #{strNm}) > 0
+        			)   				
+		</if>
+		<if test="orgCd != null and orgCd != ''">
+  				AND C.ORG_CD	= #{orgCd}
+		</if>	
+   		<if test="scrDeviceType != null and scrDeviceType != ''" >
+        <![CDATA[        	
+           		AND C.TEMON_TYPE like CONCAT('%',#{scrDeviceType},'%')
+        ]]>
+        </if>        
+   		
+	
+	<![CDATA[
+	ORDER BY ${sidx} ${sord}, deviceLoc asc
+	]]>
+	
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	
+	<!-- 장비 -->
+	<select id="retrieveEqmtList" parameterType="Map" resultType="SelectVo">
+	<![CDATA[
+   			SELECT
+  				COMM_CD     as value,
+  				COMM_CD_NM  as name
+			FROM
+  				th_comm_cd
+			WHERE 
+				COMM_GRP_CD = 'MAST02'
+	]]>	
+	</select>
+		
+	<!-- 장비 타입 -->
+	<select id="retrieveEqmtTypeList" parameterType="Map" resultType="SelectVo">
+	<![CDATA[
+   			SELECT
+  				COMM_CD     as value,
+  				COMM_CD_NM  as name
+			FROM
+  				th_comm_cd
+			WHERE 
+				COMM_GRP_CD = 'VIEW13'
+	]]>	
+	</select>
+	
+	
+	<!-- AS 타입 -->
+	<select id="retrieveEqmtAsTypeList" parameterType="Map" resultType="SelectVo">
+	<![CDATA[
+		SELECT COMM_CD AS value
+		     , COMM_CD_NM AS name
+		  FROM TH_COMM_CD
+		 WHERE COMM_GRP_CD = 'MAST10'
+	]]>	
+	</select>
+	
+  
+	
+	
+	<!-- 장비별 온도 차트 -->
+	<select id="retrieveEqmtTempChart" parameterType="Map" resultType="PlantStatusListVo">
+		<if test="temonType.equalsIgnoreCase('T') " >
+		<![CDATA[  	
+  			SELECT 
+				YYYYMMDD				as yyyymmdd
+		      	,HHMIN					as hhmin
+		      	,SENS_TEMP				as sensTemp
+			FROM 
+				TH_STR_REMS_DEVICE_BASE
+			WHERE 
+				YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')				
+				AND STR_CD = 		#{strCd}
+				AND TEMON_ID = 		#{temonId}
+				AND TEMON_TYPE = 	#{temonType}
+				AND PORT_NO = 		#{portNo}
+		 	ORDER BY YYYYMMDD, HHMIN	
+		]]>
+		</if>
+		<if test="temonType.equalsIgnoreCase('Z') " >
+		<![CDATA[  	
+  			SELECT 
+				YYYYMMDD				as yyyymmdd
+		      	,HHMIN					as hhmin
+		      	,SENS_TEMP				as sensTemp
+			FROM 
+				TH_STR_REMS_DEVICE_BASE
+			WHERE 
+				YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')				
+				AND STR_CD = 		#{strCd}
+				AND TEMON_ID = 		#{temonId}
+				AND TEMON_TYPE = 	#{temonType}
+				AND PORT_NO = 		#{portNo}
+		 	ORDER BY YYYYMMDD, HHMIN	
+		]]>
+		</if>
+		<if test="temonType.equalsIgnoreCase('I') " >	
+		<![CDATA[  	
+  			SELECT 
+				YYYYMMDD				as yyyymmdd
+		      	,HHMIN					as hhmin
+		      	,SENS_TEMP				as sensTemp
+			FROM 
+				TH_STR_INV_HUB_STATUS
+			WHERE 
+				YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')				
+				AND STR_CD = 		#{strCd}
+				AND HUB_ID  = 		#{temonId}				
+				AND PORT_NO = 		#{portNo}
+		 	ORDER BY YYYYMMDD, HHMIN	
+		]]>
+		</if>
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	<!-- 시설물 알림 매장 리스트 -->
+	<select id="retrieveEqmtAlarmStatus" parameterType="Map" resultType="GridEqmtAlarmListVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+				
+			SELECT 
+					 A.NO                                          	AS no
+					,A.DEVICE_LOC                                	AS deviceLoc
+			      	,A.STR_NM                                   	AS strNm
+			      	,A.STR_CD										AS strCd
+			     	,DATE_FORMAT(A.ALARM_DATE_S,'%Y-%m-%d %T')    	AS alarmDateS
+			      	,DATE_FORMAT(A.ALARM_DATE_E,'%Y-%m-%d %T')    	AS alarmDateE
+			      	,B.COMM_CD_NM                                 	AS temonTypeNm
+			      	,IF(A.AS_RESULT = 'Y', '처리', '미처리')      	AS asResult
+			      	,A.ALARM_MESSAGE                              	AS alarmMessage
+			      	,A.AS_VENDOR_NM                               	AS asVendorNm
+			      	,A.AS_ENGINEER                                	AS asEngineer
+			      	,DATE_FORMAT(A.AS_DATE,'%Y-%m-%d %T')         	AS asDate
+			      	,C.COMM_CD_NM                                	AS asContents
+			      	,A.AS_NOTE                                    	AS asNote
+			      	,A.YYYYMMDD										AS yyyymmdd
+			      	,A.HHMIN										AS hhmin
+			      	,A.TEMON_ID										AS temonId
+			      	,A.TEMON_TYPE									AS temonType
+			      	,A.PORT_NO										AS portNo
+			      	,(
+			      		SELECT 
+			      				COUNT(NO)
+			          	FROM 
+			          		TH_GCM_AS_RESULT
+			         	WHERE 
+			         		YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')
+			           		AND 
+			           		STR_CD = A.STR_CD
+			           		AND 
+			           		TEMON_ID = A.TEMON_ID
+			           		AND 
+			           		TEMON_TYPE = A.TEMON_TYPE
+			           		AND 
+			           		PORT_NO = A.PORT_NO
+					)											  AS alarmCnt
+			FROM 
+				TH_GCM_AS_RESULT A
+				INNER JOIN	TH_COMM_CD B 
+				ON 
+				B.COMM_GRP_CD = 'VIEW13' 
+				AND 
+				A.TEMON_TYPE = B.COMM_CD
+	            LEFT OUTER JOIN (SELECT COMM_CD, COMM_CD_NM
+				              	  FROM TH_COMM_CD
+                                 WHERE COMM_GRP_CD = 'MAST10') C 
+	            ON A.AS_METHOD = C.COMM_CD
+				LEFT OUTER JOIN TH_STR_REMS_DEVICE_MST D 
+				ON A.STR_CD = D.STR_CD 
+				AND 
+				A.TEMON_ID = D.TEMON_ID 
+				AND 
+				A.TEMON_TYPE = D.TEMON_TYPE 
+				AND 
+				A.PORT_NO = D.PORT_NO  
+				LEFT OUTER JOIN TH_STR_INV_HUB_MST E     
+				ON A.STR_CD = E.STR_CD 
+				AND 
+				A.TEMON_ID = E.HUB_ID 
+				AND 
+				A.PORT_NO = E.PORT_NO        
+				LEFT OUTER JOIN TH_STR_INFO_MST F
+        		ON
+        		A.STR_CD = F.STR_CD        		                        
+			 WHERE 
+			 	A.ALARM_DATE_E BETWEEN REPLACE(#{dateFrom}, '-', '') 
+			 	AND 
+			 	REPLACE(#{dateTo}, '-', '')
+			 	AND
+       			F.COMPANY_CD = #{companyCd}   
+	]]>
+	<if test="deviceType != null and deviceType != ''">
+       			AND (D.DEVICE_TYPE = #{deviceType} OR E.DEVICE_TYPE = #{deviceType})
+	</if>	
+	<if test="temonType != null and temonType != ''">
+       			AND A.TEMON_TYPE = #{temonType}
+	</if>
+	<if test="asVendorNm != null and asVendorNm != ''">
+       			AND A.AS_VENDOR_NM  = #{asVendorNm}
+	</if>
+	<if test="asEngineer != null and asEngineer != ''">
+       			AND INSTR(A.AS_ENGINEER, #{asEngineer}) > 0 
+	</if>
+	<if test="asResult != null and asResult != ''">
+       			AND A.AS_RESULT = #{asResult} 
+	</if>
+	<if test="closeStore != null and closeStore != ''">
+       			AND F.USE_YN = 'Y'
+	</if>
+	<![CDATA[
+	ORDER BY ${sidx} ${sord}
+	]]>
+	
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	
+	
+	
+	
+	
+	<!-- 시설물 알림 매장 리스트 -->
+	<select id="retrieveEqmtAlarmAsResult" parameterType="Map" resultType="GridEqmtAlarmListVo">		
+	<![CDATA[
+			SELECT 
+				  TGAR.STR_CD          as strCd,				  
+				  TGAR.YYYYMMDD        as yyyymmdd,
+				  TGAR.HHMIN           as hhmin,
+				  TGAR.TEMON_ID        as temonId,
+				  TGAR.TEMON_TYPE      as temonType,
+				  TGAR.PORT_NO         as portNo,
+				  TGAR.ALARM_DATE_S    as alarmDateS,
+				  TGAR.ALARM_DATE_E    as alarmDateE,
+				  TGAR.ALARM_TYPE      as alarmType,
+				  TGAR.ALARM_TEMP      as alarmTemp,
+				  TGAR.ALARM_COUNT     as alarmCount,
+				  TGAR.ALARM_MESSAGE   as alarmMessage,
+				  TGAR.AS_RESULT       as asResult,
+				  TGAR.AS_VENDOR_NM    as asVendorNm,
+				  TGAR.AS_ENGINEER     as asEngineer,
+				  TGAR.AS_METHOD       as asMethod,
+				  TGAR.AS_NOTE         as asNote,
+				  TGAR.AS_DATE         as asDate,
+				  TSIM.STR_NM		   as strNm,
+				  TSIM.VIEW_STR_CD     as viewStrCd,
+				  TSIM.ADDR            as addr,
+				  TSIM.TEL_NO          as telNo,
+				  TSTM.DEVICE_LOC      as deviceLoc
+				FROM 
+				  TH_GCM_AS_RESULT TGAR,
+				  TH_STR_INFO_MST TSIM,
+				  TH_STR_REMS_DEVICE_MST TSTM
+				WHERE
+				  TGAR.STR_Cd = TSIM.STR_CD
+				  AND
+				  TGAR.STR_Cd = TSTM.STR_CD
+				  AND
+				  TGAR.TEMON_ID = TSTM.TEMON_ID
+				  AND
+				  TGAR.TEMON_TYPE = TSTM.TEMON_TYPE
+				  AND
+				  TGAR.PORT_NO = TSTM.PORT_NO
+				  AND
+				  TGAR.STR_CD = #{strCd}
+				  AND
+				  TGAR.YYYYMMDD = #{yyyymmdd}
+				  AND
+				  TGAR.HHMIN = #{hhmin}
+				  AND
+				  TGAR.TEMON_ID = #{temonId}
+				  AND
+				  TGAR.TEMON_TYPE = #{temonType}
+				  AND
+				  TGAR.PORT_NO = #{portNo} 	 
+	]]>
+	</select>
+	
+	
+	<!-- 시설물 알림 조치내역 업데이트 -->	
+	<select id="retrieveAsResultYn" parameterType="Map" resultType="String">
+		SELECT
+			AS_RESULT
+		FROM
+			TH_GCM_AS_RESULT
+		WHERE
+			STR_CD 						= #{strCd}
+			AND TEMON_ID 				= #{temonId}
+			AND TEMON_TYPE 				= #{temonType}
+			AND PORT_NO 				= #{portNo}
+			AND YYYYMMDD 				= #{yyyymmdd}
+			AND HHMIN 					= #{hhmin}
+	</select>
+	
+	<!-- 시설물 알림 조치내역 업데이트 -->	
+	<update id="saveEqmtAlarmAsResult" parameterType="Map">
+		UPDATE TH_GCM_AS_RESULT
+			SET
+				AS_RESULT 					= 'Y',
+		        AS_ENGINEER 				= #{asEngineer},
+		        AS_METHOD 					= #{asMethod},
+		        AS_NOTE 					= #{asNote},
+		        AS_DATE 					= now(),
+		        FINAL_MOD_ID 				= #{userId},
+		        FINAL_MOD_DTTM 				= now()
+			WHERE
+				STR_CD 						= #{strCd}
+		        AND TEMON_ID 				= #{temonId}
+		        AND TEMON_TYPE 				= #{temonType}
+		        AND PORT_NO 				= #{portNo}
+		        AND YYYYMMDD 				= #{yyyymmdd}
+		        AND HHMIN 					= #{hhmin}
+	</update>
+	
+	
+	<!-- 시설물 알림 조치내역 업데이트 때 경영주 알림 등록 -->
+	<insert id="saveEqmtAlarmAsResultPush" parameterType="Map">
+		INSERT INTO 
+			TH_GCM_MESSAGE
+		SET
+			YYYYMMDD 		= DATE_FORMAT( NOW(), '%Y%m%d'),
+			HHMIN 			= DATE_FORMAT( NOW(), '%H%i'),
+			USER_ID			= ( SELECT A.USER_ID
+                                  FROM TH_USER_MST A
+                                     , TH_USER_AUTH B
+                                     , TH_AUTH C
+                                 WHERE A.USER_ID = B.USER_ID
+                                   AND B.COMPANY_CD = C.COMPANY_CD
+                                   AND B.AUTH_ID = C.AUTH_ID
+                                   AND STR_CD = #{strCd}
+                                   AND C.AUTH_SP = 'S' ),
+			STR_CD			= #{strCd},
+			STR_NM			= #{strNm},
+			TEMON_ID		= #{temonId},
+			TEMON_TYPE  	= #{temonType},
+			PORT_NO			= #{portNo},
+			DEVICE_LOC		= #{deviceLoc},
+			TITLE			= 'SEMS 관제시스템 알람',
+			MESSAGE			= CONCAT( DATE_FORMAT( now(), '%Y.%m.%d %H:%i'), ' [', #{strNm}, '] ', #{deviceLoc}, ' 장비 점검완료' ),
+			SEND_SP			= '1',
+			REGI_ID			= #{userId},
+			REGI_DTTM		= NOW(),
+			FINAL_MOD_ID	= #{userId},
+			FINAL_MOD_DTTM	= NOW()
+	</insert>
+		
+	
+	<select id="retrievePlantStatus22" parameterType="Map" resultType="PlantStatusVo">
+	<![CDATA[
+	select b.device_type  as device  /* O : OSC, R : RIF, W : WIC, C : COMP */
+	     , count(*)       as count
+	  from th_str_info_mst a 
+	     , (select aa.str_cd
+                 , aa.device_type
+              from TH_STR_REMS_DEVICE_MST aa
+             where aa.use_yn = 'Y'
+               and aa.device_type not in ('X','')
+            
+             union all
+            
+            select bb.str_cd
+                 , bb.device_type
+              from TH_STR_INV_HUB_MST bb
+             where bb.use_yn = 'Y'
+               and bb.device_type not in ('X','') 
+           ) b
+	 where a.str_cd     = b.str_cd
+	   and a.company_cd = #{companyCd}
+	   and a.use_yn = 'Y'
+	   and date_format(#{now}, '%Y%m%d') between ifnull(a.rems_start_dt, '20140101') and ifnull(a.rems_end_dt, '29991231')
+	 group by b.device_type
+	 
+	/* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantStatus */ 
+	]]>
+	</select>
+	
+	<select id="retrieveAlarmCntMonth" parameterType="Map" resultType="PlantStatusVo">
+	<![CDATA[
+	select a.yyyymm                                     as yyyymm
+	     , sum(if(a.device_type = 'R', a.alarm_cnt, 0)) as rif
+	     , sum(if(a.device_type = 'W', a.alarm_cnt, 0)) as wic
+	     , sum(if(a.device_type = 'O', a.alarm_cnt, 0)) as osc
+	     , sum(if(a.device_type = 'C', a.alarm_cnt, 0)) as comp
+	     , sum(if(a.device_type = 'C', a.alarm_cnt, 0)) as ice
+	  from TH_STR_REMS_DEVICE_MM_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd     = b.str_cd
+	   and b.company_cd = #{companyCd}
+	   and a.yyyymm between date_format(date_add(#{now}, interval -12 month), '%Y%m') and DATE_FORMAT(#{now}, '%Y%m')
+	 group by a.yyyymm
+	 
+	/* rems.eqmt.persistence.EqmtStatusMapper.retrieveAlarmCntMonth */
+	]]>
+	</select>
+	
+	<select id="retrievePlantAlarmList" parameterType="Map" resultType="PlantAlarmListVo">
+	<![CDATA[
+   	SELECT A.STR_CD                                                 AS strCd
+   	     , B.VIEW_STR_CD                                            AS viewStrCd
+   	     , B.STR_NM                                                 AS strNm
+         , SUM(A.ALARM_CNT)                                         AS alarmCnt
+      FROM TH_STR_REMS_DEVICE_MM_SUM A
+         , TH_STR_INFO_MST B
+     WHERE A.STR_CD     = B.STR_CD
+       AND B.COMPANY_CD = #{companyCd}
+       AND A.YYYYMM     = #{yyyymm}
+    ]]>
+    <if test="deviceType != null and deviceType != ''">
+       AND A.DEVICE_TYPE = #{deviceType}
+	</if>
+	<if test="strCd != null and strCd != ''">
+	   AND A.STR_CD      = #{strCd}
+	</if>
+	 GROUP BY A.STR_CD
+     ORDER BY B.VIEW_STR_CD
+     
+    /* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantAlarmList */
+	</select>
+
+	<select id="retrievePlantAlarmDtlList" parameterType="Map" resultType="Map">
+   	SELECT A.STR_CD                                                 AS strCd
+   	     , A.TEMON_ID                                               AS temonId
+   	     , A.TEMON_TYPE                                             AS temonType
+   	     , '0'                                                      AS hubId
+   	     , A.PORT_NO                                                AS portNo
+         , (SELECT CONCAT(AA.COMM_CD_NM, ' ', C.DEVICE_LOC)
+              FROM TH_COMM_CD AA
+             WHERE AA.COMM_GRP_CD = 'MAST02'
+               AND AA.COMM_CD     = A.DEVICE_TYPE
+           )                                                        AS device
+         , CONCAT( FUNCTION_STRING_TO_DTTM(A.YYYYMMDD, A.HHMIN)
+                 , ' ALARM '
+                 , ' ('
+   	             , A.SENS_TEMP
+   	             , ' ℃)' 
+                   )                                                AS alarm
+      FROM TH_STR_REMS_DEVICE_BASE A
+         , TH_STR_INFO_MST B
+         , TH_STR_REMS_DEVICE_MST C
+     WHERE A.STR_CD     = B.STR_CD
+       AND B.COMPANY_CD = #{companyCd}
+       AND A.ALARM_YN IN ('Y', 'H', 'L')
+       AND A.STR_CD     = C.STR_CD
+       AND A.TEMON_ID   = C.TEMON_ID
+       AND A.TEMON_TYPE = C.TEMON_TYPE
+       AND A.PORT_NO    = C.PORT_NO
+       AND A.STR_CD     = #{strCd}
+       AND A.YYYYMMDD LIKE CONCAT(#{yyyymm}, '%')
+
+     UNION ALL
+     
+   	SELECT C.STR_CD
+   	     , '0'
+   	     , 'I'
+         , C.HUB_ID
+   	     , C.PORT_NO
+         , (SELECT CONCAT(BB.COMM_CD_NM, ' ', D.DEVICE_LOC)
+              FROM TH_COMM_CD BB
+             WHERE BB.COMM_GRP_CD = 'MAST02'
+               AND BB.COMM_CD     = C.DEVICE_TYPE
+           )                                                        AS device
+         , CONCAT( FUNCTION_STRING_TO_DTTM(C.YYYYMMDD, C.HHMIN)
+                 , ' ALARM '
+                 , ' ('
+   	             , C.SENS_TEMP
+   	             , ' ℃)' 
+                   )                                                AS alarm
+      FROM TH_STR_INV_HUB_STATUS C
+         , TH_STR_INV_HUB_MST D
+     WHERE C.STR_CD     = D.STR_CD
+       AND C.HUB_ID     = D.HUB_ID
+       AND C.PORT_NO    = D.PORT_NO
+       AND INSTR(C.ALARM_SP, '1') > 0
+       AND C.STR_CD     = #{strCd}
+       AND C.YYYYMMDD LIKE CONCAT(#{yyyymm}, '%')
+     
+    /* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantAlarmListDtl */
+	</select>
+			
+	<select id="retrievePlantSearch" parameterType="Map" resultType="PlantStatusListVo">	
+	select a.str_cd                   as strCd
+	     , a.temon_id                 as temonId
+	     , '0'                        as hubId
+	     , a.temon_type               as temonType
+	     , a.port_no                  as portNo
+	     , a.device_type              as deviceType
+	     , ifnull(a.device_loc, ' ')  as deviceLoc
+	     , (select aa.comm_cd_nm
+	          from th_comm_cd aa
+	         where aa.comm_grp_cd = 'MAST02'
+	           and aa.comm_cd     = a.device_type
+	       )                          as deviceNm
+	     , a.max_temp                 as maxTemp
+	     , a.min_temp                 as minTemp
+	     , a.delay_time               as delayTime
+	  from TH_STR_REMS_DEVICE_MST a
+	 where a.str_cd     = #{strCd}
+	   and a.use_yn     = 'Y'
+     
+     union all
+  
+    select a.str_cd
+         , '0'
+         , a.hub_id
+         , 'I'
+         , a.port_no
+         , a.device_type
+         , ifnull(a.device_loc, ' ')
+   	     , (select aa.comm_cd_nm
+  	          from th_comm_cd aa
+  	         where aa.comm_grp_cd = 'MAST02'
+  	           and aa.comm_cd     = a.device_type
+  	       )                          as deviceNm
+         , ''
+         , ''
+         , ''
+      from TH_STR_INV_HUB_MST a
+     where a.str_cd = #{strCd}
+       and a.use_yn = 'Y'
+	</select>
+	
+	<select id="retrievePlantMonthList" parameterType="Map" resultType="Map">
+	
+	select concat(concat(substring(a.yyyymm, 1,4),'-'),substring(a.yyyymm, 5,2)) as yyyymm
+	<foreach collection="eqmtArr" item="item">
+	     , round(sum(if(a.temon_id = #{item.temonId} and a.temon_type = #{item.temonType} and a.hub_id = #{item.hubId} and a.port_no = #{item.portNo}, a.avg_temp, 0)), 1)  as #{item.columnNm}	
+	</foreach>
+	  from TH_STR_REMS_DEVICE_MM_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd     = b.str_cd
+	   and b.company_cd = #{companyCd}
+	   and a.str_cd     = #{strCd}
+	   and a.yyyymm between date_format(date_add(concat(#{yyyymm}, '01'), interval -12 month), '%Y%m') and concat(#{yyyymm}, '31')
+	 group by a.str_cd, a.yyyymm
+	 order by a.yyyymm desc 
+
+    /* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantMonthList */
+	</select>	
+
+	<select id="retrievePlantDailyList" parameterType="Map" resultType="Map">
+	
+	select substring(a.yyyymmdd, 7,2)   as yyyymmdd
+	<foreach collection="eqmtArr" item="item">
+	     , round(sum(if(a.temon_id = #{item.temonId} and a.temon_type = #{item.temonType} and a.hub_id = #{item.hubId} and a.port_no = #{item.portNo}, a.avg_temp, 0)), 1)  as #{item.columnNm}	
+	</foreach>
+	  from TH_STR_REMS_DEVICE_DD_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd     = b.str_cd
+	   and b.company_cd = #{companyCd}
+	   and a.str_cd     = #{strCd}
+	   and a.yyyymmdd like concat(#{yyyymm}, '%')
+	 group by a.str_cd, a.yyyymmdd
+     order by a.yyyymmdd desc
+     
+    /* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantDailyList */	 		 
+	</select>
+
+	<select id="retrievePlantStatusChrt" parameterType="Map" resultType="Map">
+	
+	select a.data  as hhmin
+	<foreach collection="eqmtArr" item="item">
+	     , sum(if(b.temon_id = #{item.temonId} and b.hub_id = #{item.hubId} and b.temon_type = #{item.temonType} and b.port_no = #{item.portNo}, b.sens_temp, 0))  as #{item.columnNm}	
+	</foreach>
+	  from (select data
+	          from th_dummy
+	         where type = 'hhmin'
+	       ) a
+	  left
+	 outer
+	  join (select aa.str_cd
+	             , aa.temon_id
+	             , '0' as hub_id
+	             , aa.temon_type
+	             , aa.port_no
+	             , aa.yyyymmdd
+	             , aa.hhmin 
+	             , aa.sens_temp
+	          from TH_STR_REMS_DEVICE_BASE aa
+	         where aa.str_cd   = #{strCd}
+	           and aa.yyyymmdd = concat(#{yyyymm}, #{yyyymmdd})
+
+             union all
+            
+            select bb.str_cd
+                 , '0'
+                 , bb.hub_id 
+                 , 'I'
+                 , bb.port_no
+                 , bb.yyyymmdd
+                 , bb.hhmin
+                 , bb.sens_temp
+              from th_str_inv_hub_status bb
+             where bb.str_cd   = #{strCd}
+               and bb.yyyymmdd = concat(#{yyyymm}, #{yyyymmdd})
+	       ) b
+	    on a.data = b.hhmin
+	 group by b.str_cd, b.yyyymmdd, b.hhmin
+	 order by a.data
+	      	      
+	/* rems.eqmt.persistence.EqmtStatusMapper.retrievePlantStatusChrt */
+	</select>			
+	
+	<!-- 시설물 알림 매장 리스트 엑셀 -->
+	<select id="retrieveEqmtAlarmexcelStatus" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+				
+			SELECT 
+					 A.NO                                          	AS no
+					,A.DEVICE_LOC                                	AS deviceLoc
+			      	,A.STR_NM                                   	AS strNm
+			      	,A.STR_CD										AS strCd
+			     	,DATE_FORMAT(A.ALARM_DATE_S,'%Y-%m-%d %T')    	AS alarmDateS
+			      	,DATE_FORMAT(A.ALARM_DATE_E,'%Y-%m-%d %T')    	AS alarmDateE
+			      	,B.COMM_CD_NM                                 	AS temonTypeNm
+			      	,IF(A.AS_RESULT = 'Y', '처리', '미처리')      	AS asResult
+			      	,A.ALARM_MESSAGE                              	AS alarmMessage
+			      	,A.AS_VENDOR_NM                               	AS asVendorNm
+			      	,A.AS_ENGINEER                                	AS asEngineer
+			      	,DATE_FORMAT(A.AS_DATE,'%Y-%m-%d %T')         	AS asDate
+			      	,C.COMM_CD_NM                                	AS asContents
+			      	,A.AS_NOTE                                    	AS asNote
+			      	,A.YYYYMMDD										AS yyyymmdd
+			      	,A.HHMIN										AS hhmin
+			      	,A.TEMON_ID										AS temonId
+			      	,A.TEMON_TYPE									AS temonType
+			      	,A.PORT_NO										AS portNo
+			      	,(
+			      		SELECT 
+			      				COUNT(NO)
+			          	FROM 
+			          		TH_GCM_AS_RESULT
+			         	WHERE 
+			         		YYYYMMDD > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -30 DAY), '%Y%m%d')
+			           		AND 
+			           		STR_CD = A.STR_CD
+			           		AND 
+			           		TEMON_ID = A.TEMON_ID
+			           		AND 
+			           		TEMON_TYPE = A.TEMON_TYPE
+			           		AND 
+			           		PORT_NO = A.PORT_NO
+					)											  AS alarmCnt
+			FROM 
+				TH_GCM_AS_RESULT A
+				INNER JOIN	TH_COMM_CD B 
+				ON 
+				B.COMM_GRP_CD = 'VIEW13' 
+				AND 
+				A.TEMON_TYPE = B.COMM_CD
+	            LEFT OUTER JOIN (SELECT COMM_CD, COMM_CD_NM
+				              	  FROM TH_COMM_CD
+                                 WHERE COMM_GRP_CD = 'MAST10') C 
+	            ON A.AS_METHOD = C.COMM_CD
+				LEFT OUTER JOIN TH_STR_REMS_DEVICE_MST D 
+				ON A.STR_CD = D.STR_CD 
+				AND 
+				A.TEMON_ID = D.TEMON_ID 
+				AND 
+				A.TEMON_TYPE = D.TEMON_TYPE 
+				AND 
+				A.PORT_NO = D.PORT_NO  
+				LEFT OUTER JOIN TH_STR_INV_HUB_MST E     
+				ON A.STR_CD = E.STR_CD 
+				AND 
+				A.TEMON_ID = E.HUB_ID 
+				AND 
+				A.PORT_NO = E.PORT_NO        
+				LEFT OUTER JOIN TH_STR_INFO_MST F
+        		ON
+        		A.STR_CD = F.STR_CD        		                        
+			 WHERE 
+			 	A.ALARM_DATE_E BETWEEN REPLACE(#{dateFrom}, '-', '') 
+			 	AND 
+			 	REPLACE(#{dateTo}, '-', '')
+			 	AND
+       			F.COMPANY_CD = #{companyCd}   
+	]]>
+	<if test="deviceType != null and deviceType != ''">
+       			AND (D.DEVICE_TYPE = #{deviceType} OR E.DEVICE_TYPE = #{deviceType})
+	</if>	
+	<if test="temonType != null and temonType != ''">
+       			AND A.TEMON_TYPE = #{temonType}
+	</if>
+	<if test="asVendorNm != null and asVendorNm != ''">
+       			AND A.AS_VENDOR_NM  = #{asVendorNm}
+	</if>
+	<if test="asEngineer != null and asEngineer != ''">
+       			AND INSTR(A.AS_ENGINEER, #{asEngineer}) > 0 
+	</if>
+	<if test="asResult != null and asResult != ''">
+       			AND A.AS_RESULT = #{asResult} 
+	</if>
+	<if test="closeStore != null and closeStore != ''">
+       			AND F.USE_YN = 'Y'
+	</if>
+	
+	</select>
+</mapper>

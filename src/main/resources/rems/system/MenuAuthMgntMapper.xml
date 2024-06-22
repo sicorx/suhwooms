@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.MenuAuthMgntMapper">
+
+    <select id="retrieveAuthList" parameterType="map" resultType="map">
+    <![CDATA[
+        SELECT A.AUTH_ID AS authId, A.AUTH_NM AS authNm, A.AUTH_DESC AS authDesc, A.USE_YN AS useYn ,CONCAT(B.ORDER_SEQ, '.', A.ORDER_SEQ) AS seq, 'AUTH' AS type
+          FROM TH_AUTH A
+               INNER JOIN TH_COMM_CD B ON B.COMM_GRP_CD = 'MAST04' AND A.AUTH_SP = B.COMM_CD
+         WHERE COMPANY_CD = #{companyCd}
+        UNION
+        SELECT COMM_CD AS authId, COMM_CD_NM AS authNm, COMMENTS AS authDesc, USE_YN AS useYn, CONCAT('', ORDER_SEQ) AS seq, 'CODE' AS type
+          FROM TH_COMM_CD
+         WHERE COMM_GRP_CD = 'MAST04'
+         ORDER BY SEQ
+    ]]>
+    </select>
+
+    <select id="retrieveMenuAuthList" parameterType="map" resultType="map">
+        <![CDATA[
+		SELECT A.MENU_ID as menuId
+			  ,A.MENU_NM as menuNm
+			  ,A.MENU_TYPE as menuType
+			  ,A.INDEX_HIER as indexHier
+			  ,CASE WHEN B.AUTH_ID IS NOT NULL THEN 'true' ELSE 'false' END AS selected
+          FROM TH_MENU A
+               LEFT OUTER JOIN TH_MENU_AUTH B ON B.AUTH_ID = #{authId} AND A.COMPANY_CD = B.COMPANY_CD AND A.MENU_ID = B.MENU_ID
+         WHERE A.COMPANY_CD = #{companyCd}
+		 ORDER BY A.INDEX_HIER ASC
+        ]]>
+    </select>
+
+    <delete id="deleteAuthBatch" parameterType="map">
+        DELETE FROM TH_AUTH
+         WHERE COMPANY_CD = #{companyCd}
+           AND AUTH_ID IN
+        <foreach item="authId" index="index" collection="list" open="(" separator="," close=")">
+            #{authId}
+        </foreach>
+    </delete>
+
+    <insert id="insertAuthBatch" parameterType="map">
+        INSERT INTO TH_AUTH(COMPANY_CD, AUTH_ID, AUTH_SP, AUTH_NM, AUTH_DESC, ORDER_SEQ, USE_YN, REGI_ID, REGI_DTTM, FINAL_MOD_ID, FINAL_MOD_DTTM)
+        VALUES
+        <foreach item="auth" index="index" collection="list" open="" separator="," close="">
+            (#{companyCd}, #{auth.authId}, #{auth.authSp}, #{auth.authNm}, #{auth.authDesc}, #{auth.orderSeq}, #{auth.useYn}, #{regiId}, #{now}, #{finalModId}, #{now})
+        </foreach>
+    </insert>
+
+    <insert id="updateAuthBatch" parameterType="map">
+        INSERT INTO TH_AUTH(COMPANY_CD, AUTH_ID, AUTH_SP, AUTH_NM, AUTH_DESC, ORDER_SEQ, USE_YN, FINAL_MOD_ID, FINAL_MOD_DTTM)
+        VALUES
+        <foreach item="auth" index="index" collection="list" open="" separator="," close="">
+            (#{companyCd}, #{auth.authId}, #{auth.authSp}, #{auth.authNm}, #{auth.authDesc}, #{auth.orderSeq}, #{auth.useYn}, #{finalModId}, #{now})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+         AUTH_SP        = VALUES(AUTH_SP)
+        ,AUTH_NM        = VALUES(AUTH_NM)
+        ,AUTH_DESC      = VALUES(AUTH_DESC)
+        ,ORDER_SEQ      = VALUES(ORDER_SEQ)
+        ,USE_YN         = VALUES(USE_YN)
+        ,FINAL_MOD_ID   = VALUES(FINAL_MOD_ID)
+        ,FINAL_MOD_DTTM = VALUES(FINAL_MOD_DTTM)
+    </insert>
+
+    <delete id="deleteMenuAuthBatch" parameterType="map">
+        DELETE FROM TH_MENU_AUTH
+         WHERE COMPANY_CD = #{companyCd}
+           AND AUTH_ID = #{authId}
+           AND MENU_ID IN
+        <foreach item="menuId" index="index" collection="list" open="(" separator="," close=")">
+            #{menuId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteMenuAuthBatchByAuthId" parameterType="map">
+        DELETE FROM TH_MENU_AUTH
+         WHERE COMPANY_CD = #{companyCd}
+           AND AUTH_ID IN
+        <foreach item="authId" index="index" collection="list" open="(" separator="," close=")">
+            #{authId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteMenuAuthBatchByMenuId" parameterType="map">
+        DELETE FROM TH_MENU_AUTH
+         WHERE COMPANY_CD = #{companyCd}
+           AND MENU_ID IN
+        <foreach item="menuId" index="index" collection="list" open="(" separator="," close=")">
+            #{menuId}
+        </foreach>
+    </delete>
+
+    <insert id="insertMenuAuthBatch" parameterType="map">
+        INSERT INTO TH_MENU_AUTH(COMPANY_CD, AUTH_ID, MENU_ID, REGI_ID, REGI_DTTM)
+        VALUES
+        <foreach item="menuId" index="index" collection="list" open="" separator="," close="">
+            (#{companyCd}, #{authId}, #{menuId}, #{regiId}, #{now})
+        </foreach>
+    </insert>
+
+</mapper>

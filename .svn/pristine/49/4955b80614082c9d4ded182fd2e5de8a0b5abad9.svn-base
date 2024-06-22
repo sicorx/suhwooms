@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.eqmt.persistence.EqmtStoreLogMapper">
+
+	<select id="retrieveStoreLogList" parameterType="Map" resultType="SystemVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+    <![CDATA[
+		SELECT 	A.NO AS no, A.VENDOR AS remsDeivceVendor, 
+				B.USER_ID AS userId, 
+				B.USER_NM AS userNm, 
+				IFNULL(E.STR_CD,'-') AS strCd, 
+				IFNULL(F.STR_NM,'-') AS strNm, 
+				DATE_FORMAT(A.REGI_DTTM,'%Y/%m/%d %H:%i') AS testDt, 
+				A.CONTENTS AS contents, 
+				C.GW_ADDR as gwAddr, 
+				SUM(CASE WHEN ITEM_TYPE = 'GW' THEN D.CNT ELSE 0 END) AS cntGw, 
+				SUM(CASE WHEN ITEM_TYPE = 'TM' THEN D.CNT ELSE 0 END) AS cntTemon, 
+				SUM(CASE WHEN ITEM_TYPE = 'LS' THEN D.CNT ELSE 0 END) AS cntLine, 
+				SUM(CASE WHEN ITEM_TYPE = 'HA' THEN D.CNT ELSE 0 END) AS cntHacon, 
+				SUM(CASE WHEN ITEM_TYPE = 'TS' THEN D.CNT ELSE 0 END) AS cntTsensor, 
+				SUM(CASE WHEN ITEM_TYPE = 'DM' THEN D.CNT ELSE 0 END) AS cntMeter, 
+				SUM(CASE WHEN ITEM_TYPE = 'CT' THEN D.CNT ELSE 0 END) AS cntCt
+		  FROM  TH_REMS_BOX_MONITOR_LOG A LEFT JOIN TH_USER_MST B ON A.USER_ID = B.USER_ID
+		  								  LEFT JOIN TH_REMS_BOX_MONITOR_DEVICE_CNT C ON A.NO = C.NO
+		  								  LEFT JOIN TH_REMS_BOX_MONITOR_DEVICE_CNT_DETAIL D ON C.NO = D.NO
+		  								  LEFT OUTER JOIN TH_STR_GW_MST E ON C.GW_ADDR = E.GW_ADDR
+		  								  LEFT JOIN TH_STR_INFO_MST F ON E.STR_CD = F.STR_CD
+		 WHERE  1=1
+		   AND  A.REGI_DTTM BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '') 
+	]]>	
+		<if test="scrStrNm != null and scrStrNm != ''">
+		   AND  E.STR_CD LIKE CONCAT('%', #{scrStrNm}, '%') 
+		</if> 
+	  <![CDATA[
+	  GROUP BY  no, remsDeivceVendor, userId, userNm, testDt, contents, strCd, strNm
+      ORDER BY  ${sidx} ${sord}
+    ]]>	    
+    <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>
+    
+    
+    <select id="downloadEqmtStoreLogExcel" parameterType="Map" resultType="HashMap">
+    <![CDATA[
+		SELECT 	A.NO AS no, A.VENDOR AS remsDeivceVendor, 
+				B.USER_ID AS userId, 
+				B.USER_NM AS userNm, 
+				IFNULL(E.STR_CD,'-') AS strCd, 
+				IFNULL(F.STR_NM,'-') AS strNm, 
+				DATE_FORMAT(A.REGI_DTTM,'%Y/%m/%d %H:%i') AS testDt, 
+				A.CONTENTS AS contents, 
+				C.GW_ADDR as gwAddr, 
+				SUM(CASE WHEN ITEM_TYPE = 'GW' THEN D.CNT ELSE 0 END) AS cntGw, 
+				SUM(CASE WHEN ITEM_TYPE = 'TM' THEN D.CNT ELSE 0 END) AS cntTemon, 
+				SUM(CASE WHEN ITEM_TYPE = 'LS' THEN D.CNT ELSE 0 END) AS cntLine, 
+				SUM(CASE WHEN ITEM_TYPE = 'HA' THEN D.CNT ELSE 0 END) AS cntHacon, 
+				SUM(CASE WHEN ITEM_TYPE = 'TS' THEN D.CNT ELSE 0 END) AS cntTsensor, 
+				SUM(CASE WHEN ITEM_TYPE = 'DM' THEN D.CNT ELSE 0 END) AS cntMeter, 
+				SUM(CASE WHEN ITEM_TYPE = 'CT' THEN D.CNT ELSE 0 END) AS cntCt
+		  FROM  TH_REMS_BOX_MONITOR_LOG A LEFT JOIN TH_USER_MST B ON A.USER_ID = B.USER_ID
+		  								  LEFT JOIN TH_REMS_BOX_MONITOR_DEVICE_CNT C ON A.NO = C.NO
+		  								  LEFT JOIN TH_REMS_BOX_MONITOR_DEVICE_CNT_DETAIL D ON C.NO = D.NO
+		  								  LEFT OUTER JOIN TH_STR_GW_MST E ON C.GW_ADDR = E.GW_ADDR
+		  								  LEFT JOIN TH_STR_INFO_MST F ON E.STR_CD = F.STR_CD
+		 WHERE  1=1
+		   AND  A.REGI_DTTM BETWEEN REPLACE(#{scrDateFrom}, '-', '') AND REPLACE(#{scrDateTo}, '-', '') 
+	]]>	
+		<if test="scrStrNm != null and scrStrNm != ''">
+		   AND  E.STR_CD LIKE CONCAT('%', #{scrStrNm}, '%') 
+		</if> 
+	  <![CDATA[
+	  GROUP BY  no, remsDeivceVendor, userId, userNm, testDt, contents, strCd, strNm
+    ]]>	    
+    </select>
+
+</mapper>

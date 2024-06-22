@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.DimmPolicyMgntMapper">
+
+	<select id="retrieveDimmTimePolicyList" parameterType="Map" resultType="GridDimmTimePolicyMgntVo">
+		SELECT 
+			     COMPANY_CD       as companyCd 
+			   , DIM_CD           as dimCd
+			   , SUNLIGHT_DIMM	  as sundimmtime
+			   , UN_SUNLIGHT_DIMM as unsundimmtime
+		  FROM TH_DEFAULT_DIMM_CONF
+		 WHERE COMPANY_CD = #{companyCd} 
+		 ORDER BY DIM_CD ASC
+    </select>
+   
+    <select id="retrieveDimmWeatherPolicyList" parameterType="Map" resultType="GridDimmWeatherPolicyMgntVo">
+		SELECT  COMPANY_CD			as companyCd,
+				weather_cd			as weatherCd,
+				weather_desc		as weatherdesc,
+			    sunlight_day		as sundaydimm,
+			    unsunlight_day 		as unsundaydimm,
+			    sunlight_night		as sunnightdimm,
+			    unsunlight_night	as unsunnightdimm			   
+		 FROM TH_WEATHER_DIMM_LEVEL_CONF
+		WHERE COMPANY_CD =  #{companyCd}
+		ORDER BY WEATHER_CD ASC
+    </select>
+
+	<update id="saveDimmTimePolicyMgnt" parameterType="Map">
+		INSERT INTO TH_DEFAULT_DIMM_CONF
+		(
+		   COMPANY_CD
+		 , DIM_CD
+		 , SUNLIGHT_DIMM	
+		 , UN_SUNLIGHT_DIMM
+		 , FINAL_MOD_ID
+		 , FINAL_MOD_DTTM
+		)
+		VALUES
+		(
+		   #{companyCd}
+		 , #{dim_cd}
+		 , #{sundimmtime}
+		 , #{unsundimmtime} 
+		 , #{regiId}
+		 , #{regiDttm}
+		)
+		ON DUPLICATE KEY UPDATE
+				          	    SUNLIGHT_DIMM			=		#{sundimmtime},
+				          	    UN_SUNLIGHT_DIMM		=		#{unsundimmtime},
+				          	    FINAL_MOD_ID			=		#{regiId},
+				          	    FINAL_MOD_DTTM			=		#{regiDttm}        
+          	    
+	</update>
+	
+	
+	<update id="saveDimmWeatherPolicyMgnt" parameterType="Map">
+          
+		INSERT INTO TH_WEATHER_DIMM_LEVEL_CONF
+		(
+			COMPANY_CD,
+			WEATHER_CD,
+			WEATHER_DESC,
+			SUNLIGHT_DAY,
+			SUNLIGHT_NIGHT,
+			UNSUNLIGHT_DAY,
+			UNSUNLIGHT_NIGHT,
+			REGI_ID,
+			REGI_DTTM,
+			FINAL_MOD_ID,
+			FINAL_MOD_DTTM
+		)
+		VALUE
+		(
+			#{companyCd},
+		    #{weatherCd},
+		    #{weatherdesc},
+		    #{sundaydimm},
+		    #{unsundaydimm},
+		    #{sunnightdimm},
+		    #{unsunnightdimm},
+		    #{regiId},
+		    #{regiDttm},
+		    #{finalModId},
+		    #{finalModDttm}
+		)  
+		on duplicate key update
+								SUNLIGHT_DAY	       =     #{sundaydimm},
+								SUNLIGHT_NIGHT	       =     #{unsundaydimm},
+								UNSUNLIGHT_DAY	       =     #{sunnightdimm},
+								UNSUNLIGHT_NIGHT       =     #{unsunnightdimm},
+								REGI_ID			       =     #{regiId},
+								REGI_DTTM		       =     #{regiIdDttm},
+								FINAL_MOD_ID	       =     #{finalId},
+								FINAL_MOD_DTTM 	       =     #{finalModDttm}
+							          
+	</update>
+</mapper>

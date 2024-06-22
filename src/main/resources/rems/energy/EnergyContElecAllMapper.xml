@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.energy.persistence.EnergyContElecAllMapper">
+	
+	<select id="retrieveComCodeList" parameterType="ComCodeVo" resultType="ComCodeVo">
+	SELECT COMM_CD      AS code
+	     , COMM_CD_NM   AS commCdNm
+	  FROM th_comm_cd
+	 WHERE COMM_GRP_CD = #{commGrpCd}
+	 ORDER BY ORDER_SEQ
+	
+	/* rems.energy.persistence.EnergyContElecAllMapper.retrieveComCodeList */
+	</select>	 
+
+	<select id="retrieveEpContList" parameterType="Map" resultType="EpContOverStoreVo">
+	<![CDATA[
+	SELECT concat(concat(substring(a.yyyymm, 3,2),'.'),substring(a.yyyymm, 5,2)) as yymm
+	     , a.yyyymm        as yyyymm
+   		 , ifnull(B.CNT,0) as peakCount
+	FROM
+	(
+	select DATE_FORMAT(#{now}, '%Y%m') AS yyyymm
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -1 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -2 MONTH), '%Y%m' ) 
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -3 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -4 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -5 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -6 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -7 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -8 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -9 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -10 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -11 MONTH), '%Y%m' )
+	union
+	select DATE_FORMAT(date_add(#{now}, interval -12 MONTH), '%Y%m' )
+	) A LEFT OUTER JOIN 
+	(
+	SELECT AAA.YYYYMM
+	     , COUNT(*) AS CNT
+	  FROM (
+			SELECT SUBSTRING(AA.YYYYMMDD,1,6) AS YYYYMM
+		         , AA.STR_CD
+			  FROM TH_STR_PEAK_ALARM AA,
+				   TH_STR_INFO_MST BB
+			 WHERE AA.STR_CD = BB.STR_CD
+			   AND ifnull( BB.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+			   AND BB.COMPANY_CD = #{companyCd}
+			 GROUP BY SUBSTRING(AA.YYYYMMDD,1,6), AA.STR_CD
+           ) AAA
+	 GROUP BY AAA.YYYYMM
+	) B ON A.YYYYMM = B.YYYYMM
+	order by a.yyyymm
+	
+	/* rems.energy.persistence.EnergyContElecAllMapper.retrieveEpContList */
+	]]>
+	</select>
+		
+	<select id="retrieveEpContChrt" parameterType="Map" resultType="EpContExcessChrtVo">
+	<![CDATA[
+	select a.company_cd                                                          as companyCd
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 0
+	          and a.cont_demand_power / a.str_area_spec <= 20, 1, 0))     as data1
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 20
+	          and a.cont_demand_power / a.str_area_spec <= 40, 1, 0))     as data2
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 40
+	          and a.cont_demand_power / a.str_area_spec <= 60, 1, 0))     as data3
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 60
+	          and a.cont_demand_power / a.str_area_spec <= 80, 1, 0))     as data4
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 80
+	          and a.cont_demand_power / a.str_area_spec <= 100, 1, 0))    as data5
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 100
+	          and a.cont_demand_power / a.str_area_spec <= 120, 1, 0))    as data6
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 120
+	          and a.cont_demand_power / a.str_area_spec <= 140, 1, 0))    as data7
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 140
+	          and a.cont_demand_power / a.str_area_spec <= 160, 1, 0))    as data8
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 160
+	          and a.cont_demand_power / a.str_area_spec <= 180, 1, 0))    as data9
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 180
+	          and a.cont_demand_power / a.str_area_spec <= 200, 1, 0))    as data10
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 200
+	          and a.cont_demand_power / a.str_area_spec <= 220, 1, 0))    as data11
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 220
+	          and a.cont_demand_power / a.str_area_spec <= 240, 1, 0))    as data12
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 240
+	          and a.cont_demand_power / a.str_area_spec <= 260, 1, 0))    as data13
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 260
+	          and a.cont_demand_power / a.str_area_spec <= 280, 1, 0))    as data14
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 280
+	          and a.cont_demand_power / a.str_area_spec <= 300, 1, 0))    as data15
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 300
+	          and a.cont_demand_power / a.str_area_spec <= 320, 1, 0))    as data16
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 320
+	          and a.cont_demand_power / a.str_area_spec <= 340, 1, 0))    as data17
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 340
+	          and a.cont_demand_power / a.str_area_spec <= 360, 1, 0))    as data18
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 360
+	          and a.cont_demand_power / a.str_area_spec <= 380, 1, 0))    as data19
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 380
+	          and a.cont_demand_power / a.str_area_spec <= 400, 1, 0))    as data20
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 400
+	          and a.cont_demand_power / a.str_area_spec <= 420, 1, 0))    as data21
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 420
+	          and a.cont_demand_power / a.str_area_spec <= 440, 1, 0))    as data22
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 440
+	          and a.cont_demand_power / a.str_area_spec <= 460, 1, 0))    as data23
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 460
+	          and a.cont_demand_power / a.str_area_spec <= 480, 1, 0))    as data24
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 480
+	          and a.cont_demand_power / a.str_area_spec <= 500, 1, 0))    as data25
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 500
+	          and a.cont_demand_power / a.str_area_spec <= 520, 1, 0))    as data26
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 520
+	          and a.cont_demand_power / a.str_area_spec <= 540, 1, 0))    as data27
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 540
+	          and a.cont_demand_power / a.str_area_spec <= 560, 1, 0))    as data28
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 560
+	          and a.cont_demand_power / a.str_area_spec <= 580, 1, 0))    as data29
+	     , sum(if(a.cont_demand_power / a.str_area_spec > 580, 1, 0))     as data30
+	  from th_str_info_mst a
+	 where a.company_cd = #{companyCd}
+	   and ifnull( a.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	   and date_format(#{now}, '%Y%m%d') between ifnull(a.rems_start_dt, '20130101') and ifnull(a.rems_end_dt, '29991231')
+	 group by a.company_cd
+	 
+	/* rems.energy.persistence.EnergyContElecAllMapper.retrieveEpContChrt */
+	]]>
+	</select>
+
+	<select id="retrieveEpContOverStore" parameterType="Map" resultType="EpContOverStoreVo">
+	<![CDATA[
+	select b.company_cd
+	     , a.yyyymm
+	     , round(avg(b.cont_demand_power / b.str_area_spec), 1)           as avgCont
+	     , round(max(b.cont_demand_power / b.str_area_spec), 1)           as max
+	     , round(min(b.cont_demand_power / b.str_area_spec), 1)           as min
+	     , round(stddev(b.cont_demand_power / b.str_area_spec), 1)        as stdev
+	     , round(avg(a.EP_1CH_EFT_WATAGE / b.str_area_spec ) / 1000, 1)    as avgTotal
+	     , round(avg(a.EP_2CH_EFT_WATAGE+ a.EP_3CH_EFT_WATAGE / b.str_area_spec ) / 1000, 1)     as avgTemp
+	     , round(avg(a.EP_4CH_EFT_WATAGE / b.str_area_spec ) / 1000, 1)    as avgLight
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	     , th_str_info_mst b
+	 where a.str_cd     = b.str_cd
+	   and b.company_cd = #{companyCd}
+	   and ifnull( b.rems_start_dt, '20000101' ) <= date_format( date_add( now(), interval -30 day), '%Y%m%d' )
+	   and a.yyyymm     = #{yyyymm}
+	 group by b.company_cd, a.yyyymm
+	 
+	/* rems.energy.persistence.EnergyContElecAllMapper.retrieveEpContOverStore */
+	]]>
+	</select>
+	
+	<select id="retrieveEpContOverStoreList" parameterType="Map" resultType="EpContOverStoreListVo">
+
+    select distinct b.view_str_cd                                          as viewStrCd
+         , a.str_cd                                               as strCd
+	     , b.str_nm                                               as strNm
+	     , b.company_cd                                           as companyCd
+	     , a.yyyymm                                               as yyyymm  
+	     , round(b.cont_demand_power / b.str_area_spec, 1)        as cont
+	     , round(b.cont_demand_power / b.str_area_spec, 1)        as avgCont
+	     , round(a.EP_1CH_EFT_WATAGE / b.str_area_spec / 1000, 1)  as total
+	     , round(a.EP_1CH_EFT_WATAGE / b.str_area_spec / 1000, 1)  as avgTotal
+	     , round(a.EP_2CH_EFT_WATAGE+ a.EP_3CH_EFT_WATAGE / b.str_area_spec / 1000, 1)   as temp
+	     , round(a.EP_2CH_EFT_WATAGE+ a.EP_3CH_EFT_WATAGE / b.str_area_spec / 1000, 1)   as avgTemp
+	     , round(a.EP_4CH_EFT_WATAGE / b.str_area_spec / 1000, 1)  as light
+	     , round(a.EP_4CH_EFT_WATAGE / b.str_area_spec / 1000, 1)  as avgLight    
+	  from TH_STR_CHN_ELEC_USE_MM_SUM a
+	     , th_str_info_mst b
+	<if test="sVal == null or sVal == ''">		    
+	<![CDATA[
+	     , th_str_peak_alarm c
+	]]>
+	</if>	     
+	 where a.str_cd     = b.str_cd
+	<if test="sVal == null or sVal == ''">		    
+	<![CDATA[	   
+	   and a.str_cd     = c.str_cd	
+	   and a.yyyymm     = substring(c.yyyymmdd, 1, 6)
+	]]>
+	</if>	     	   
+	   and b.company_cd = #{companyCd}
+	   and a.yyyymm     = ifnull(#{yyyymm}, date_format(#{now}, '%Y%m'))
+	<if test="sVal != null and sVal != ''">		    
+	<![CDATA[
+
+	   and b.cont_demand_power / b.str_area_spec > #{sVal}
+	   and b.cont_demand_power / b.str_area_spec <= #{eVal}
+	]]>
+	</if>
+     order by b.view_str_cd
+ 
+    /* rems.energy.persistence.EnergyContElecAllMapper.retrieveEpContOverStoreList */
+	</select>
+
+	<select id="retrieveMonthDemandList" parameterType="Map" resultType="EpContDemandListVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT AA.strCd
+      	      ,AA.viewStrCd
+      	      ,AA.strNm      
+      	      ,AA.peakCnt
+      	      ,orgFullName
+      	      ,AA.contPower
+      	      ,AA.mainTotal
+      	      ,ROUND(AA.contPower - AA.mainTotal,1) AS freePower
+      	      ,AA.temp
+      	      ,AA.addr	      
+      	      ,AA.telNo
+      	      ,AA.yyyymm  
+		FROM(
+			SELECT MST.STR_CD								AS strCd
+			      ,MST.VIEW_STR_CD							AS viewStrCd
+			      ,MST.STR_NM								AS strNm      
+			      ,IFNULL(ALARM.CNT,0)						AS peakCnt
+				  ,fnGetOrgFullName('GSR', MST.ORG_CD)		AS orgFullName
+			      ,ROUND(MST.CONT_DEMAND_POWER / 1000, 1)	AS contPower
+			      ,IFNULL(QTR.TOTAL_USE_WATAGE,0)			AS mainTotal
+			      ,IFNULL(QTR.TEMP_USE_WATAGE,0)			AS temp
+			      ,MST.ADDR									AS addr	      
+			      ,MST.TEL_NO								AS telNo
+			      ,IFNULL(QTR.YYYYMM,0)						AS yyyymm 
+			FROM (
+					SELECT ROUND(MAX_TOTAL_USE_WATAGE, 1)	AS TOTAL_USE_WATAGE
+					      ,ROUND(MAX_TEMP_USE_WATAGE, 1)	AS TEMP_USE_WATAGE  
+					      ,STR_CD
+					      ,YYYYMM
+					FROM TH_STR_CHN_ELEC_USE_MM_SUM
+					WHERE YYYYMM = REPLACE(#{DateFrom}, '-', '')
+					GROUP BY STR_CD ) QTR
+			RIGHT OUTER JOIN TH_STR_INFO_MST MST
+			ON QTR.STR_CD = MST.STR_CD
+			LEFT OUTER JOIN(
+					SELECT ALARM.STR_CD,
+						   COUNT(*) AS CNT
+					FROM TH_STR_PEAK_ALARM ALARM
+					WHERE ALARM.YYYYMMDD BETWEEN CONCAT(REPLACE( #{DateFrom}, '-', ''), '01') 
+								AND CONCAT(REPLACE(#{DateTo}, '-', ''), '31')
+					AND SEND_SP = '2'
+					GROUP BY ALARM.STR_CD ) ALARM
+			ON MST.STR_CD = ALARM.STR_CD
+			WHERE 1=1
+			AND MST.REMS_START_DT <= DATE_FORMAT(NOW(), '%Y%m%d') 
+			AND MST.USE_YN = 'Y'
+			AND MST.COMPANY_CD = #{companyCd}
+		]]>
+		<if test="strNm != null and strNm != ''">
+			AND ( INSTR(MST.STR_NM, #{strNm}) > 0 OR INSTR(MST.VIEW_STR_CD, #{strNm}) > 0 )
+		</if>
+		<if test="orgCd != null and orgCd != ''">    
+			AND MST.ORG_CD = #{orgCd}
+		</if>
+		) AA
+		LEFT JOIN TH_STR_GW_MST GM
+		ON AA.strCd = GM.STR_CD
+		WHERE 1=1
+		AND GM.GW_ADDR != '000000000000'
+		AND GM.GW_IP is not null
+		<if test="mode eq 'ENOUGH' ">  
+		<![CDATA[ 
+			AND AA.peakCnt < 1
+			-- AND AA.contPower > AA.mainTotal
+		]]>
+		</if>
+
+		<if test="mode eq 'OVER' ">   
+		<![CDATA[
+			AND AA.peakCnt >= 1
+			-- AND AA.contPower > AA.mainTotal
+		]]>
+		</if>
+      
+		<![CDATA[
+			ORDER BY ${sidx} ${sord}
+		]]>
+  
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+	</select>
+	
+	<select id="retrieveExcelMonthDemandList" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+		SELECT AA.strNm
+      	      ,AA.viewStrCd
+      	      ,orgFullName
+      	      ,AA.peakCnt
+      	      ,AA.contPower
+      	      ,AA.mainTotal
+      	      ,ROUND(AA.contPower - AA.mainTotal,1) AS freePower
+      	      ,AA.temp
+      	      ,AA.addr
+      	      ,AA.telNo
+		FROM(
+			SELECT MST.STR_CD								AS strCd
+			      ,MST.VIEW_STR_CD							AS viewStrCd
+			      ,MST.STR_NM								AS strNm
+			      ,IFNULL(ALARM.CNT,0)						AS peakCnt
+				  ,fnGetOrgFullName(#{companyCd}, MST.ORG_CD)		AS orgFullName
+			      ,ROUND(MST.CONT_DEMAND_POWER / 1000, 1)	AS contPower
+			      ,IFNULL(QTR.TOTAL_USE_WATAGE,0)			AS mainTotal
+			      ,IFNULL(QTR.TEMP_USE_WATAGE,0)			AS temp
+			      ,MST.ADDR									AS addr
+			      ,MST.TEL_NO								AS telNo
+			      ,IFNULL(QTR.YYYYMM,0)						AS yyyymm
+			FROM (
+					SELECT ROUND(MAX_TOTAL_USE_WATAGE, 1)	AS TOTAL_USE_WATAGE
+					      ,ROUND(MAX_TEMP_USE_WATAGE, 1)	AS TEMP_USE_WATAGE
+					      ,STR_CD
+					      ,YYYYMM
+					FROM TH_STR_CHN_ELEC_USE_MM_SUM
+					WHERE YYYYMM = REPLACE(#{DateFrom}, '-', '')
+					GROUP BY STR_CD ) QTR
+			RIGHT OUTER JOIN TH_STR_INFO_MST MST
+			ON QTR.STR_CD = MST.STR_CD
+			LEFT OUTER JOIN(
+					SELECT ALARM.STR_CD,
+						   COUNT(*) AS CNT
+					FROM TH_STR_PEAK_ALARM ALARM
+					WHERE ALARM.YYYYMMDD BETWEEN CONCAT(REPLACE( #{DateFrom}, '-', ''), '01') 
+								AND CONCAT(REPLACE(#{DateTo}, '-', ''), '31')
+					AND SEND_SP = '2'
+					GROUP BY ALARM.STR_CD ) ALARM
+			ON MST.STR_CD = ALARM.STR_CD
+			WHERE 1=1
+			AND MST.REMS_START_DT <= DATE_FORMAT(NOW(), '%Y%m%d') 
+			AND MST.USE_YN = 'Y'
+			AND MST.COMPANY_CD = #{companyCd}
+	]]>
+		<if test="strNm != null and strNm != ''">
+			AND ( INSTR(MST.STR_NM, #{strNm}) > 0 OR INSTR(MST.VIEW_STR_CD, #{strNm}) > 0 )
+		</if>
+		<if test="orgCd != null and orgCd != ''">    
+			AND MST.ORG_CD = #{orgCd}
+		</if>
+		) AA
+		LEFT JOIN TH_STR_GW_MST GM
+		ON AA.strCd = GM.STR_CD
+		WHERE 1=1
+		AND GM.GW_ADDR != '000000000000'
+		AND GM.GW_IP is not null
+		
+	<if test="mode eq 'ENOUGH' ">  
+	<![CDATA[ 
+		AND AA.peakCnt < 1
+		-- AND AA.contPower > AA.mainTotal
+	]]>
+	</if>
+
+	<if test="mode eq 'OVER' ">   
+	<![CDATA[
+		AND AA.peakCnt >= 1
+		-- AND AA.contPower > AA.mainTotal
+	]]>
+	</if>
+	<![CDATA[
+		ORDER BY strNm
+	]]>
+	</select>
+	
+	<select id="retrieveMonthDemandChart" parameterType="Map" resultType="EpContDemandListVo">
+	<![CDATA[
+	SELECT A.YYYYMMDD                           AS yyyymmdd
+     	  ,A.HH                                 AS hh
+	      ,A.QUARTER                            AS qrt
+	      ,ROUND(B.CONT_DEMAND_POWER / 1000, 1) AS contPower
+	      ,ROUND(A.TOTAL_USE_WATAGE, 1)  AS total
+	  FROM TH_STR_ENER_USE_QTR A
+	       INNER JOIN TH_STR_INFO_MST B ON A.STR_CD = B.STR_CD
+	 WHERE A.STR_CD = #{strCd}
+	   AND A.YYYYMMDD BETWEEN CONCAT(REPLACE(#{yyyymm}, '-', ''), '01') AND CONCAT(REPLACE(#{yyyymm}, '-', ''), '31')
+	 ORDER BY A.YYYYMMDD, A.HH, A.QUARTER
+	 
+	/* rems.energy.persistence.EnergyContElecAllMapper.retrieveDailyDemandChart */
+	]]>
+	</select>	
+			
+</mapper>

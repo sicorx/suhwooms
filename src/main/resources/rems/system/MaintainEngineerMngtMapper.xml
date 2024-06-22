@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rems.system.persistence.MaintainEngineerMngtMapper">
+	
+	<!-- 엔지니어 목록 -->
+	<select id="searchMaintainEngineerList" parameterType="Map" resultType="GridMaintainEngineerMgntVo">
+	<include refid="rems.common.persistence.CommonMapper.PagingTemplateHeader" />	
+	<![CDATA[
+		SELECT 
+  			V.VENDOR_NM 							AS vendorNm, 
+  			U.USER_ID 								AS userId,
+  			U.USER_NM 								AS userNm,
+  			U.USE_YN 								AS useYn, 
+  			IF(U.USE_YN = 'Y', '사용', '미사용') 	AS useYnNm, 
+  			U.EULA_YN 								AS eulaYn, 
+  			IF(U.EULA_YN = 'Y', '동의', '미동의') 	AS eulaYnNm, 
+  			V.VENDOR_CD 							AS vendorCd, 
+  			CAST(AES_DECRYPT(U.USER_PW, 'REMS_ADM') AS CHAR(100)) AS userPw 
+		FROM 
+  			TH_USER_MST U,
+  			TH_VENDOR_MST V,
+            TH_USER_AUTH B,
+            TH_AUTH C
+		WHERE 1 = 1 
+            AND U.USER_ID = B.USER_ID
+            AND B.COMPANY_CD = C.COMPANY_CD
+            AND B.AUTH_ID = C.AUTH_ID
+  			AND U.VENDOR_CD = V.VENDOR_CD 
+  			AND C.AUTH_SP IN ('E', 'M') 
+  			AND U.COMPANY_CD = #{companyCd} 
+  			AND V.COMPANY_CD = #{companyCd}
+	]]>
+	<if test='vendorCd != null and vendorCd != ""'>
+    	<![CDATA[		
+			AND U.VENDOR_CD = #{vendorCd} 
+        ]]>
+    </if>
+    <if test='userId != null and userId != ""'>
+    	<![CDATA[
+   			AND (
+    			INSTR(U.USER_NM, #{userId}) > 0 
+    			OR 
+    			INSTR(U.USER_ID, #{userId}) > 0
+   			)
+        ]]>
+    </if>
+    <if test='useYn != null and useYn != ""'>
+        <![CDATA[
+        	AND U.USE_YN = #{useYn}
+        ]]>
+    </if> 
+  	<![CDATA[
+		ORDER BY ${sidx} ${sord}, vendorNm, userNm
+	]]>
+        <include refid="rems.common.persistence.CommonMapper.PagingTemplateBottom" />
+    </select>	
+    
+    <!-- 엔지니어 저장 -->
+	<update id="saveEngineerMgnt" parameterType="GridUserMgntVo">
+	INSERT INTO 
+		TH_USER_MST 
+    (
+       	USER_ID, 
+		USER_NM, 
+	    USER_PW, 
+	    COMPANY_CD, 
+	    VENDOR_CD, 
+	    EULA_YN, 
+	    USE_YN, 
+	    REGI_ID, 
+	    REGI_DTTM, 
+	    FINAL_MOD_ID, 
+	    FINAL_MOD_DTTM
+	) 
+    VALUES 
+    ( 
+       	#{userId}, 
+     	#{userNm}, 
+     	AES_ENCRYPT(#{userPw}, 'REMS_ADM'), 
+     	#{companyCd}, 
+     	#{vendorCd}, 
+     	#{eulaYn}, 
+     	#{useYn}, 
+     	#{regiId}, 
+     	NOW(), 
+     	#{finalModId}, 
+     	NOW()
+    ) 
+	ON DUPLICATE KEY UPDATE 
+	  	USER_NM         = #{userNm}, 
+		USER_PW         = AES_ENCRYPT(#{userPw}, 'REMS_ADM'), 
+		EULA_YN         = #{eulaYn}, 
+		USE_YN          = #{useYn}, 
+		FINAL_MOD_ID    = #{finalModId}, 
+		FINAL_MOD_DTTM	= NOW()
+	</update>    
+	
+	
+	<update id="saveEngineerAuthMgnt" parameterType="GridUserMgntVo">
+	INSERT INTO 
+		TH_USER_AUTH
+    (
+       	COMPANY_CD,
+		USER_ID,
+	    AUTH_ID
+	) 
+    VALUES 
+    ( 
+       	#{companyCd}, 
+        #{userId}, 
+     	'3'     	
+    ) 
+	ON DUPLICATE KEY UPDATE 
+	  	COMPANY_CD      = #{companyCd}, 		
+		USER_ID         = #{userId}, 
+		AUTH_ID         = '3'
+	</update>    
+    
+    <!-- 엔지니어 목록 -->
+	<select id="downloadMaintainEngineerListrExcel" parameterType="Map" resultType="HashMap">
+	<![CDATA[
+		SELECT 
+  			V.VENDOR_NM 							AS vendorNm, 
+  			U.USER_ID 								AS userId,
+  			U.USER_NM 								AS userNm,
+  			U.USE_YN 								AS useYn, 
+  			IF(U.USE_YN = 'Y', '사용', '미사용') 	AS useYnNm, 
+  			U.EULA_YN 								AS eulaYn, 
+  			IF(U.EULA_YN = 'Y', '동의', '미동의') 	AS eulaYnNm, 
+  			V.VENDOR_CD 							AS vendorCd, 
+  			CAST(AES_DECRYPT(U.USER_PW, 'REMS_ADM') AS CHAR(100)) AS userPw 
+		FROM 
+  			TH_USER_MST U,
+  			TH_VENDOR_MST V,
+            TH_USER_AUTH B,
+            TH_AUTH C
+		WHERE 1 = 1 
+            AND U.USER_ID = B.USER_ID
+            AND B.COMPANY_CD = C.COMPANY_CD
+            AND B.AUTH_ID = C.AUTH_ID
+  			AND U.VENDOR_CD = V.VENDOR_CD 
+  			AND C.AUTH_SP IN ('E', 'M') 
+  			AND U.COMPANY_CD = #{companyCd} 
+  			AND V.COMPANY_CD = #{companyCd}
+	]]>
+	<if test='vendorCd != null and vendorCd != ""'>
+    	<![CDATA[		
+			AND U.VENDOR_CD = #{vendorCd} 
+        ]]>
+    </if>
+    <if test='userId != null and userId != ""'>
+    	<![CDATA[
+   			AND (
+    			INSTR(U.USER_NM, #{userId}) > 0 
+    			OR 
+    			INSTR(U.USER_ID, #{userId}) > 0
+   			)
+        ]]>
+    </if>
+    <if test='useYn != null and useYn != ""'>
+        <![CDATA[
+        	AND U.USE_YN = #{useYn}
+        ]]>
+    </if> 
+  	<![CDATA[
+		ORDER BY vendorNm, userNm
+	]]>
+    </select>	
+    
+</mapper>

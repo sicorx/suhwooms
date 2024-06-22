@@ -1,0 +1,162 @@
+alarmEqmtList=▒ 알람 발생 시설물 목록
+alarmCnt=알람 발생 횟수
+avg=평균
+avgTempDiff=평균과의 차이(℃)
+avgElecDiff=평균과의 차이(Wh/㎡)
+avgElecDiffK=평균과의 차이(kWh/㎡)
+avgDailyUse=일평균 총 사용량
+avgDailyUsePerStore=일평균 매장별 사용량
+avgUsePerSpace=면적당 사용량
+avgUsePerStore=매장 평균 사용량
+autoLogin=자동로그인
+
+cnfm=확인
+clos=닫기
+changeLocale=언어 변경
+collTime=수집기준
+curMonth=당월
+contElec=계약전력
+contElecK=계약전력(kW)
+contElecPerSpace=면적당 계약전력(W/㎡)
+contElecPerSpaceDist=▒ 면적당 계약전력 분포(W/㎡)
+contElecPerSpaceList=▒ 면적당 계약전력 목록
+
+date=일자
+dailyEqmtTemp=▒ 일자별 시설물 온도
+dailyTotalElecUse=▒ 일자별 전력량
+dailyHacElecUse=▒ 일자별 냉난방전력량
+dailyLightElecUse=▒ 일자별 조명전력량
+dailyMaxDemandElec=▒ 일자별 최대수요전력
+day=일
+defrostCycle=제상주기(분)
+defrostTime=제상시간(분)
+dimmingValue=디밍값(%)
+
+elec=전력
+elecUse=전력량 (kWh)
+elecUsePerSpace=면적당 전력량 (Wh/㎡)
+elecUsePerSpaceK=면적당 전력량 (kWh/㎡)
+elecUsePerSpaceDist=▒ 면적당 전력량 분포(kWh/㎡)
+elecUsePerSpaceList=▒ 면적당 전력량 목록
+elecStatus=▒ 전력 현황
+elecUseRatio=▒ 전력 예측 대비 사용률
+etc=기타
+emitCorel=※ 배출계수 : 해당연도의 국가 고유 전력배출계수, 전력거래소에서 발표(현재는 2011년 발표한 0.4585(tCO₂/MWh기준))
+eqmt=시설물
+eqmtStatus=▒ 시설물 현황
+eqmtWorkingState=▒ 시설물 가동 상태
+eqmtTemp=고내온도
+
+ghouseGasEmit=▒ 온실가스 배출량
+ghouseGasCal=※ 온실가스 배출량 = ∑[전력사용량(MWh) * 배출계수(tGHG(CO₂/CH₄/N₂O)/ MWh) * 지구온난화지수]
+ghouseDegree=※ 지구온난화 지수 : CO₂= 1, CH₄= 21, N₂O = 310
+
+hac=냉난방기
+hacCount=냉난방기 개수
+hacElecUse=냉난방전력량(kWh)
+hacElecUsePerSpaceList=▒ 면적당 냉난방전력량 목록(Wh/㎡)
+hacElecUsePerSpaceDist=▒ 면적당 냉난방전력량 분포(kWh/㎡)
+hacElecUseStatus=▒ 냉난방 전력 현황
+
+indoorTemp=실내온도
+indoorTempC=실내온도(℃)
+
+light=조명
+lightElecUseStatus=▒ 조명 전력 현황
+lightElecUse=조명전력량(kWh)
+lightElecUseRatio=조명전력비중(%)
+login=로그인
+
+max=최대
+min=최소
+month=월
+monthTotal=개월 총량
+monthlyAlarmCnt=월간 알람횟수
+monthlyAlarmRaiseCnt=월 알람 발생 횟수
+monthlyElecUse=▒ 월 사용전력량(kWh)
+monthlyEqmtTemp=▒ 월별 시설물 온도
+monthlyTotalElecUse=▒ 월별 전력량
+monthlyHacElecUse=▒ 월별 냉난방전력량
+monthlyLightElecUse=▒ 월별 조명전력량
+monthlyMaxDemandElec=▒ 월별 최대수요전력
+maxDemandElec=최대수요전력
+maxDemandElecK=최대수요전력(kW)
+maxDemandHacElec=최대냉난방전력(kW)
+maxDemandLightElec=최대조명전력(kW)
+
+outdoorTemp=실외온도
+outdoorTempC=실외온도(℃)
+
+peakStr=▒ 계약전력 대비 초과사용 발생 매장현황
+peakStrList=▒ 계약전력 초과사용 매장 목록
+predict=예측
+
+recentAlarm=최근 알람
+recentTempC=▒ 최근 온도(℃)
+regnCd=지역코드
+regnNm=지역명
+regnList=지역목록
+regn=지역
+retrieve=조회
+
+sameMonthLastYear=전년동월
+selectLocale=언어 선택
+setTemp=설정온도(℃)
+srch=찾기
+strCd=매장코드
+strNm=매장명
+str=매장
+strCount=매장수
+stdDev=표준편차
+status=현황
+
+tempC=온도(℃)
+tempStatus=▒ 온도 현황
+tempCtrl=냉난방
+tempElecUsePerSpace=면적당 냉난방전력량(kWh/㎡)
+time=시간
+total=전체
+totalElecUse=전체전력량(kWh)
+thisMonthElecUse=이달 총 사용량
+
+use=사용
+userAgreement=사용자 약관
+
+viewStrCd=기매장코드
+valid_required=반드시 입력해야 합니다.
+valid_remote=수정바랍니다.
+valid_email=이메일 주소를 올바르게 입력하세요.
+valid_url=URL을 올바르게 입력하세요.
+valid_date=날짜가 잘못 입력되었습니다.
+valid_dateISO=ISO 형식에 맞는 날짜로 입력하세요.
+valid_number=숫자만 입력하세요.
+valid_digits=숫자(digits)만 입력하세요.
+valid_creditcard=올바른 신용카드 번호를 입력하세요.
+valid_equalTo=값이 서로 다릅니다.
+valid_accept=승인해주세요.
+valid_maxlength={0}글자 이상은 입력할 수 없습니다.
+valid_minlength=적어도 {0}글자는 입력해야 합니다.
+valid_rangelength={0}글자 이상 {1}글자 이하로 입력하세요.
+vaild_range={0}에서 {1}사이의 값을 입력하세요.
+valid_max={0}이하로 입력해 주세요.
+valid_min={0}이상으로 입력해 주세요.
+
+
+weather=날씨
+weatherStatus=▒ 날씨 현황
+
+year=년
+yearMonth=년월
+
+autoRefresh5=5분 자동 리프레쉬
+strCdSrch=매장 코드를 조회하세요!
+chrtClick=차트를 클릭하세요!
+gridDblClick=그리드를 더블클릭하세요!
+logoutCnfm=로그아웃 하시겠습니까?
+inputId=ID를 입력하세요.
+inputPw=Password를 입력하세요.
+invalidSession=세션 정보가 올바르지 않습니다. 로그인 화면으로 이동합니다.
+agree=예, 이용 약관에 동의합니다.
+deny=아니오, 이용 약관에 동의하지 않습니다.
+
+seq=번호
